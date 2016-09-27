@@ -1,0 +1,1106 @@
+Block begin: windowCreate...OK, time:  82.607 ms
+Block begin: blitManagerCreate
+	Block begin: blitQueueDisable...OK, time:  41.2 us
+Block end: blitManagerCreate, time:   3.910 ms
+Block begin: copCreate()
+	Block begin: copListCreate()
+		Addr: 0x2200b0
+	Block end: copListCreate(), time:   8.645 ms
+Block end: copCreate(), time:  14.407 ms
+Block begin: gsGameCreate()
+	Block begin: viewCreate(uwFlags: 1)
+		addr: 0x268610
+		Block begin: copListCreate()
+			Addr: 0x268830
+		Block end: copListCreate(), time:   8.324 ms
+	Block end: viewCreate(), time:  15.212 ms
+	Block begin: vPortCreate(pView: 0x268610, uwWidth: 320, uwHeight: 191, ubBPP: 5, uwFlags: 0)
+		Addr: 0x27b478
+		Offsets: 0x0
+		No prev VPorts - added to head
+	Block end: vPortCreate(), time:   8.297 ms
+	Block begin: simpleBufferManagerCreate(pVPort: 0x27b478, uwBoundWidth: 640, uwBoundHeight: 640)
+		Addr: 0x27b530
+		Bounds: 640x640
+		Block begin: bitmapCreate(uwWidth: 640, uwHeight: 640, ubDepth: 5, ubFlags: 1)
+			addr: 0x27b6b8
+		Block end: bitmapCreate(), time:  53.863 ms
+		Block begin: cameraCreate(pVPort: 0x27b478, uwPosX: 0, uwPosY: 0, uwMaxX: 640, uwMaxY: 640)
+			Addr: 0x27b708
+			Block begin: cameraReset(pManager: 0x27b708, uwStartX: 0, uwStartY: 0, uwWidth: 640, uwHeight: 640)
+				Camera max coord: 320,449
+			Block end: cameraReset(), time:   1.063 ms
+			Manager 0x27b708 attached to head of VP 0x27b478
+		Block end: cameraCreate(), time:  10.457 ms
+		Block begin: copBlockCreate(pCopList: 0x268830, uwMaxCmds: 15, uwWaitX: 0, uwWaitY: 43)
+			pAddr: 0x27b740
+			Head: 0
+			Added as head, next: 0
+		Block end: copBlockCreate(), time:  10.721 ms
+		Block begin: simpleBufferSetBitmap(pManager: 0x27b530, pBitMap: 0x27b6b8)
+			Modulo: 40
+			X scroll
+		Block end: simplebufferSetBitmap(), time:   2.843 ms
+		Manager 0x27b530 attached after manager 0x27b708 of VP 0x27b478
+	Block end: simpleBufferManagerCreate(), time: 105.697 ms
+	Block begin: vPortCreate(pView: 0x268610, uwWidth: 320, uwHeight: 64, ubBPP: 5, uwFlags: 0)
+		Addr: 0x27b8a0
+		Offsets: 0x193
+		VPort added after 0x27b478
+	Block end: vPortCreate(), time:   7.602 ms
+	Block begin: simpleBufferManagerCreate(pVPort: 0x27b8a0, uwBoundWidth: 320, uwBoundHeight: 64)
+		Addr: 0x27b928
+		Bounds: 320x64
+		Block begin: bitmapCreate(uwWidth: 320, uwHeight: 64, ubDepth: 5, ubFlags: 1)
+			addr: 0x27ba88
+		Block end: bitmapCreate(), time:  17.671 ms
+		Block begin: cameraCreate(pVPort: 0x27b8a0, uwPosX: 0, uwPosY: 0, uwMaxX: 320, uwMaxY: 64)
+			Addr: 0x27bd88
+			Block begin: cameraReset(pManager: 0x27bd88, uwStartX: 0, uwStartY: 0, uwWidth: 320, uwHeight: 64)
+				Camera max coord: 0,0
+			Block end: cameraReset(), time:   1.475 ms
+			Manager 0x27bd88 attached to head of VP 0x27b8a0
+		Block end: cameraCreate(), time:  13.305 ms
+		Block begin: copBlockCreate(pCopList: 0x268830, uwMaxCmds: 15, uwWaitX: 0, uwWaitY: 236)
+			pAddr: 0x27bb88
+			Head: 0x27b740
+		Block end: copBlockCreate(), time:   9.739 ms
+		Block begin: simpleBufferSetBitmap(pManager: 0x27b928, pBitMap: 0x27ba88)
+			Modulo: 0
+			No X scroll
+		Block end: simplebufferSetBitmap(), time:   1.808 ms
+		Manager 0x27b928 attached after manager 0x27bd88 of VP 0x27b8a0
+	Block end: simpleBufferManagerCreate(), time:  69.777 ms
+	ILLEGAL BLIT Dest out of range: source 0x0, dest: 320x64, blit: 0,0 1x64 D:\prg\_git\openfire\src\gamestates\game\hud.c@18
+	Allocated buffer
+	Block begin: bitmapDump(pBitMap: 0x27b6b8)
+		BytesPerRow: 80, Rows: 640, Flags: 0, Depth: 5, pad: 0
+		Bitplane 0 addr: 0x50c00
+		Bitplane 1 addr: 0x44400
+		Bitplane 2 addr: 0x37c00
+		Bitplane 3 addr: 0x2b400
+		Bitplane 4 addr: 0x1ec00
+	Block end: bitmapDump(), time:   7.577 ms
+	Block begin: paletteLoad(szFileName: data/amidb32.plt, pPalette: 0x27b4a8, ubMaxLength: 32)
+		 Color count: 32
+	Block end: paletteLoad(), time:   5.894 ms
+	Block begin: bitmapCreateFromFile(szFileName: data/tiles.bm)
+		Addr: 0x26beb8
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 2560, ubDepth: 5, ubFlags: 0)
+			addr: 0x281a90
+		Block end: bitmapCreate(), time:  14.840 ms
+		Dimensions: 32x2560@5BPP, unused: 0 0
+	Block end: bitmapCreateFromFile(), time:  30.734 ms
+	Block begin: bobUniqueCreate(szBitmapPath: data/silohighlight.bm, szMaskPath: data/silohighlight.msk, uwFrameHeight: 0, uwFrameIdx: 0)
+		Block begin: bitmapCreateFromFile(szFileName: data/silohighlight.bm)
+			Addr: 0x26beb8
+			Block begin: bitmapCreate(uwWidth: 32, uwHeight: 32, ubDepth: 5, ubFlags: 0)
+				addr: 0x281ac8
+			Block end: bitmapCreate(), time:  18.636 ms
+			Dimensions: 32x32@5BPP, unused: 0 0
+		Block end: bitmapCreateFromFile(), time:  29.913 ms
+		Block begin: bitmapMaskCreate(szFile: data/silohighlight.msk)
+			Addr: 0x21f338
+			Data addr: 0x6cf80
+		Block end: bitmapMaskCreate(), time:  10.687 ms
+		Block begin: bobCreate(pBitmap: 0x281ac8, pMask: 0x21f338, uwFrameHeight: 32, uwFrameIdx: 0)
+			Addr: 0x281a10
+			Block begin: bitmapCreate(uwWidth: 32, uwHeight: 32, ubDepth: 5, ubFlags: 0)
+				addr: 0x281ba8
+			Block end: bitmapCreate(), time:  14.476 ms
+		Block end: bobCreate(), time:  24.217 ms
+	Block end: bobUniqueCreate(), time:  77.890 ms
+	Block begin: mapCreate(pVPort: 0x27b478, pTileset: 0x281a90, szPath: data/maps/test.txt)...OK, time: 211.511 ms
+	Block begin: bunkerCreate()
+		Block begin: viewCreate(uwFlags: 1)
+			addr: 0x296f50
+			Block begin: copListCreate()
+				Addr: 0x2e8b40
+			Block end: copListCreate(), time:   8.517 ms
+		Block end: viewCreate(), time:  16.390 ms
+		Block begin: vPortCreate(pView: 0x296f50, uwWidth: 320, uwHeight: 256, ubBPP: 5, uwFlags: 0)
+			Addr: 0x2e9d50
+			Offsets: 0x0
+			No prev VPorts - added to head
+		Block end: vPortCreate(), time:   8.023 ms
+		Block begin: simpleBufferManagerCreate(pVPort: 0x2e9d50, uwBoundWidth: 320, uwBoundHeight: 256)
+			Addr: 0x2e9e00
+			Bounds: 320x256
+			Block begin: bitmapCreate(uwWidth: 320, uwHeight: 256, ubDepth: 5, ubFlags: 1)
+				addr: 0x2ea7d8
+			Block end: bitmapCreate(), time:  27.805 ms
+			Block begin: cameraCreate(pVPort: 0x2e9d50, uwPosX: 0, uwPosY: 0, uwMaxX: 320, uwMaxY: 256)
+				Addr: 0x2ea860
+				Block begin: cameraReset(pManager: 0x2ea860, uwStartX: 0, uwStartY: 0, uwWidth: 320, uwHeight: 256)
+					Camera max coord: 0,0
+				Block end: cameraReset(), time: 909.6 us
+				Manager 0x2ea860 attached to head of VP 0x2e9d50
+			Block end: cameraCreate(), time:  11.270 ms
+			Block begin: copBlockCreate(pCopList: 0x2e8b40, uwMaxCmds: 15, uwWaitX: 0, uwWaitY: 43)
+				pAddr: 0x2ea890
+				Head: 0
+				Added as head, next: 0
+			Block end: copBlockCreate(), time:  11.807 ms
+			Block begin: simpleBufferSetBitmap(pManager: 0x2e9e00, pBitMap: 0x2ea7d8)
+				Modulo: 0
+				No X scroll
+			Block end: simplebufferSetBitmap(), time:   1.511 ms
+			Manager 0x2e9e00 attached after manager 0x2ea860 of VP 0x2e9d50
+		Block end: simpleBufferManagerCreate(), time:  79.130 ms
+		Allocated buffer
+		Block begin: paletteLoad(szFileName: data/amidb32.plt, pPalette: 0x2ea798, ubMaxLength: 32)
+			 Color count: 32
+		Block end: paletteLoad(), time:   8.532 ms
+		Block begin: bitmapCreateFromFile(szFileName: data/bunker/dirt.bm)
+			Addr: 0x26beb8
+			Block begin: bitmapCreate(uwWidth: 32, uwHeight: 128, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ea968
+			Block end: bitmapCreate(), time:  17.165 ms
+			Dimensions: 32x128@5BPP, unused: 0 0
+		Block end: bitmapCreateFromFile(), time:  35.491 ms
+		Block begin: bitmapDestroy(pBitMap: 0x2ea968)...OK, time:  12.118 ms
+		Block begin: bobUniqueCreate(szBitmapPath: data/bunker/hangar.bm, szMaskPath: data/bunker/hangar.msk, uwFrameHeight: 0, uwFrameIdx: 0)
+			Block begin: bitmapCreateFromFile(szFileName: data/bunker/hangar.bm)
+				Addr: 0x26beb8
+				Block begin: bitmapCreate(uwWidth: 144, uwHeight: 105, ubDepth: 5, ubFlags: 0)
+					addr: 0x2ea968
+				Block end: bitmapCreate(), time:  16.930 ms
+				Dimensions: 144x105@5BPP, unused: 0 0
+			Block end: bitmapCreateFromFile(), time:  37.573 ms
+			Block begin: bitmapMaskCreate(szFile: data/bunker/hangar.msk)
+				Addr: 0x21f548
+				Data addr: 0x7bf88
+			Block end: bitmapMaskCreate(), time:  18.662 ms
+			Block begin: bobCreate(pBitmap: 0x2ea968, pMask: 0x21f548, uwFrameHeight: 105, uwFrameIdx: 0)
+				Addr: 0x2eaa50
+				Block begin: bitmapCreate(uwWidth: 144, uwHeight: 105, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eaa68
+				Block end: bitmapCreate(), time:  17.355 ms
+			Block end: bobCreate(), time:  27.334 ms
+		Block end: bobUniqueCreate(), time:  97.030 ms
+		Block begin: bobUniqueDestroy(pBob: 0x2eaa50)
+			Block begin: bitmapDestroy(pBitMap: 0x2ea968)...OK, time:  13.714 ms
+			Block begin: bitmapMaskDestroy(pMask: 0x140)...OK, time:   4.840 ms
+			Block begin: bobDestroy(pBob: 0x2eaa50)
+				Block begin: bitmapDestroy(pBitMap: 0x2eaa68)...OK, time:  16.192 ms
+			Block end: bobDestroy(), time:  23.639 ms
+		Block end: bobUniqueDestroy(), time:  58.502 ms
+		Block begin: bobUniqueCreate(szBitmapPath: data/bunker/surface.bm, szMaskPath: data/bunker/surface.msk, uwFrameHeight: 32, uwFrameIdx: 0)
+			Block begin: bitmapCreateFromFile(szFileName: data/bunker/surface.bm)
+				Addr: 0x26beb8
+				Block begin: bitmapCreate(uwWidth: 64, uwHeight: 96, ubDepth: 5, ubFlags: 0)
+					addr: 0x2ea968
+				Block end: bitmapCreate(), time:  18.299 ms
+				Dimensions: 64x96@5BPP, unused: 0 0
+			Block end: bitmapCreateFromFile(), time:  39.914 ms
+			Block begin: bitmapMaskCreate(szFile: data/bunker/surface.msk)
+				Addr: 0x21f548
+				Data addr: 0x7a980
+			Block end: bitmapMaskCreate(), time:  19.312 ms
+			Block begin: bobCreate(pBitmap: 0x2ea968, pMask: 0x21f548, uwFrameHeight: 32, uwFrameIdx: 0)
+				Addr: 0x2eab40
+				Block begin: bitmapCreate(uwWidth: 64, uwHeight: 32, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eab58
+				Block end: bitmapCreate(), time:  19.020 ms
+			Block end: bobCreate(), time:  28.472 ms
+		Block end: bobUniqueCreate(), time: 102.706 ms
+		Block begin: bobUniqueDestroy(pBob: 0x2eab40)
+			Block begin: bitmapDestroy(pBitMap: 0x2ea968)...OK, time:  15.825 ms
+			Block begin: bitmapMaskDestroy(pMask: 0x140)...OK, time:   4.656 ms
+			Block begin: bobDestroy(pBob: 0x2eab40)
+				Block begin: bitmapDestroy(pBitMap: 0x2eab58)...OK, time:  39.382 ms
+			Block end: bobDestroy(), time:  49.754 ms
+		Block end: bobUniqueDestroy(), time:  86.262 ms
+		Block begin: bobUniqueCreate(szBitmapPath: data/bunker/lamp.bm, szMaskPath: data/bunker/lamp.msk, uwFrameHeight: 0, uwFrameIdx: 0)
+			Block begin: bitmapCreateFromFile(szFileName: data/bunker/lamp.bm)
+				Addr: 0x2eab40
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 12, ubDepth: 5, ubFlags: 0)
+					addr: 0x2ea968
+				Block end: bitmapCreate(), time:  17.125 ms
+				Dimensions: 32x12@5BPP, unused: 0 0
+			Block end: bitmapCreateFromFile(), time:  34.520 ms
+			Block begin: bitmapMaskCreate(szFile: data/bunker/lamp.msk)
+				Addr: 0x21f548
+				Data addr: 0x79b10
+			Block end: bitmapMaskCreate(), time:  21.343 ms
+			Block begin: bobCreate(pBitmap: 0x2ea968, pMask: 0x21f548, uwFrameHeight: 12, uwFrameIdx: 0)
+				Addr: 0x2eac30
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 12, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eac48
+				Block end: bitmapCreate(), time:  16.725 ms
+			Block end: bobCreate(), time:  26.309 ms
+		Block end: bobUniqueCreate(), time:  97.416 ms
+		Block begin: bobUniqueCreate(szBitmapPath: data/bunker/platform.bm, szMaskPath: data/bunker/platform.msk, uwFrameHeight: 0, uwFrameIdx: 0)
+			Block begin: bitmapCreateFromFile(szFileName: data/bunker/platform.bm)
+				Addr: 0x2eab40
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 6, ubDepth: 5, ubFlags: 0)
+					addr: 0x2ead00
+				Block end: bitmapCreate(), time:  18.646 ms
+				Dimensions: 32x6@5BPP, unused: 0 0
+			Block end: bitmapCreateFromFile(), time:  32.388 ms
+			Block begin: bitmapMaskCreate(szFile: data/bunker/platform.msk)
+				Addr: 0x21f5f8
+				Data addr: 0x79ca8
+			Block end: bitmapMaskCreate(), time:  15.002 ms
+			Block begin: bobCreate(pBitmap: 0x2ead00, pMask: 0x21f5f8, uwFrameHeight: 6, uwFrameIdx: 0)
+				Addr: 0x2ead88
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 6, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eada0
+				Block end: bitmapCreate(), time:  16.533 ms
+			Block end: bobCreate(), time:  25.224 ms
+		Block end: bobUniqueCreate(), time:  86.238 ms
+		Block begin: bunkerVehiclesCreate()
+			Block begin: bitmapCreateFromFile(szFileName: data/bunker/vehicles_green.bm)
+				Addr: 0x2eab40
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 64, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eae58
+				Block end: bitmapCreate(), time:  18.709 ms
+				Dimensions: 32x64@5BPP, unused: 0 0
+			Block end: bitmapCreateFromFile(), time:  34.674 ms
+			Block begin: bitmapMaskCreate(szFile: data/bunker/vehicles.msk)
+				Addr: 0x21fca8
+				Data addr: 0x7a238
+			Block end: bitmapMaskCreate(), time:  14.020 ms
+			Block begin: bobCreate(pBitmap: 0x2eae58, pMask: 0x21fca8, uwFrameHeight: 16, uwFrameIdx: 0)
+				Addr: 0x2eaee0
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 16, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eaef8
+				Block end: bitmapCreate(), time:  16.084 ms
+			Block end: bobCreate(), time:  24.531 ms
+			Block begin: bobCreate(pBitmap: 0x2eae58, pMask: 0x21fca8, uwFrameHeight: 16, uwFrameIdx: 1)
+				Addr: 0x2eaf80
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 16, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eafa8
+				Block end: bitmapCreate(), time:  16.332 ms
+			Block end: bobCreate(), time:  25.160 ms
+			Block begin: bobCreate(pBitmap: 0x2eae58, pMask: 0x21fca8, uwFrameHeight: 16, uwFrameIdx: 2)
+				Addr: 0x2eb030
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 16, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eb058
+				Block end: bitmapCreate(), time:  17.293 ms
+			Block end: bobCreate(), time:  25.819 ms
+			Block begin: bobCreate(pBitmap: 0x2eae58, pMask: 0x21fca8, uwFrameHeight: 16, uwFrameIdx: 3)
+				Addr: 0x2eb0e0
+				Block begin: bitmapCreate(uwWidth: 32, uwHeight: 16, ubDepth: 5, ubFlags: 0)
+					addr: 0x2eb108
+				Block end: bitmapCreate(), time:  16.410 ms
+			Block end: bobCreate(), time:  26.407 ms
+		Block end: bunkerVehiclesCreate(), time: 179.416 ms
+	Block end: bunkerCreate(), time: 982.501 ms
+	Block begin: bitmapCreateFromFile(szFileName: data/vehicles/tank.bm)
+		Addr: 0x26beb8
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 2048, ubDepth: 5, ubFlags: 0)
+			addr: 0x2eb1c0
+		Block end: bitmapCreate(), time:  17.201 ms
+		Dimensions: 32x2048@5BPP, unused: 0 0
+	Block end: bitmapCreateFromFile(), time:  39.876 ms
+	Block begin: bitmapMaskCreate(szFile: data/vehicles/tank.msk)
+		Addr: 0x21fe08
+		Data addr: 0x84838
+	Block end: bitmapMaskCreate(), time:  15.875 ms
+	Block begin: bitmapCreateFromFile(szFileName: data/vehicles/tankturret.bm)
+		Addr: 0x26beb8
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 2048, ubDepth: 5, ubFlags: 0)
+			addr: 0x2eb278
+		Block end: bitmapCreate(), time:  16.622 ms
+		Dimensions: 32x2048@5BPP, unused: 0 0
+	Block end: bitmapCreateFromFile(), time:  36.995 ms
+	Block begin: bitmapMaskCreate(szFile: data/vehicles/tankturret.msk)
+		Addr: 0x21feb8
+		Data addr: 0x90838
+	Block end: bitmapMaskCreate(), time:  19.113 ms
+	Block begin: bitmapCreateFromFile(szFileName: data/vehicles/jeep.bm)
+		Addr: 0x26beb8
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 2048, ubDepth: 5, ubFlags: 0)
+			addr: 0x2eb320
+		Block end: bitmapCreate(), time:  18.428 ms
+		Dimensions: 32x2048@5BPP, unused: 0 0
+	Block end: bitmapCreateFromFile(), time:  38.531 ms
+	Block begin: bitmapMaskCreate(szFile: data/vehicles/jeep.msk)
+		Addr: 0x220228
+		Data addr: 0x9c838
+	Block end: bitmapMaskCreate(), time:  16.703 ms
+	Block begin: projectileListCreate(ubProjectileCount: 20)
+		Block begin: bitmapCreateFromFile(szFileName: data/projectiles/cannon.bm)
+			Addr: 0x26beb8
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 512, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb3c8
+			Block end: bitmapCreate(), time:  18.071 ms
+			Dimensions: 16x512@5BPP, unused: 0 0
+		Block end: bitmapCreateFromFile(), time:  37.636 ms
+		Block begin: bitmapMaskCreate(szFile: data/projectiles/cannon.msk)
+			Addr: 0x2275a8
+			Data addr: 0xacfe8
+		Block end: bitmapMaskCreate(), time:  16.792 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb670
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb698
+			Block end: bitmapCreate(), time:  17.677 ms
+		Block end: bobCreate(), time:  26.610 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb720
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb748
+			Block end: bitmapCreate(), time:  16.587 ms
+		Block end: bobCreate(), time:  26.439 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb7d0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb7f8
+			Block end: bitmapCreate(), time:  18.827 ms
+		Block end: bobCreate(), time:  27.208 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb880
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb8a8
+			Block end: bitmapCreate(), time:  16.524 ms
+		Block end: bobCreate(), time:  25.158 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb930
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eb958
+			Block end: bitmapCreate(), time:  19.849 ms
+		Block end: bobCreate(), time:  28.679 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eb9e0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2eba08
+			Block end: bitmapCreate(), time:  17.079 ms
+		Block end: bobCreate(), time:  25.821 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2eba90
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebab8
+			Block end: bitmapCreate(), time:  17.251 ms
+		Block end: bobCreate(), time:  28.295 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebb40
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebb68
+			Block end: bitmapCreate(), time:  19.151 ms
+		Block end: bobCreate(), time:  27.975 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebbf0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebc18
+			Block end: bitmapCreate(), time:  17.427 ms
+		Block end: bobCreate(), time:  25.891 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebca0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebcc8
+			Block end: bitmapCreate(), time:  16.530 ms
+		Block end: bobCreate(), time:  27.730 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebd50
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebd78
+			Block end: bitmapCreate(), time:  17.757 ms
+		Block end: bobCreate(), time:  26.054 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebe00
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebe28
+			Block end: bitmapCreate(), time:  16.552 ms
+		Block end: bobCreate(), time:  25.864 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebeb0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebed8
+			Block end: bitmapCreate(), time:  17.440 ms
+		Block end: bobCreate(), time:  26.967 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ebf60
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ebf88
+			Block end: bitmapCreate(), time:  16.460 ms
+		Block end: bobCreate(), time:  25.223 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec010
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec038
+			Block end: bitmapCreate(), time:  16.522 ms
+		Block end: bobCreate(), time:  25.350 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec0c0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec0e8
+			Block end: bitmapCreate(), time:  16.910 ms
+		Block end: bobCreate(), time:  25.461 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec170
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec198
+			Block end: bitmapCreate(), time:  16.037 ms
+		Block end: bobCreate(), time:  26.214 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec220
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec248
+			Block end: bitmapCreate(), time:  17.209 ms
+		Block end: bobCreate(), time:  25.674 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec2d0
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec2f8
+			Block end: bitmapCreate(), time:  18.012 ms
+		Block end: bobCreate(), time:  27.499 ms
+		Block begin: bobCreate(pBitmap: 0x2eb3c8, pMask: 0x2275a8, uwFrameHeight: 8, uwFrameIdx: 0)
+			Addr: 0x2ec380
+			Block begin: bitmapCreate(uwWidth: 16, uwHeight: 8, ubDepth: 5, ubFlags: 0)
+				addr: 0x2ec3a8
+			Block end: bitmapCreate(), time:  19.212 ms
+		Block end: bobCreate(), time:  28.137 ms
+	Block end: projectileListCreate(), time: 706.212 ms
+	Block begin: viewLoad(pView: 0x268610)...OK, time:  35.364 ms
+Block end: gsGameCreate(), time: 6.010 s
+Block begin: bunkerShow()
+	Drawing platform & lamp
+	Drawing vehicles
+	Block begin: viewLoad(pView: 0x296f50)...OK, time:  29.129 ms
+Block end: bunkerShow(), time:  38.408 ms
+Block begin: vehicleCreate(ubVehicleType: 0)
+	Block begin: bobCreate(pBitmap: 0x2eb1c0, pMask: 0x21fe08, uwFrameHeight: 32, uwFrameIdx: 16)
+		Addr: 0x2ec648
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 32, ubDepth: 5, ubFlags: 0)
+			addr: 0x2ec670
+		Block end: bitmapCreate(), time:  17.490 ms
+	Block end: bobCreate(), time:  26.440 ms
+	Block begin: bobCreate(pBitmap: 0x2eb278, pMask: 0x21feb8, uwFrameHeight: 32, uwFrameIdx: 16)
+		Addr: 0x2ec6f8
+		Block begin: bitmapCreate(uwWidth: 32, uwHeight: 32, ubDepth: 5, ubFlags: 0)
+			addr: 0x2ec720
+		Block end: bitmapCreate(), time:  18.252 ms
+	Block end: bobCreate(), time:  27.463 ms
+Block end: vehicleCreate(), time:  68.605 ms
+Block begin: bunkerHide()
+	Block begin: viewLoad(pView: 0x268610)...OK, time:  34.276 ms
+Block end: bunkerHide(), time:  41.224 ms
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+processInput c/z
+keyChecks
+actions
+processInput steers
+steer fwd: curr pos
+steer fwd: end
+steer angle
+steer collision
+steer turret
+steer fire
+processInput esc
+Block begin: bunkerDestroy()
+	Block begin: viewLoad(pView: 0)...OK, time:  35.556 ms
+	Block begin: viewDestroy(pView: 0x296f50)
+		Block begin: vPortDestroy(pVPort: 0x2e9d50)
+			Parent extView: 0x296f50
+			found VP: 0x2e9d50... gotcha!
+			Block begin: Destroying managers
+				Destroying manager 128 @addr: 0x2ea860
+				cameraManagerDestroy...OK! 
+				Destroying manager 0 @addr: 0x2e9e00
+				Destroying bitmap...
+				Block begin: bitmapDestroy(pBitMap: 0x2ea7d8)...OK, time:  18.029 ms
+				Freeing mem...
+				Done
+			Block end: Destroying managers, time:  40.282 ms
+		Block end: vPortDestroy(), time:  52.476 ms
+		Freeing copperlists...
+		Block begin: copListDestroy(pCopList: 0x2e8b40)
+			Block begin: copBlockDestroy(pCopList: 0x2e8b40, pBlock: 0x2ea890)...OK, time:   5.615 ms
+		Block end: copListDestroy(), time:  23.938 ms
+	Block end: viewDestroy(), time:  87.481 ms
+	Block begin: bobUniqueDestroy(pBob: 0x2eac30)
+		Block begin: bitmapDestroy(pBitMap: 0x2ea968)...OK, time:  15.666 ms
+		Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   5.313 ms
+		Block begin: bobDestroy(pBob: 0x2eac30)
+			Block begin: bitmapDestroy(pBitMap: 0x2eac48)...OK, time:  15.354 ms
+		Block end: bobDestroy(), time:  23.324 ms
+	Block end: bobUniqueDestroy(), time:  56.228 ms
+	Block begin: bobUniqueDestroy(pBob: 0x2ead88)
+		Block begin: bitmapDestroy(pBitMap: 0x2ead00)...OK, time:  15.270 ms
+		Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   5.608 ms
+		Block begin: bobDestroy(pBob: 0x2ead88)
+			Block begin: bitmapDestroy(pBitMap: 0x2eada0)...OK, time:  15.174 ms
+		Block end: bobDestroy(), time:  21.899 ms
+	Block end: bobUniqueDestroy(), time:  55.623 ms
+	Block begin: bobDestroy(pBob: 0x2eaee0)
+		Block begin: bitmapDestroy(pBitMap: 0x2eaef8)...OK, time:  14.148 ms
+	Block end: bobDestroy(), time:  21.258 ms
+	Block begin: bobDestroy(pBob: 0x2eaf80)
+		Block begin: bitmapDestroy(pBitMap: 0x2eafa8)...OK, time:  14.619 ms
+	Block end: bobDestroy(), time:  23.212 ms
+	Block begin: bobDestroy(pBob: 0x2eb030)
+		Block begin: bitmapDestroy(pBitMap: 0x2eb058)...OK, time:  14.145 ms
+	Block end: bobDestroy(), time:  21.274 ms
+	Block begin: bobDestroy(pBob: 0x2eb0e0)
+		Block begin: bitmapDestroy(pBitMap: 0x2eb108)...OK, time:  15.592 ms
+	Block end: bobDestroy(), time:  23.911 ms
+	Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   5.310 ms
+	Block begin: bitmapDestroy(pBitMap: 0x2eae58)...OK, time:  16.544 ms
+Block end: BunkerDestroy(), time: 390.440 ms
+Block begin: projectileListDestroy()...OK, time:   3.078 ms
+Block begin: vehicleTypesDestroy()
+	Block begin: bitmapDestroy(pBitMap: 0x2eb1c0)...OK, time:  14.200 ms
+	Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   4.640 ms
+	Block begin: bitmapDestroy(pBitMap: 0x2eb278)...OK, time:  15.811 ms
+	Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   6.145 ms
+	Block begin: bitmapDestroy(pBitMap: 0x2eb320)...OK, time:  14.302 ms
+	Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   4.565 ms
+Block end: vehicleTypesDestroy(), time:  86.948 ms
+Block begin: viewDestroy(pView: 0x268610)
+	Block begin: vPortDestroy(pVPort: 0x27b478)
+		Parent extView: 0x268610
+		found VP: 0x27b478... gotcha!
+		Block begin: Destroying managers
+			Destroying manager 128 @addr: 0x27b708
+			cameraManagerDestroy...OK! 
+			Destroying manager 0 @addr: 0x27b530
+			Destroying bitmap...
+			Block begin: bitmapDestroy(pBitMap: 0x27b6b8)...OK, time:  16.572 ms
+			Freeing mem...
+			Done
+		Block end: Destroying managers, time:  32.645 ms
+	Block end: vPortDestroy(), time:  43.556 ms
+	Block begin: vPortDestroy(pVPort: 0x27b8a0)
+		Parent extView: 0x268610
+		found VP: 0x27b8a0... gotcha!
+		Block begin: Destroying managers
+			Destroying manager 128 @addr: 0x27bd88
+			cameraManagerDestroy...OK! 
+			Destroying manager 0 @addr: 0x27b928
+			Destroying bitmap...
+			Block begin: bitmapDestroy(pBitMap: 0x27ba88)...OK, time:  14.884 ms
+			Freeing mem...
+			Done
+		Block end: Destroying managers, time:  30.080 ms
+	Block end: vPortDestroy(), time:  41.614 ms
+	Freeing copperlists...
+	Block begin: copListDestroy(pCopList: 0x268830)
+		Block begin: copBlockDestroy(pCopList: 0x268830, pBlock: 0x27b740)...OK, time:   5.626 ms
+		Block begin: copBlockDestroy(pCopList: 0x268830, pBlock: 0x27bb88)...OK, time:   5.220 ms
+	Block end: copListDestroy(), time:  37.425 ms
+Block end: viewDestroy(), time: 138.550 ms
+Block begin: bobUniqueDestroy(pBob: 0x281a10)
+	Block begin: bitmapDestroy(pBitMap: 0x281ac8)...OK, time:  14.992 ms
+	Block begin: bitmapMaskDestroy(pMask: 0xffff)...OK, time:   4.815 ms
+	Block begin: bobDestroy(pBob: 0x281a10)
+		Block begin: bitmapDestroy(pBitMap: 0x281ba8)...OK, time:  16.683 ms
+	Block end: bobDestroy(), time:  23.920 ms
+Block end: bobUniqueDestroy(), time:  58.380 ms
+Block begin: bitmapDestroy(pBitMap: 0x281a90)...OK, time:  16.604 ms
+Block begin: mapDestroy()...OK, time:  56.565 ms
+Block begin: bobDestroy(pBob: 0x2ec648)
+	Block begin: bitmapDestroy(pBitMap: 0x2ec670)...OK, time:  13.030 ms
+Block end: bobDestroy(), time:  22.103 ms
+Block begin: bobDestroy(pBob: 0x2ec6f8)
+	Block begin: bitmapDestroy(pBitMap: 0x2ec720)...OK, time:  14.053 ms
+Block end: bobDestroy(), time:  21.241 ms
+Block begin: copDestroy()
+	Block begin: copListDestroy(pCopList: 0x2200b0)...OK, time:  11.036 ms
+Block end: copDestroy(), time:  15.974 ms
+Block begin: blitManagerDestroy
+	blitPos: 0
+	Block begin: blitQueueDisable...OK, time:  41.2 us
+Block end: blitManagerDestroy, time:  19.184 ms
+Block begin: windowDestroy()
+	Closing intuition window...OK
+	Closing intuition screen...OK
+	Closing graphics.library...OK
+	Closing intuition.library...OK
+Block end: windowDestroy(), time:  39.589 ms

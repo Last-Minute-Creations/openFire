@@ -1,0 +1,4 @@
+_arch/*
+_res/*
+*.lnk
+src/tmp/*
