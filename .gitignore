@@ -2,3 +2,5 @@ _arch/*
 _res/*
 *.lnk
 src/tmp/*
+*.log
+debug/*
