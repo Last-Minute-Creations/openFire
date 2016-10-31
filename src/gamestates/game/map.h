@@ -2,10 +2,6 @@
 #define GUARD_OF_GAMESTATES_GAME_MAP_H
 
 #define MAP_TILE_SIZE 5
-#define MAP_TILE_WIDTH 20
-#define MAP_TILE_HEIGHT 20
-#define MAP_WIDTH (MAP_TILE_WIDTH << MAP_TILE_SIZE)
-#define MAP_HEIGHT (MAP_TILE_HEIGHT << MAP_TILE_SIZE)
 
 #define MAP_LOGIC_WATER   '.'
 #define MAP_LOGIC_DIRT    ' '
@@ -22,6 +18,10 @@
 
 #include <ace/utils/extview.h>
 #include <ace/utils/bitmap.h>
+
+extern UWORD g_uwMapWidth, g_uwMapHeight;
+extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
+extern char g_szMapName[256];
 
 void mapCreate(
 	IN tVPort *pVPort,

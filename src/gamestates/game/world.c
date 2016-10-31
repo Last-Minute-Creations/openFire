@@ -17,18 +17,14 @@ UBYTE g_ubSiloHighlighted;
 UBYTE worldProcessInput(void) {
 	tSteerRequest sReq;
 	
-	logWrite("processInput esc\n");
 	if (keyUse(KEY_ESCAPE)) {
 		gameClose();
 		return 0;
 	}
-	logWrite("processInput c/z\n");
+
 	if(keyUse(KEY_C))
 		bitmapSaveBMP(g_pGameBfr->pBuffer, g_pGameMainVPort->pPalette, "bufDump.bmp");
-	if(keyUse(KEY_Z))
-		copDumpBlocks();
 	
-	logWrite("keyChecks\n");
 	sReq.ubForward     = keyCheck(OF_KEY_FORWARD);
 	sReq.ubBackward    = keyCheck(OF_KEY_BACKWARD);
 	sReq.ubLeft        = keyCheck(OF_KEY_LEFT);
@@ -39,13 +35,12 @@ UBYTE worldProcessInput(void) {
 	sReq.ubAction2     = keyCheck(OF_KEY_ACTION2);
 	sReq.ubAction3     = keyCheck(OF_KEY_ACTION3);
 	
-	logWrite("actions\n");
 	if(sReq.ubAction1 && g_ubSiloHighlighted) {
 		playerHideInBunker(g_pLocalPlayer);
 		bunkerShow();
 		return 0;
 	}
-	logWrite("processInput steers\n");
+
 	switch(g_pLocalPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
 			vehicleSteerTank(g_pLocalPlayer->pCurrentVehicle, &sReq);

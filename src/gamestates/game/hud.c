@@ -9,13 +9,11 @@ tSimpleBufferManager *s_pHudBfr;
 
 void hudCreate(void) {
 	s_pHudVPort = vPortCreate(g_pGameView, WINDOW_SCREEN_WIDTH, 64, GAME_BPP, 0);
-	s_pHudBfr = simpleBufferCreate(s_pHudVPort, WINDOW_SCREEN_WIDTH, 64);
+	s_pHudBfr = simpleBufferCreate(s_pHudVPort, WINDOW_SCREEN_WIDTH, 64, 0);
 	
 	// Initial draw on buffer
-	blitRect(s_pHudBfr->pBuffer, 0, 0, 320, 1, 31);
-	blitRect(s_pHudBfr->pBuffer, 0, 63, 320, 1, 31);
-	blitRect(s_pHudBfr->pBuffer, 0, 0, 1, 64, 31);
-	blitRect(s_pHudBfr->pBuffer, 0, 319, 1, 64, 31);
+	blitRect(s_pHudBfr->pBuffer, 0, 0, 320, 64, 31);
+	blitRect(s_pHudBfr->pBuffer, 1, 1, 318, 62, 0);
 }
 
 void hudDestroy(void) {

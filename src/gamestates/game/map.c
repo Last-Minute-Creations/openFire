@@ -26,6 +26,9 @@
 #define MAP_TILE_TURRET 64
 
 UBYTE **g_pMap;
+UWORD g_uwMapWidth, g_uwMapHeight;
+UWORD g_uwMapTileWidth, g_uwMapTileHeight;
+char g_szMapName[256];
 
 UBYTE isWater(UBYTE ubMapTile) {
 	return ubMapTile == MAP_LOGIC_WATER;
@@ -65,11 +68,11 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	ubTileType = g_pMap[ubX][ubY];
 	if(ubX && checkFn(g_pMap[ubX+1][ubY]))
 		ubOut |= ubE;
-	if(ubX-1 < MAP_TILE_WIDTH && checkFn(g_pMap[ubX-1][ubY]))
+	if(ubX-1 < g_uwMapTileWidth && checkFn(g_pMap[ubX-1][ubY]))
 		ubOut |= ubW;
 	if(ubY && checkFn(g_pMap[ubX][ubY-1]))
 		ubOut |= ubN;
-	if(ubY-1 < MAP_TILE_HEIGHT && checkFn(g_pMap[ubX][ubY+1]))
+	if(ubY-1 < g_uwMapHeight && checkFn(g_pMap[ubX][ubY+1]))
 		ubOut |= ubS;
 	return ubOut;
 }
@@ -79,23 +82,29 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
 	tBitMap *pBuffer;
+	char szHeaderBfr[256];
 	
 	logBlockBegin("mapCreate(pVPort: %p, pTileset: %p, szPath: %s)", pVPort, pTileset, szPath);
 
 	pManager = (tSimpleBufferManager*)vPortGetManager(pVPort, VPM_SCROLL);
 	pBuffer = pManager->pBuffer;
 	
-	// First pass - mem alloc
+	// First pass - header & mem alloc
+	pMapFile = fopen(szPath, "rb");
 	if(!pMapFile)
 		logWrite("ERR: File doesn't exist: %s\n", szPath);
-	g_pMap = memAllocFast(sizeof(UBYTE*) * MAP_TILE_WIDTH);
-	for(x = 0; x != MAP_TILE_WIDTH; ++x)
-		g_pMap[x] = memAllocFast(sizeof(UBYTE) * MAP_TILE_HEIGHT);
+	fgets(g_szMapName, 256, pMapFile);
+	fscanf(pMapFile, "%hux%hu\n", &g_uwMapTileWidth, &g_uwMapTileHeight);
+	logWrite("Dimensions: %u, %u\n", g_uwMapTileWidth, g_uwMapTileHeight);
+	g_uwMapWidth = g_uwMapTileWidth << MAP_TILE_SIZE;
+	g_uwMapHeight = g_uwMapTileHeight << MAP_TILE_SIZE;
+	g_pMap = memAllocFast(sizeof(UBYTE*) * g_uwMapTileWidth);
+	for(x = 0; x != g_uwMapTileWidth; ++x)
+		g_pMap[x] = memAllocFast(sizeof(UBYTE) * g_uwMapTileHeight);
 	
-	// Second pass - read from file
-	pMapFile = fopen(szPath, "rb");
-	for(y = 0; y != MAP_TILE_HEIGHT; ++y) {
-		for(x = 0; x != MAP_TILE_WIDTH; ++x) {
+	// Read map data
+	for(y = 0; y != g_uwMapTileHeight; ++y) {
+		for(x = 0; x != g_uwMapTileWidth; ++x) {
 			do
 				fread(&ubTileIdx, 1, 1, pMapFile);
 				while(ubTileIdx == '\n' || ubTileIdx == '\r');
@@ -105,8 +114,8 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	fclose(pMapFile);
 	
 	// Third pass - generate graphics based on logic tiles
-	for(x = 0; x != MAP_TILE_WIDTH; ++x) {
-		for(y = 0; y != MAP_TILE_HEIGHT; ++y) {
+	for(x = 0; x != g_uwMapTileWidth; ++x) {
+		for(y = 0; y != g_uwMapTileHeight; ++y) {
 			ubTileIdx = g_pMap[x][y];
 			switch(ubTileIdx) {
 				case MAP_LOGIC_WATER:
@@ -159,9 +168,9 @@ void mapDestroy(void) {
 	UBYTE x;
 	
 	logBlockBegin("mapDestroy()");
-	for(x = 0; x != MAP_TILE_WIDTH; ++x) {
-		memFree(g_pMap[x], sizeof(UBYTE) * MAP_TILE_HEIGHT);	
+	for(x = 0; x != g_uwMapTileWidth; ++x) {
+		memFree(g_pMap[x], sizeof(UBYTE) * g_uwMapTileHeight);	
 	}
-	memFree(g_pMap, sizeof(UBYTE*) * MAP_TILE_WIDTH);
+	memFree(g_pMap, sizeof(UBYTE*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");
 }

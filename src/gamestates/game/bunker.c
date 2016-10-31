@@ -106,7 +106,7 @@ void bunkerCreate(void) {
 	logBlockBegin("bunkerCreate()");
 	s_pBunkerView = viewCreate(V_GLOBAL_CLUT);
 	s_pBunkerVPort = vPortCreate(s_pBunkerView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, GAME_BPP, 0);
-	s_pBunkerBfr = simpleBufferCreate(s_pBunkerVPort, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+	s_pBunkerBfr = simpleBufferCreate(s_pBunkerVPort, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
 	if(!s_pBunkerBfr) {
 		logWrite("Buffer creation failed");
 		gameClose();

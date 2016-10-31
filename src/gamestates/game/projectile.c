@@ -38,8 +38,20 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 }
 
 void projectileListDestroy() {
+	UBYTE i;
+	
 	logBlockBegin("projectileListDestroy()");
+	
+	// Dealloc bobs
+	for(i = 0; i != s_ubProjectileCount; ++i) {
+		bobDestroy(s_pProjectiles[i].pBob);
+	}	
 	memFree(s_pProjectiles, s_ubProjectileCount * sizeof(tProjectile));
+	
+	// Dealloc bob bitmaps
+	bitmapDestroy(s_pCannonBitmap);
+	bitmapMaskDestroy(s_pCannonMask);
+
 	logBlockEnd("projectileListDestroy()");
 }
 

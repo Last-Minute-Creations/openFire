@@ -35,7 +35,7 @@ void gsGameCreate(void) {
 	// Prepare view & viewport
 	g_pGameView = viewCreate(V_GLOBAL_CLUT);
 	g_pGameMainVPort = vPortCreate(g_pGameView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT-64-1, GAME_BPP, 0);
-	g_pGameBfr = simpleBufferCreate(g_pGameMainVPort, MAP_WIDTH, MAP_HEIGHT);
+	g_pGameBfr = simpleBufferCreate(g_pGameMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
 	hudCreate();
 	if(!g_pGameBfr) {
 		logWrite("Buffer creation failed");
