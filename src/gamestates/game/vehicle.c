@@ -162,6 +162,8 @@ tVehicle *vehicleCreate(UBYTE ubVehicleType) {
 	else
 		pVehicle->pAuxBob = 0;
 	
+	pVehicle->ubCooldown = 0;
+	
 	logBlockEnd("vehicleCreate()");
 	return pVehicle;
 }
@@ -271,8 +273,14 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	}
 	
 	// Fire straight
-	if(pSteerRequest->ubAction1)
+	if(pVehicle->ubCooldown) {
+		--pVehicle->ubCooldown;
+	}
+	else if(pSteerRequest->ubAction1) {
 		projectileCreate(pVehicle, PROJECTILE_TYPE_CANNON);
+		pVehicle->ubCooldown = VEHICLE_TANK_COOLDOWN;
+	}
+	
 }
 
 void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {

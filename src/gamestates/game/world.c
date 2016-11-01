@@ -31,7 +31,7 @@ UBYTE worldProcessInput(void) {
 	sReq.ubRight       = keyCheck(OF_KEY_RIGHT);
 	sReq.ubTurretLeft  = keyCheck(OF_KEY_TURRET_LEFT);
 	sReq.ubTurretRight = keyCheck(OF_KEY_TURRET_RIGHT);
-	sReq.ubAction1     = keyUse(OF_KEY_ACTION1);
+	sReq.ubAction1     = keyCheck(OF_KEY_ACTION1);
 	sReq.ubAction2     = keyCheck(OF_KEY_ACTION2);
 	sReq.ubAction3     = keyCheck(OF_KEY_ACTION3);
 	

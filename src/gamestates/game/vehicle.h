@@ -17,6 +17,9 @@
 #define VEHICLE_TURRET_WIDTH 32
 #define VEHICLE_TURRET_HEIGHT 32
 
+/// Vehicle-specific constants
+#define VEHICLE_TANK_COOLDOWN 25
+
 #define PI 3.14159265358979323846264338327950288
 #define ANGLE_0    0
 #define ANGLE_45   16
@@ -70,6 +73,7 @@ typedef struct {
 	BYTE  bRotDiv;
 	UBYTE ubFuel;
 	UBYTE ubLife;
+	UBYTE ubCooldown; ///< Cooldown timer after fire
 } tVehicle;
 
 tVehicle *vehicleCreate(
