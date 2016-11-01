@@ -1,6 +1,9 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_MAP_H
 #define GUARD_OF_GAMESTATES_GAME_MAP_H
 
+#include <ace/utils/extview.h>
+#include <ace/utils/bitmap.h>
+
 #define MAP_TILE_SIZE 5
 
 #define MAP_LOGIC_WATER   '.'
@@ -16,9 +19,11 @@
 #define MAP_LOGIC_GATE1   'g'
 #define MAP_LOGIC_GATE2   'G'
 
-#include <ace/utils/extview.h>
-#include <ace/utils/bitmap.h>
-
+typedef struct {
+	UBYTE ubIdx;  ///< Tileset idx
+	UBYTE ubData; ///< Data field. For buildings/gates used as idx in obj array.
+} tTile;
+	
 extern UWORD g_uwMapWidth, g_uwMapHeight;
 extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 extern char g_szMapName[256];
@@ -31,6 +36,6 @@ void mapCreate(
 
 void mapDestroy(void);
 
-extern UBYTE **g_pMap;
+extern tTile **g_pMap;
 
 #endif

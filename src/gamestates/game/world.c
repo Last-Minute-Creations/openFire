@@ -71,7 +71,7 @@ void worldGameLoop(void) {
 	cameraCenterAt(g_pCamera, uwLocalX, uwLocalY);
 	
 	// Draw objects on map
-	if(g_pMap[uwLocalTileX][uwLocalTileY] == MAP_LOGIC_SPAWN1) {
+	if(g_pMap[uwLocalTileX][uwLocalTileY].ubIdx == MAP_LOGIC_SPAWN1) {
 		UWORD uwSiloDiffX, uwSiloDiffY;
 		
 		uwSiloDiffX = uwLocalX - (uwLocalTileX << MAP_TILE_SIZE);
@@ -88,7 +88,7 @@ void worldGameLoop(void) {
 			g_pSiloHighlight, g_pGameBfr->pBuffer,
 			uwLocalTileX << MAP_TILE_SIZE, uwLocalTileY << MAP_TILE_SIZE
 		);
-	else if(g_pMap[uwLocalTileX][uwLocalTileY] == MAP_LOGIC_WATER) {
+	else if(g_pMap[uwLocalTileX][uwLocalTileY].ubIdx == MAP_LOGIC_WATER) {
 		playerLoseVehicle(g_pLocalPlayer);
 		bunkerShow();
 		return;

@@ -25,7 +25,7 @@
 #define MAP_TILE_WALL   48
 #define MAP_TILE_TURRET 64
 
-UBYTE **g_pMap;
+tTile **g_pMap;
 UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 char g_szMapName[256];
@@ -65,14 +65,14 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	const UBYTE ubN = 1;
 	
 	ubOut = 0;
-	ubTileType = g_pMap[ubX][ubY];
-	if(ubX && checkFn(g_pMap[ubX+1][ubY]))
+	ubTileType = g_pMap[ubX][ubY].ubIdx;
+	if(ubX && checkFn(g_pMap[ubX+1][ubY].ubIdx))
 		ubOut |= ubE;
-	if(ubX-1 < g_uwMapTileWidth && checkFn(g_pMap[ubX-1][ubY]))
+	if(ubX-1 < g_uwMapTileWidth && checkFn(g_pMap[ubX-1][ubY].ubIdx))
 		ubOut |= ubW;
-	if(ubY && checkFn(g_pMap[ubX][ubY-1]))
+	if(ubY && checkFn(g_pMap[ubX][ubY-1].ubIdx))
 		ubOut |= ubN;
-	if(ubY-1 < g_uwMapHeight && checkFn(g_pMap[ubX][ubY+1]))
+	if(ubY-1 < g_uwMapHeight && checkFn(g_pMap[ubX][ubY+1].ubIdx))
 		ubOut |= ubS;
 	return ubOut;
 }
@@ -98,9 +98,9 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	logWrite("Dimensions: %u, %u\n", g_uwMapTileWidth, g_uwMapTileHeight);
 	g_uwMapWidth = g_uwMapTileWidth << MAP_TILE_SIZE;
 	g_uwMapHeight = g_uwMapTileHeight << MAP_TILE_SIZE;
-	g_pMap = memAllocFast(sizeof(UBYTE*) * g_uwMapTileWidth);
+	g_pMap = memAllocFast(sizeof(tTile*) * g_uwMapTileWidth);
 	for(x = 0; x != g_uwMapTileWidth; ++x)
-		g_pMap[x] = memAllocFast(sizeof(UBYTE) * g_uwMapTileHeight);
+		g_pMap[x] = memAllocFast(sizeof(tTile) * g_uwMapTileHeight);
 	
 	// Read map data
 	for(y = 0; y != g_uwMapTileHeight; ++y) {
@@ -108,7 +108,7 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 			do
 				fread(&ubTileIdx, 1, 1, pMapFile);
 				while(ubTileIdx == '\n' || ubTileIdx == '\r');
-			g_pMap[x][y] = ubTileIdx;
+			g_pMap[x][y].ubIdx = ubTileIdx;
 		}
 	}
 	fclose(pMapFile);
@@ -116,7 +116,7 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	// Third pass - generate graphics based on logic tiles
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
-			ubTileIdx = g_pMap[x][y];
+			ubTileIdx = g_pMap[x][y].ubIdx;
 			switch(ubTileIdx) {
 				case MAP_LOGIC_WATER:
 					ubOutTile = MAP_TILE_WATER;
@@ -169,8 +169,8 @@ void mapDestroy(void) {
 	
 	logBlockBegin("mapDestroy()");
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
-		memFree(g_pMap[x], sizeof(UBYTE) * g_uwMapTileHeight);	
+		memFree(g_pMap[x], sizeof(tTile) * g_uwMapTileHeight);	
 	}
-	memFree(g_pMap, sizeof(UBYTE*) * g_uwMapTileWidth);
+	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");
 }

@@ -182,7 +182,7 @@ UBYTE vehicleCollides(float fX, float fY, tBCoordYX *pCollisionPoints) {
 	for(p = 0; p != 9; ++p) {
 		uwPX = fX - VEHICLE_BODY_WIDTH/2 + pCollisionPoints[p].bX;
 		uwPY = fY - VEHICLE_BODY_HEIGHT/2 + pCollisionPoints[p].bY;
-		ubLogicTile = g_pMap[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE];
+		ubLogicTile = g_pMap[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
 			ubLogicTile == MAP_LOGIC_SENTRY1 ||
