@@ -3,7 +3,7 @@
 
 #include <ace/config.h>
 
-#define BUILDING_INVALID 0
+#define BUILDING_IDX_INVALID 0
 #define BUILDING_TYPE_WALL 0
 #define BUILDING_TYPE_AMMO 1
 #define BUILDING_TYPE_FUEL 2

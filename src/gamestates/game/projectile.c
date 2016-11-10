@@ -2,6 +2,8 @@
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/game.h"
+#include "gamestates/game/map.h"
+#include "gamestates/game/building.h"
 
 #define PROJECTILE_SPEED      (2.0)
 #define PROJECTILE_FRAME_LIFE (((320-32)/4)/PROJECTILE_SPEED)
@@ -132,6 +134,7 @@ void projectileProcess(void) {
 	tProjectile *pProjectile;
 	tVehicle *pVehicle;
 	UBYTE i;
+	UBYTE ubMapX, ubMapY, ubBuildingIdx;
 	
 	for(i = 0; i != s_ubProjectileCount; ++i) {
 		pProjectile = &s_pProjectiles[i];
@@ -166,6 +169,17 @@ void projectileProcess(void) {
 		*/
 		
 		// Check collistion with buildings
-		// TODO
+		ubMapX = (UWORD)(pProjectile->fX) >> MAP_TILE_SIZE;
+		ubMapY = (UWORD)(pProjectile->fY) >> MAP_TILE_SIZE;
+		ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
+		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
+			if(buildingDamage(ubBuildingIdx, 10) == BUILDING_DESTROYED) {
+				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
+				g_pMap[ubMapX][ubMapY].ubData = 0;
+				mapDrawTile(ubMapX, ubMapY, MAP_TILE_DIRT);
+			}
+			projectileDestroy(pProjectile);
+			continue;
+		}
 	}
 }

@@ -4,6 +4,7 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/extview.h>
 #include "gamestates/game/team.h"
+#include "gamestates/game/building.h"
 
 #define MAP_TILE_WATER  0
 #define MAP_TILE_SPAWN1 1
@@ -13,12 +14,12 @@
 #define MAP_TILE_FLAG2L 4
 #define MAP_TILE_FLAGD  5
 // Destroyed wall tile
-#define MAP_WALLD       6
+#define MAP_TILE_WALLD  6
 // Gates - horizontal & vertical, 'live' & destroyed
-#define MAP_GATEVL      7
-#define MAP_GATEVD      8
-#define MAP_GATEHL      9
-#define MAP_GATEHD      10
+#define MAP_TILE_GATEVL 7
+#define MAP_TILE_GATEVD 8
+#define MAP_TILE_GATEHL 9
+#define MAP_TILE_GATEHD 10
 // 16-variant tiles - base codes, ends 16 positions later.
 #define MAP_TILE_DIRT   16
 #define MAP_TILE_ROAD   32
@@ -29,6 +30,8 @@ tTile **g_pMap;
 UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 char g_szMapName[256];
+tBitMap *s_pTileset;
+tBitMap *s_pBuffer;
 
 UBYTE isWater(UBYTE ubMapTile) {
 	return ubMapTile == MAP_LOGIC_WATER;
@@ -81,15 +84,15 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	UBYTE x, y, ubTileIdx, ubOutTile;
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
-	tBitMap *pBuffer;
 	char szHeaderBfr[256];
 	
 	logBlockBegin("mapCreate(pVPort: %p, pTileset: %p, szPath: %s)", pVPort, pTileset, szPath);
 
 	pManager = (tSimpleBufferManager*)vPortGetManager(pVPort, VPM_SCROLL);
-	pBuffer = pManager->pBuffer;
+	s_pBuffer = pManager->pBuffer;
+	s_pTileset = pTileset;
 	
-	// First pass - header & mem alloc
+	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
 	if(!pMapFile)
 		logWrite("ERR: File doesn't exist: %s\n", szPath);
@@ -101,6 +104,7 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	g_pMap = memAllocFast(sizeof(tTile*) * g_uwMapTileWidth);
 	for(x = 0; x != g_uwMapTileWidth; ++x)
 		g_pMap[x] = memAllocFast(sizeof(tTile) * g_uwMapTileHeight);
+	buildingManagerReset();
 	
 	// Read map data
 	for(y = 0; y != g_uwMapTileHeight; ++y) {
@@ -109,11 +113,12 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 				fread(&ubTileIdx, 1, 1, pMapFile);
 				while(ubTileIdx == '\n' || ubTileIdx == '\r');
 			g_pMap[x][y].ubIdx = ubTileIdx;
+			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
 		}
 	}
 	fclose(pMapFile);
 	
-	// Third pass - generate graphics based on logic tiles
+	// 2nd data pass - generate graphics based on logic tiles
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
 			ubTileIdx = g_pMap[x][y].ubIdx;
@@ -134,18 +139,22 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 					break;
 				case MAP_LOGIC_WALL:
 					ubOutTile = MAP_TILE_WALL + mapCheckNeighbours(x, y, isWall);
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
 					break;
 				case MAP_LOGIC_FLAG1:
-					// TODO: register flag
 					ubOutTile = MAP_TILE_FLAG1L;
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
+					// TODO: register flag
 					break;
 				case MAP_LOGIC_FLAG2:
-					// TODO: register flag
 					ubOutTile = MAP_TILE_FLAG2L;
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
+					// TODO: register flag
 					break;
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
 					ubOutTile = MAP_TILE_TURRET;
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
 					// TODO: register turret
 					break;
 				case MAP_LOGIC_DIRT:
@@ -153,15 +162,19 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 					ubOutTile = MAP_TILE_DIRT + mapCheckNeighbours(x, y, isWater);
 					break;
 			}
-			blitCopyAligned(
-				pTileset, 0, ubOutTile << MAP_TILE_SIZE,
-				pBuffer, x << MAP_TILE_SIZE, y << MAP_TILE_SIZE,
-				1 << MAP_TILE_SIZE, 1 << MAP_TILE_SIZE
-			);
+			mapDrawTile(x, y, ubOutTile);
 		}
 	}
 	
 	logBlockEnd("mapCreate()");
+}
+
+void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
+	blitCopyAligned(
+		s_pTileset, 0, ubTileIdx << MAP_TILE_SIZE,
+		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
+		1 << MAP_TILE_SIZE, 1 << MAP_TILE_SIZE
+	);	
 }
 
 void mapDestroy(void) {

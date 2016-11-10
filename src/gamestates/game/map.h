@@ -19,6 +19,26 @@
 #define MAP_LOGIC_GATE1   'g'
 #define MAP_LOGIC_GATE2   'G'
 
+#define MAP_TILE_WATER  0
+#define MAP_TILE_SPAWN1 1
+#define MAP_TILE_SPAWN2 2
+// Flag buildings - 'live' & destroyed
+#define MAP_TILE_FLAG1L 3
+#define MAP_TILE_FLAG2L 4
+#define MAP_TILE_FLAGD  5
+// Destroyed wall tile
+#define MAP_TILE_WALLD  6
+// Gates - horizontal & vertical, 'live' & destroyed
+#define MAP_TILE_GATEVL 7
+#define MAP_TILE_GATEVD 8
+#define MAP_TILE_GATEHL 9
+#define MAP_TILE_GATEHD 10
+// 16-variant tiles - base codes, ends 16 positions later.
+#define MAP_TILE_DIRT   16
+#define MAP_TILE_ROAD   32
+#define MAP_TILE_WALL   48
+#define MAP_TILE_TURRET 64
+
 typedef struct {
 	UBYTE ubIdx;  ///< Tileset idx
 	UBYTE ubData; ///< Data field. For buildings/gates used as idx in obj array.
@@ -35,6 +55,12 @@ void mapCreate(
 );
 
 void mapDestroy(void);
+
+void mapDrawTile(
+	IN UBYTE ubX,
+	IN UBYTE ubY,
+	IN UBYTE ubTileIdx
+);
 
 extern tTile **g_pMap;
 
