@@ -109,7 +109,7 @@ void projectileUndraw(void) {
 	
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
-		if(pProjectile->ubType != PROJECTILE_TYPE_OFF);
+		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
 			bobUndraw(pProjectile->pBob, g_pGameBfr->pBuffer);
 		--pProjectile;
 	}

@@ -105,8 +105,9 @@ void worldGameLoop(void) {
 		
 	// Undraw objects
 	projectileUndraw();
-	if(g_pLocalPlayer->pCurrentVehicle)
+	if(g_pLocalPlayer->pCurrentVehicle) {
 		vehicleUndraw(g_pLocalPlayer->pCurrentVehicle);
 		if(g_ubSiloHighlighted)
 			bobUndraw(g_pSiloHighlight, g_pGameBfr->pBuffer);
+	}
 }
