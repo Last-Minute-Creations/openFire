@@ -2,6 +2,7 @@
 #include <ace/config.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
+#include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
 
 tVPort *s_pHudVPort;
@@ -12,8 +13,7 @@ void hudCreate(void) {
 	s_pHudBfr = simpleBufferCreate(s_pHudVPort, WINDOW_SCREEN_WIDTH, 64, 0);
 	
 	// Initial draw on buffer
-	blitRect(s_pHudBfr->pBuffer, 0, 0, 320, 64, 31);
-	blitRect(s_pHudBfr->pBuffer, 1, 1, 318, 62, 0);
+	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud_bg.bm", 0, 0);	
 }
 
 void hudDestroy(void) {
