@@ -136,7 +136,6 @@ tVehicle *vehicleCreate(UBYTE ubVehicleType) {
 	
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
-	// TODO: pass spawn point pos
 	pVehicle->fX = (g_pTeams[TEAM_GREEN].ubSpawnX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
 	pVehicle->fY = (g_pTeams[TEAM_GREEN].ubSpawnY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
 	pVehicle->ubBodyAngle = ANGLE_90;

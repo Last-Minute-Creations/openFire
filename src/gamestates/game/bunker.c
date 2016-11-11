@@ -47,6 +47,8 @@ UBYTE s_ubMode;
 UWORD s_uwFrameCount;
 UWORD s_uwPlatformY;
 
+UWORD s_pPalettes[16][32];
+
 tView *s_pBunkerView;
 tVPort *s_pBunkerVPort;
 tSimpleBufferManager *s_pBunkerBfr;
@@ -59,6 +61,33 @@ tBob *s_pLamp;
 
 tBunkerVehicle s_pVehicles[4];
 
+void bunkerSetPalette(UBYTE ubIdx) {
+	CopyMem(s_pPalettes[ubIdx], s_pBunkerVPort->pPalette, sizeof(UWORD) << GAME_BPP);
+	viewUpdateCLUT(s_pBunkerView);
+}
+
+void bunkerPreparePalettes(void) {
+	UBYTE i, c;
+	UBYTE r,g,b;
+	
+	paletteLoad("data/amidb32.plt", s_pPalettes[0], 1 << GAME_BPP);
+	for(i = 1; i != 16; ++i) {
+		for(c = 0; c != 32; ++c) {
+			// Extract channels
+			r = (s_pPalettes[0][c] >> 8) & 0xF;
+			g = (s_pPalettes[0][c] >> 4) & 0xF;
+			b = (s_pPalettes[0][c])      & 0xF;
+			
+			// Dim color
+			r = ((r * (15-i))/15) & 0xF;
+			g = ((g * (15-i))/15) & 0xF;
+			b = ((b * (15-i))/15) & 0xF;
+			
+			// Output
+			s_pPalettes[i][c] = (r << 8) | (g << 4) | b;
+		}
+	}
+}
 
 void bunkerVehiclesResetPos(void) {
 	const UWORD uwLeftX = WINDOW_SCREEN_WIDTH/2 - HANGAR_SHAFT_DIST - GFX_VEHICLE_WIDTH;
@@ -113,7 +142,7 @@ void bunkerCreate(void) {
 		return;
 	}
 	logWrite("Allocated buffer\n");
-	paletteLoad("data/amidb32.plt", s_pBunkerVPort->pPalette, 1 << GAME_BPP);
+	bunkerPreparePalettes();
 	
 	s_ubChoice = 0;
 	
@@ -240,9 +269,9 @@ void bunkerProcess(void) {
 			break;
 		case BUNKER_MODE_MAP:
 			if(keyUse(KEY_RETURN)) {
-				// TODO: loadBunkerPreview();
 				s_ubMode = BUNKER_MODE_CHOICE;
 			}
+			// TODO: loadBunkerPreview();
 			break;
 		case BUNKER_MODE_ELEVATOR_TO_VEHICLE:
 			bobUndraw(s_pPlatform, s_pBunkerBfr->pBuffer);
@@ -281,9 +310,8 @@ void bunkerProcess(void) {
 			--s_uwPlatformY;
 			bobDraw(s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer, s_pVehicles[s_ubChoice].uwX, s_pVehicles[s_ubChoice].uwY);
 			bobDraw(s_pPlatform, s_pBunkerBfr->pBuffer, s_pPlatform->uwPrevX, s_uwPlatformY);
-			if(s_uwFrameCount > BUNKER_ANIM_FRAMES - BUNKER_FADE_FRAMES) {
-				// TODO: fade
-			}
+			if(BUNKER_ANIM_FRAMES - s_uwFrameCount < BUNKER_FADE_FRAMES)
+				bunkerSetPalette(15 - (BUNKER_ANIM_FRAMES - s_uwFrameCount));
 			if(s_uwFrameCount >= BUNKER_ANIM_FRAMES) {
 				bunkerHide();
 			}
@@ -335,8 +363,9 @@ void bunkerShow(void) {
 				s_pVehicles[i].pBob, s_pBunkerBfr->pBuffer,
 				s_pVehicles[i].uwX, s_pVehicles[i].uwY
 			);
-	
+			
 	viewLoad(s_pBunkerView);
+	bunkerSetPalette(0);
 	gameChangeLoop(bunkerProcess);
 	logBlockEnd("bunkerShow()");
 }

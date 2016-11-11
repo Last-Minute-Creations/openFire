@@ -15,14 +15,12 @@ UBYTE s_ubProjectileCount;
 tBitMap *s_pCannonBitmap;
 tBitmapMask *s_pCannonMask;
 
-/**
- *  @todo Load gfx
- */
 void projectileListCreate(UBYTE ubProjectileCount) {
 	UBYTE i;
 	
-	// Load gfx
 	logBlockBegin("projectileListCreate(ubProjectileCount: %hhu)", ubProjectileCount);
+	
+	// Load gfx
 	s_pCannonBitmap = bitmapCreateFromFile("data/projectiles/cannon.bm");
 	s_pCannonMask = bitmapMaskCreate("data/projectiles/cannon.msk");
 	
@@ -36,6 +34,7 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 			PROJECTILE_CANNON_HEIGHT, 0
 		);
 	}
+	
 	logBlockEnd("projectileListCreate()");
 }
 

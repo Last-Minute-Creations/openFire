@@ -79,7 +79,6 @@ void bobChangeFrame(tBob *pBob, UWORD uwFrameIdx) {
  *  @todo Change to blitCopy when it gets stable
  */
 void bobUndraw(tBob *pBob, tBitMap *pDest) {
-	// TODO: 
 	BltBitMap(
 		pBob->pBg, 0, 0,
 		pDest, pBob->uwPrevX, pBob->uwPrevY,
