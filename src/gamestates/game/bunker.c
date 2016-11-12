@@ -44,10 +44,11 @@
 
 UBYTE s_ubChoice;
 UBYTE s_ubMode;
+UBYTE s_ubDoUpdateCLUT;
 UWORD s_uwFrameCount;
 UWORD s_uwPlatformY;
 
-UWORD s_pPalettes[16][32];
+UWORD s_pBasePalette[32];
 
 tView *s_pBunkerView;
 tVPort *s_pBunkerVPort;
@@ -61,32 +62,9 @@ tBob *s_pLamp;
 
 tBunkerVehicle s_pVehicles[4];
 
-void bunkerSetPalette(UBYTE ubIdx) {
-	CopyMem(s_pPalettes[ubIdx], s_pBunkerVPort->pPalette, sizeof(UWORD) << GAME_BPP);
-	viewUpdateCLUT(s_pBunkerView);
-}
-
-void bunkerPreparePalettes(void) {
-	UBYTE i, c;
-	UBYTE r,g,b;
-	
-	paletteLoad("data/amidb32.plt", s_pPalettes[0], 1 << GAME_BPP);
-	for(i = 1; i != 16; ++i) {
-		for(c = 0; c != 32; ++c) {
-			// Extract channels
-			r = (s_pPalettes[0][c] >> 8) & 0xF;
-			g = (s_pPalettes[0][c] >> 4) & 0xF;
-			b = (s_pPalettes[0][c])      & 0xF;
-			
-			// Dim color
-			r = ((r * (15-i))/15) & 0xF;
-			g = ((g * (15-i))/15) & 0xF;
-			b = ((b * (15-i))/15) & 0xF;
-			
-			// Output
-			s_pPalettes[i][c] = (r << 8) | (g << 4) | b;
-		}
-	}
+void bunkerSetPalette(UBYTE ubLevel) {
+	paletteDim(s_pBasePalette, s_pBunkerVPort->pPalette, 1 << GAME_BPP, ubLevel);
+	s_ubDoUpdateCLUT = 1;
 }
 
 void bunkerVehiclesResetPos(void) {
@@ -142,7 +120,7 @@ void bunkerCreate(void) {
 		return;
 	}
 	logWrite("Allocated buffer\n");
-	bunkerPreparePalettes();
+	paletteLoad("data/amidb32.plt", s_pBasePalette, 1 << GAME_BPP);
 	
 	s_ubChoice = 0;
 	
@@ -257,7 +235,7 @@ void bunkerProcessChoice() {
 }
 
 void bunkerProcess(void) {
-	
+		
 	if (keyUse(KEY_ESCAPE)) {
 		gameClose();
 		return;
@@ -311,9 +289,10 @@ void bunkerProcess(void) {
 			bobDraw(s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer, s_pVehicles[s_ubChoice].uwX, s_pVehicles[s_ubChoice].uwY);
 			bobDraw(s_pPlatform, s_pBunkerBfr->pBuffer, s_pPlatform->uwPrevX, s_uwPlatformY);
 			if(BUNKER_ANIM_FRAMES - s_uwFrameCount < BUNKER_FADE_FRAMES)
-				bunkerSetPalette(15 - (BUNKER_ANIM_FRAMES - s_uwFrameCount));
+				bunkerSetPalette(BUNKER_ANIM_FRAMES - s_uwFrameCount);
 			if(s_uwFrameCount >= BUNKER_ANIM_FRAMES) {
 				bunkerHide();
+				return;
 			}
 			++s_uwFrameCount;
 			break;
@@ -323,6 +302,10 @@ void bunkerProcess(void) {
 	viewProcessManagers(s_pBunkerView);
 	copProcessBlocks();
 	WaitTOF();
+	if(s_ubDoUpdateCLUT) {
+		viewUpdateCLUT(s_pBunkerView);
+		s_ubDoUpdateCLUT = 0;
+	}
 }
 
 void bunkerShow(void) {
@@ -365,7 +348,7 @@ void bunkerShow(void) {
 			);
 			
 	viewLoad(s_pBunkerView);
-	bunkerSetPalette(0);
+	bunkerSetPalette(15);
 	gameChangeLoop(bunkerProcess);
 	logBlockEnd("bunkerShow()");
 }
