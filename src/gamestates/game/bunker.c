@@ -10,6 +10,7 @@
 #include "gamestates/game/world.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
+#include "gamestates/game/map.h"
 
 // Initial config
 #define GFX_SKY_HEIGHT (50)
@@ -42,6 +43,8 @@
 #define BUNKER_ANIM_FRAMES 100
 #define BUNKER_FADE_FRAMES 16
 
+#define BUNKER_MAP_TILE_SIZE 4
+
 UBYTE s_ubChoice;
 UBYTE s_ubMode;
 UBYTE s_ubDoUpdateCLUT;
@@ -55,6 +58,7 @@ tVPort *s_pBunkerVPort;
 tSimpleBufferManager *s_pBunkerBfr;
 
 tBitMap *s_pVehiclesBitmap;
+tBitMap *s_pMinimap;
 tBitmapMask *s_pVehiclesMask;
 
 tBob *s_pPlatform;
@@ -65,6 +69,41 @@ tBunkerVehicle s_pVehicles[4];
 void bunkerSetPalette(UBYTE ubLevel) {
 	paletteDim(s_pBasePalette, s_pBunkerVPort->pPalette, 1 << GAME_BPP, ubLevel);
 	s_ubDoUpdateCLUT = 1;
+}
+
+void bunkerMinimapCreate(void) {
+	UBYTE x,y;
+	UBYTE ubColor;
+	
+	s_pMinimap = bitmapCreate(
+		g_uwMapTileWidth << BUNKER_MAP_TILE_SIZE,
+		g_uwMapTileHeight << BUNKER_MAP_TILE_SIZE,
+		GAME_BPP, 0
+	);
+	
+	for(y = 0; y != g_uwMapTileHeight; ++y) {
+		for(x = 0; x != g_uwMapTileWidth; ++x) {
+			switch(g_pMap[x][y].ubIdx) {
+				case MAP_LOGIC_WATER:
+					ubColor = 22;
+					break;
+				case MAP_LOGIC_WALL:
+				case MAP_LOGIC_SENTRY1:
+				case MAP_LOGIC_SENTRY2:
+					ubColor = 1;
+					break;
+				default:
+					ubColor = 9;
+			}
+				
+			blitRect(
+				s_pMinimap,
+				x << BUNKER_MAP_TILE_SIZE, y << BUNKER_MAP_TILE_SIZE,
+				1 << BUNKER_MAP_TILE_SIZE, 1 << BUNKER_MAP_TILE_SIZE,
+				ubColor
+			);
+		}
+	}
 }
 
 void bunkerVehiclesResetPos(void) {
@@ -123,7 +162,7 @@ void bunkerCreate(void) {
 	paletteLoad("data/amidb32.plt", s_pBasePalette, 1 << GAME_BPP);
 	
 	s_ubChoice = 0;
-	
+		
 	// Draw bunker bg - dirt
 	pDirt = bitmapCreateFromFile("data/bunker/dirt.bm");
 	ubDirtSize = pDirt->BytesPerRow << 3;
