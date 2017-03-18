@@ -1,5 +1,5 @@
-#ifndef GUARD_SHOWCASE_CONFIG_H
-#define GUARD_SHOWCASE_CONFIG_H
+#ifndef GUARD_OF_CONFIG_H
+#define GUARD_OF_CONFIG_H
 
 #include <ace/types.h>
 
