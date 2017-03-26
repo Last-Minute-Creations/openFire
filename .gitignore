@@ -4,3 +4,4 @@ _res/*
 src/tmp/*
 *.log
 debug/*
+.vscode/*
