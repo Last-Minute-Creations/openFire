@@ -23,7 +23,7 @@ UBYTE worldProcessInput(void) {
 	}
 
 	if(keyUse(KEY_C))
-		bitmapSaveBMP(g_pGameBfr->pBuffer, g_pGameMainVPort->pPalette, "bufDump.bmp");
+		bitmapSaveBmp(g_pGameBfr->pBuffer, g_pGameMainVPort->pPalette, "bufDump.bmp");
 	
 	sReq.ubForward     = keyCheck(OF_KEY_FORWARD);
 	sReq.ubBackward    = keyCheck(OF_KEY_BACKWARD);

@@ -21,7 +21,6 @@ typedef struct {
 typedef struct {
 	tBuilding pBuildings[BUILDING_MAX_COUNT];
 	UBYTE ubLastIdx;
-	
 } tBuildingManager;
 
 void buildingManagerReset(void);

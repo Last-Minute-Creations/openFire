@@ -15,14 +15,14 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 		return 0;
 	}
 	logWrite("Addr: %p\n", pBob);
-	pBob->pBitmap = pBitmap;
-	pBob->pMask = pMask;
+	pBob->sSource.pBitmap = pBitmap;
+	pBob->sSource.pMask = pMask;
 	pBob->uwOffsY = uwFrameIdx*uwFrameHeight;
 	pBob->uwHeight = uwFrameHeight;
 	
 	// BG buffer
 	pBob->pBg = bitmapCreate(
-		pBitmap->BytesPerRow << 3,
+		bitmapGetByteWidth(pBitmap) << 3,
 		uwFrameHeight,
 		pBitmap->Depth,
 		0
@@ -52,21 +52,29 @@ tBob *bobUniqueCreate(char *szBitmapPath, char *szMaskPath, UWORD uwFrameHeight,
 	);
 	pBob = 0;
 	pBitmap = bitmapCreateFromFile(szBitmapPath);
-	if(pBitmap) {
-		if(uwFrameHeight == 0)
-			uwFrameHeight = pBitmap->Rows;
-		pMask = bitmapMaskCreate(szMaskPath);
-		if(pMask)
-			pBob = bobCreate(pBitmap, pMask, uwFrameHeight, uwFrameIdx);
+	if(!pBitmap) {
+		logWrite("ERR: Couldn't read bitmap file!\n");
+		logBlockEnd("bobUniqueCreate()");
+		return 0;
 	}
+	if(uwFrameHeight == 0)
+		uwFrameHeight = pBitmap->Rows;
+	pMask = bitmapMaskCreateFromFile(szMaskPath);
+	if(!pMask) {
+		logWrite("ERR: Couldn't read mask file!\n");
+		bitmapDestroy(pBitmap);
+		logBlockEnd("bobUniqueCreate()");
+		return 0;
+	}
+	pBob = bobCreate(pBitmap, pMask, uwFrameHeight, uwFrameIdx);
 	logBlockEnd("bobUniqueCreate()");
 	return pBob;
 }
 
 void bobUniqueDestroy(tBob *pBob) {
 	logBlockBegin("bobUniqueDestroy(pBob: %p)", pBob);
-	bitmapDestroy(pBob->pBitmap);
-	bitmapMaskDestroy(pBob->pMask);
+	bitmapDestroy(pBob->sSource.pBitmap);
+	bitmapMaskDestroy(pBob->sSource.pMask);
 	bobDestroy(pBob);
 	logBlockEnd("bobUniqueDestroy()");
 }
@@ -101,10 +109,10 @@ void bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	
 	// Redraw bob
 	blitCopyMask(
-		pBob->pBitmap, 0, pBob->uwOffsY,
+		pBob->sSource.pBitmap, 0, pBob->uwOffsY,
 		pDest, uwX, uwY,
 		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
-		pBob->pMask->pData
+		pBob->sSource.pMask->pData
 	);
 	
 	// Update bob position

@@ -22,7 +22,7 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	
 	// Load gfx
 	s_pCannonBitmap = bitmapCreateFromFile("data/projectiles/cannon.bm");
-	s_pCannonMask = bitmapMaskCreate("data/projectiles/cannon.msk");
+	s_pCannonMask = bitmapMaskCreateFromFile("data/projectiles/cannon.msk");
 	
 	// Create projectiles
 	s_ubProjectileCount = ubProjectileCount;

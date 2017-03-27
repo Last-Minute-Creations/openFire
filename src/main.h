@@ -1,5 +1,5 @@
-#ifndef GUARD_SHOWCASE_MAIN_H
-#define GUARD_SHOWCASE_MAIN_H
+#ifndef GUARD_OF_MAIN_H
+#define GUARD_OF_MAIN_H
 
 
 

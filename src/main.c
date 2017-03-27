@@ -11,7 +11,6 @@
 #include "config.h"
 #include "input.h"
 #include "gamestates/game/game.h"
-#include "gamestates/game/world.h"
 
 int main(void) {
 	memCreate();

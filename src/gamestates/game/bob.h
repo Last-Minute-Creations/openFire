@@ -5,9 +5,13 @@
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
 
-typedef struct _tBob {
+typedef struct _tBobSource {
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;
+	tBitmapMask *pMask;	
+} tBobSource;
+
+typedef struct _tBob {
+	tBobSource sSource;
 	tBitMap* pBg;
 	UWORD uwPrevX;
 	UWORD uwPrevY;

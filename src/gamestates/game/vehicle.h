@@ -14,6 +14,7 @@
 
 #define VEHICLE_BODY_WIDTH 32
 #define VEHICLE_BODY_HEIGHT 32
+#define VEHICLE_BODY_ANGLE_COUNT 64
 #define VEHICLE_TURRET_WIDTH 32
 #define VEHICLE_TURRET_HEIGHT 32
 
@@ -45,19 +46,17 @@ typedef struct _tSteerRequest {
 } tSteerRequest;
 
 typedef struct {
-	UBYTE ubFwdSpeed;               ///< Forward movement speed
-	UBYTE ubBwSpeed;                ///< Backward movement speed
-	UBYTE ubRotSpeed;               ///< Rotate speed
-	UBYTE ubRotSpeedDiv;            ///< Rotate speed divider - do rotation every ubRotSpeedDiv frames
-	UBYTE ubMaxBaseAmmo;            ///< Tank cannon, chopper gun, ASV rockets, jeep 'nades
-	UBYTE ubMaxSuperAmmo;           ///< Chopper rockets, ASV mines
+	UBYTE ubFwdSpeed;                                     ///< Forward movement speed
+	UBYTE ubBwSpeed;                                      ///< Backward movement speed
+	UBYTE ubRotSpeed;                                     ///< Rotate speed
+	UBYTE ubRotSpeedDiv;                                  ///< Rotate speed divider - do rotation every ubRotSpeedDiv frames
+	UBYTE ubMaxBaseAmmo;                                  ///< Tank cannon, chopper gun, ASV rockets, jeep 'nades
+	UBYTE ubMaxSuperAmmo;                                 ///< Chopper rockets, ASV mines
 	UBYTE ubMaxFuel;
 	UBYTE ubMaxLife;
-	tBitMap *pFrames;               ///< Rotation frames
-	tBitmapMask *pMask;             ///< pFrames mask
-	tBitMap *pAuxFrames;            ///< Tank - turret, chopper- takeoff anim
-	tBitmapMask *pAuxMask;          ///< Mask for pAuxFrames
-	tBCoordYX pCollisionPts[64][8]; ///< Collision points
+	tBobSource sMainSource;                               ///< Main bob gfx source.
+	tBobSource sAuxSource;                                ///< Tank turret & chopper takeoff gfx source.
+	tBCoordYX pCollisionPts[VEHICLE_BODY_ANGLE_COUNT][8]; ///< Collision points
 } tVehicleType;
 
 typedef struct {

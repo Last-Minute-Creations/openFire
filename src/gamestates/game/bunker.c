@@ -124,7 +124,7 @@ void bunkerVehiclesCreate(void) {
 	// Vehicle load & initial display
 	// TODO: brown player
 	s_pVehiclesBitmap = bitmapCreateFromFile("data/bunker/vehicles_green.bm");
-	s_pVehiclesMask = bitmapMaskCreate("data/bunker/vehicles.msk");
+	s_pVehiclesMask = bitmapMaskCreateFromFile("data/bunker/vehicles.msk");
 	
 	// Bobs
 	for(i = 0; i != 4; ++i)
@@ -186,7 +186,8 @@ void bunkerCreate(void) {
 	pHangar = bobUniqueCreate("data/bunker/hangar.bm", "data/bunker/hangar.msk", 0, 0);
 	bobDraw(
 		pHangar, s_pBunkerBfr->pBuffer,
-		(WINDOW_SCREEN_WIDTH-(pHangar->pBitmap->BytesPerRow<<3))/2, GFX_SHAFT_OFFS
+		(WINDOW_SCREEN_WIDTH-(bitmapGetByteWidth(pHangar->sSource.pBitmap)<<3))/2,
+		GFX_SHAFT_OFFS
 	);
 	bobUniqueDestroy(pHangar);
 	
@@ -369,7 +370,7 @@ void bunkerShow(void) {
 	logWrite("Drawing platform & lamp\n");
 	bobDraw(
 		s_pPlatform, s_pBunkerBfr->pBuffer,
-		(WINDOW_SCREEN_WIDTH - (s_pPlatform->pBitmap->BytesPerRow << 3))/2, HANGAR_LO_Y
+		(WINDOW_SCREEN_WIDTH - (s_pPlatform->sSource.pBitmap->BytesPerRow << 3))/2, HANGAR_LO_Y
 	);
 	bobDraw(
 		s_pLamp, s_pBunkerBfr->pBuffer,

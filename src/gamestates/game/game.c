@@ -44,7 +44,6 @@ void gsGameCreate(void) {
 	}
 	g_pCamera = g_pGameBfr->pCameraManager;
 	logWrite("Allocated buffer\n");
-	bitmapDump(g_pGameBfr->pBuffer);
 	paletteLoad("data/amidb32.plt", g_pGameMainVPort->pPalette, 32);
 	
 	// Load gfx
