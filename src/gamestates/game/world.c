@@ -18,7 +18,7 @@ UBYTE worldProcessInput(void) {
 	tSteerRequest sReq;
 	
 	if (keyUse(KEY_ESCAPE)) {
-		gameClose();
+		gamePopState();
 		return 0;
 	}
 

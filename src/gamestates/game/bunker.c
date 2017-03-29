@@ -277,7 +277,7 @@ void bunkerProcessChoice() {
 void bunkerProcess(void) {
 		
 	if (keyUse(KEY_ESCAPE)) {
-		gameClose();
+		gamePopState();
 		return;
 	}
 	

@@ -10,7 +10,7 @@
 
 #include "config.h"
 #include "input.h"
-#include "gamestates/game/game.h"
+#include "gamestates/initloading/initloading.h"
 
 int main(void) {
 	memCreate();
@@ -23,7 +23,7 @@ int main(void) {
 	
 	inputOpen();
 	
-	gameCreate(gsGameCreate, gsGameLoop, gsGameDestroy);
+	gameCreate(gsInitLoadingCreate, gsInitLoadingLoop, gsInitLoadingDestroy);
 	while (gameIsRunning()) {
 		timerProcess();
 		inputProcess();

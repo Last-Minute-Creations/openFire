@@ -39,7 +39,7 @@ void gsGameCreate(void) {
 	hudCreate();
 	if(!g_pGameBfr) {
 		logWrite("Buffer creation failed");
-		gameClose();
+		gamePopState();
 		return;
 	}
 	g_pCamera = g_pGameBfr->pCameraManager;
@@ -60,10 +60,6 @@ void gsGameCreate(void) {
 	// Prepare bunker gfx
 	bunkerCreate();
 	
-	// Load objs
-	vehicleTypesCreate();
-	projectileListCreate(20);
-
 	// Display view with its viewports
 	viewLoad(g_pGameView);
 	logBlockEnd("gsGameCreate()");
@@ -75,8 +71,6 @@ void gsGameLoop(void) {
 
 void gsGameDestroy(void) {
 	bunkerDestroy();
-	projectileListDestroy();
-	vehicleTypesDestroy();
 	viewDestroy(g_pGameView);
 	bobUniqueDestroy(g_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
