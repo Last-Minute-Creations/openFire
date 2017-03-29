@@ -19,7 +19,6 @@ typedef struct _tSeg {
 	void (*pFn)(void); ///< Pointer to the function
 } tSeg;
 
-struct Task *s_pWorkerTask;
 UWORD s_uwWorkerRequest; ///< Worker reads this and does stuff.
 UWORD g_uwWorkerStep;
 
@@ -50,7 +49,7 @@ UWORD workerCreate(void) {
 
 	pResult = CreateProc(
 		"OpenFire init proc", 0,
-		((ULONG)&s_sFakeSeg.ulNextSeg) >> 2,
+		MKBADDR(&s_sFakeSeg.ulNextSeg),
 		WORKER_STACK_SIZE
 	);
 
