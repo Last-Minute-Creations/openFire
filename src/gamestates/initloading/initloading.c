@@ -1,7 +1,11 @@
 #include "gamestates/initloading/initloading.h"
 #include <ace/managers/game.h>
 #include <ace/managers/log.h>
+#include <ace/managers/viewport/simplebuffer.h>
+#include <ace/utils/font.h>
+#include <ace/utils/palette.h>
 #include "gamestates/initloading/worker.h"
+#include "gamestates/initloading/loadingscreen.h"
 #include "gamestates/game/game.h"
 
 #define INITLOADING_STATE_OFF  0
@@ -11,15 +15,14 @@
 
 void gsInitLoadingCreate(void) {
 	logBlockBegin("gsInitLoadingCreate()");
-
-	// Draw some loading screen
-	// TODO
+	loadingScreenCreate();
 
 	logBlockEnd("gsInitLoadingCreate()");
 }
 
 void gsInitLoadingLoop(void) {
 	static UBYTE ubState = INITLOADING_STATE_OFF;
+	static UBYTE ubPrevState = 0;
 
 	switch(ubState) {
 		case INITLOADING_STATE_OFF:
@@ -29,11 +32,12 @@ void gsInitLoadingLoop(void) {
 			break;
 		case INITLOADING_STATE_BUSY:
 			// Query worker status
-			// TODO
-
-			// Update status bar
-			// TODO
-			if(g_uwWorkerStep >= WORKER_MAX_STEP)
+			if(ubPrevState != g_ubWorkerStep) {
+				// Update status bar
+				loadingScreenSetProgress(g_ubWorkerStep);
+				ubPrevState = g_ubWorkerStep;
+			}
+			if(g_ubWorkerStep >= WORKER_MAX_STEP)
 				ubState = INITLOADING_STATE_DONE;
 			break;
 		case INITLOADING_STATE_DONE:
@@ -41,6 +45,7 @@ void gsInitLoadingLoop(void) {
 			workerDestroy();
 			// Fadeout
 			// TODO
+			loadingScreenDestroy();
 			// Move to proper gamestate
 			gamePushState(gsGameCreate, gsGameLoop, gsGameDestroy);
 			ubState = INITLOADING_STATE_EXIT;

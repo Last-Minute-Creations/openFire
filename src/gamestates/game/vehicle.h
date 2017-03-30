@@ -5,30 +5,17 @@
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
 #include "gamestates/game/bob.h"
-
-#define VEHICLE_TYPE_COUNT 4
-#define VEHICLE_TYPE_TANK 0
-#define VEHICLE_TYPE_CHOPPER 1
-#define VEHICLE_TYPE_ASV 2
-#define VEHICLE_TYPE_JEEP 3
-
-#define VEHICLE_BODY_WIDTH 32
-#define VEHICLE_BODY_HEIGHT 32
-#define VEHICLE_BODY_ANGLE_COUNT 64
-#define VEHICLE_TURRET_WIDTH 32
-#define VEHICLE_TURRET_HEIGHT 32
+#include "vehicletypes.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN 25
 
-#define PI 3.14159265358979323846264338327950288
 #define ANGLE_0    0
 #define ANGLE_45   16
 #define ANGLE_90   32
 #define ANGLE_180  64
 #define ANGLE_360  128
 #define ANGLE_LAST 127
-extern float g_pSin[128];
 #define csin(x) (g_pSin[x])
 #define ccos(x) ((x < 96?csin(ANGLE_90+x):csin(x-3*ANGLE_90)))
 #define angleToFrame(angle) (angle>>1)
@@ -44,20 +31,6 @@ typedef struct _tSteerRequest {
 	UBYTE ubAction2;
 	UBYTE ubAction3;
 } tSteerRequest;
-
-typedef struct {
-	UBYTE ubFwdSpeed;                                     ///< Forward movement speed
-	UBYTE ubBwSpeed;                                      ///< Backward movement speed
-	UBYTE ubRotSpeed;                                     ///< Rotate speed
-	UBYTE ubRotSpeedDiv;                                  ///< Rotate speed divider - do rotation every ubRotSpeedDiv frames
-	UBYTE ubMaxBaseAmmo;                                  ///< Tank cannon, chopper gun, ASV rockets, jeep 'nades
-	UBYTE ubMaxSuperAmmo;                                 ///< Chopper rockets, ASV mines
-	UBYTE ubMaxFuel;
-	UBYTE ubMaxLife;
-	tBobSource sMainSource;                               ///< Main bob gfx source.
-	tBobSource sAuxSource;                                ///< Tank turret & chopper takeoff gfx source.
-	tBCoordYX pCollisionPts[VEHICLE_BODY_ANGLE_COUNT][8]; ///< Collision points
-} tVehicleType;
 
 typedef struct {
 	tVehicleType *pType; ///< Ptr to vehicle type definition
@@ -83,10 +56,6 @@ void vehicleDestroy(
 	tVehicle *pVehicle
 );
 
-void vehicleTypesCreate(void);
-
-void vehicleTypesDestroy(void);
-
 void vehicleDrawFrame(
 	IN UWORD uwX,
 	IN UWORD uwY,
@@ -109,8 +78,5 @@ void vehicleDraw(
 void vehicleUndraw(
 	IN tVehicle *pVehicle
 );
-
-extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
-extern tUwCoordYX g_pTurretCoords[64];
 
 #endif

@@ -1,12 +1,13 @@
 #include "gamestates/initloading/worker.h"
+#include <math.h>
 #include <exec/tasks.h>
 #include <clib/dos_protos.h>
 #include <clib/alib_protos.h>
 #include <ace/config.h>
 #include <ace/managers/log.h>
 
-#include <gamestates/game/vehicle.h>
-#include <gamestates/game/projectile.h>
+#include "vehicletypes.h"
+#include "gamestates/game/projectile.h"
 
 #define WORKER_REQUEST_WORK 0
 #define WORKER_REQUEST_KILL 8
@@ -20,7 +21,7 @@ typedef struct _tSeg {
 } tSeg;
 
 UWORD s_uwWorkerRequest; ///< Worker reads this and does stuff.
-UWORD g_uwWorkerStep;
+UBYTE g_ubWorkerStep;
 
 inline void workerDoStuff(void (*fn)(void)) {
 	if(fn)
@@ -31,20 +32,28 @@ inline void workerDoStuff(void (*fn)(void)) {
 }
 
 void workerMain(void) {
-
-	// Do stuff, occasionally checking if it should kill itself
+	// Vehicle stuff
 	logWrite("Working on vehicles...\n");
 	vehicleTypesCreate();
+
+	// Generate math table
+	logWrite("Generating sine table...\n");
+	UBYTE i;
+	for(i = 0; i != 128; ++i)
+		g_pSin[i] = sin(i*2*M_PI/128);
+	g_ubWorkerStep = 50;
+
 	logWrite("Working on projectiles...\n");
 	projectileListCreate(20);
-	++g_uwWorkerStep;
+	g_ubWorkerStep = 100;
 }
 
 const tSeg s_sFakeSeg = {sizeof(tSeg), 0, 0x4EF9, workerMain};
 
 UWORD workerCreate(void) {
+	// Start worker
 	s_uwWorkerRequest = WORKER_REQUEST_WORK;
-	g_uwWorkerStep = 0;
+	g_ubWorkerStep = 0;
 	struct MsgPort *pResult;
 
 	pResult = CreateProc(

@@ -3,9 +3,9 @@
 
 #include <ace/config.h>
 
-#define WORKER_MAX_STEP 1
+#define WORKER_MAX_STEP 100
 
-extern UWORD g_uwWorkerStep;
+extern UBYTE g_ubWorkerStep;
 
 /**
  * @brief Creates worker subtask.
