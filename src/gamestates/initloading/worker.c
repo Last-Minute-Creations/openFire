@@ -22,6 +22,7 @@ typedef struct _tSeg {
 
 UWORD s_uwWorkerRequest; ///< Worker reads this and does stuff.
 UBYTE g_ubWorkerStep;
+BYTE g_pWorkerProgress[VEHICLE_TYPE_COUNT] = {-1};
 
 inline void workerDoStuff(void (*fn)(void)) {
 	if(fn)
@@ -34,7 +35,7 @@ inline void workerDoStuff(void (*fn)(void)) {
 void workerMain(void) {
 	// Vehicle stuff
 	logWrite("Working on vehicles...\n");
-	vehicleTypesCreate();
+	vehicleTypesCreate(g_pWorkerProgress);
 
 	// Generate math table
 	logWrite("Generating sine table...\n");

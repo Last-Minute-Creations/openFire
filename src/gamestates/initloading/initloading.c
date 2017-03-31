@@ -32,6 +32,7 @@ void gsInitLoadingLoop(void) {
 			break;
 		case INITLOADING_STATE_BUSY:
 			// Query worker status
+			loadingScreenUpdate();
 			if(ubPrevState != g_ubWorkerStep) {
 				// Update status bar
 				loadingScreenSetProgress(g_ubWorkerStep);

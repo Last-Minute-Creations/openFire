@@ -2,10 +2,12 @@
 #define GUARD_OF_INITLOADING_WORKER_H
 
 #include <ace/config.h>
+#include "vehicletypes.h"
 
 #define WORKER_MAX_STEP 100
 
 extern UBYTE g_ubWorkerStep;
+extern BYTE g_pWorkerProgress[VEHICLE_TYPE_COUNT];
 
 /**
  * @brief Creates worker subtask.

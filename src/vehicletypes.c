@@ -16,7 +16,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
  *  
  *  @todo Make it accept bitmaps wider than 32px?
  */
-UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource) {
+UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProgress) {
 	UBYTE *pChunkySrc;
 	UBYTE *pChunkyRotated;
 	char szFullFileName[50];
@@ -27,6 +27,9 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource) {
 	tBitmapMask *pMask;
 	UWORD uwFrameOffs;
 	
+	if(pProgress)
+		*pProgress = -1;
+
 	logBlockBegin(
 		"vehicleBobSourceLoad(szName: %s, pBobSource: %p)",
 		szName, pBobSource
@@ -52,6 +55,8 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource) {
 		logWrite("Couldn't allocate vehicle mask\n");
 		goto fail;
 	}
+	pBobSource->pBitmap = pBitmap;
+	pBobSource->pMask = pMask;
 	
 	// Load source bitmap as first frame
 	strcpy(szFullFileName, "data/vehicles/");
@@ -78,6 +83,8 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource) {
 	fclose(pMaskFile);
 	pMaskFile = 0;
 	logWrite("Read first frame mask\n");
+	if(pProgress)
+		*pProgress = 0;
 
 	// Convert first frame & its mask to 6bpp chunky
 	UWORD uwMaskChunk;
@@ -136,13 +143,15 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource) {
 				}
 			}
 		}
+		if(pProgress)
+			*pProgress = ubFrame;
 	}
 	
 	memFree(pChunkySrc, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
 	memFree(pChunkyRotated, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
-	pBobSource->pBitmap = pBitmap;
-	pBobSource->pMask = pMask;
 	logBlockEnd("vehicleBobSourceLoad()");
+	if(pProgress)
+		*pProgress = 0;
 	return 1;
 fail:
 	if(pMaskFile)
@@ -185,11 +194,26 @@ void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
  *  @todo Chopper
  *  @todo ASV
  */
-void vehicleTypesCreate(void) {
+void vehicleTypesCreate(BYTE *pProgress) {
 	tVehicleType *pType;
 	UBYTE i;
 	
 	logBlockBegin("vehicleTypesCreate");
+
+	// Tank turret coords
+	logWrite("Generating tank turret coords...\n");
+	UBYTE ubStartX = 9;
+	UBYTE ubStartY = 16;
+	for(i = 0; i != 64; ++i) {
+		float fAng, fCos, fSin;
+		fAng = i*2*M_PI/64;
+		fCos = cos(fAng);
+		fSin = sin(fAng);
+		g_pTurretCoords[i].sUwCoord.uwX = (ubStartX-16)*fCos - (ubStartY-16)*fSin + 16;
+		g_pTurretCoords[i].sUwCoord.uwY = (ubStartX-16)*fSin + (ubStartY-16)*fCos + 16;
+	}
+	g_ubWorkerStep += 5;
+
 	// Tank
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_TANK];
 	pType->ubFwdSpeed = 1;
@@ -200,9 +224,9 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
-	vehicleTypeBobSourceLoad("tank", &pType->sMainSource);
+	vehicleTypeBobSourceLoad("tank", &pType->sMainSource, &pProgress[0]);
 	g_ubWorkerStep += 10;
-	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource);
+	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource, &pProgress[1]);
 	g_ubWorkerStep += 10;
 	
 	// Tank collision coords
@@ -228,7 +252,7 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
-	vehicleTypeBobSourceLoad("jeep", &pType->sMainSource);
+	vehicleTypeBobSourceLoad("jeep", &pType->sMainSource, &pProgress[2]);
 	pType->sAuxSource.pBitmap = 0;
 	pType->sAuxSource.pMask = 0;
 	g_ubWorkerStep += 10;
@@ -246,16 +270,6 @@ void vehicleTypesCreate(void) {
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 	g_ubWorkerStep += 5;
 		
-	// Tank turret coords
-	logWrite("Generating tank turret coords...\n");
-	UBYTE ubStartX = 9;
-	UBYTE ubStartY = 16;
-	for(i = 0; i != 64; ++i) {
-		float fAng = i*2*M_PI/64;
-		g_pTurretCoords[i].sUwCoord.uwX = (ubStartX-16)*cos(fAng) - (ubStartY-16)*sin(fAng) + 16;
-		g_pTurretCoords[i].sUwCoord.uwY = (ubStartX-16)*sin(fAng) + (ubStartY-16)*cos(fAng) + 16;
-	}
-	g_ubWorkerStep += 5;
 	logBlockEnd("vehicleTypesCreate");
 }
 

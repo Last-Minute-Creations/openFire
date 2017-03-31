@@ -11,4 +11,6 @@ void loadingScreenSetProgress(
 	IN UBYTE ubProgress
 );
 
+void loadingScreenUpdate(void);
+
 #endif // GUARD_OF_GAMESTATES_INITLOADING_LOADINGSCREEN_H

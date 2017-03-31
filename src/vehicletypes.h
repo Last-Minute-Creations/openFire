@@ -30,11 +30,17 @@ typedef struct {
 	tBCoordYX pCollisionPts[VEHICLE_BODY_ANGLE_COUNT][8]; ///< Collision points
 } tVehicleType;
 
-void vehicleTypesCreate(void);
+void vehicleTypesCreate(
+	OUT BYTE *pProgress
+);
 
 void vehicleTypesDestroy(void);
 
-UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource);
+UWORD vehicleTypeBobSourceLoad(
+	IN char *szName,
+	IN tBobSource *pBobSource,
+	OUT BYTE *pProgress
+);
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 extern tUwCoordYX g_pTurretCoords[64];
