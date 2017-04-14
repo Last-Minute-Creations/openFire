@@ -1,6 +1,7 @@
 #include "vehicletypes.h"
 #include <math.h>
 #include <ace/utils/chunky.h>
+#include <ace/libfixmath/fix16.h>
 #include "gamestates/game/bob.h"
 #include "gamestates/initloading/worker.h"
 
@@ -115,7 +116,9 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		// Rotate chunky source
 		chunkyRotate(
 			pChunkySrc, pChunkyRotated,
-			-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT, 0,
+			//-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT,
+			fix16_from_float(-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT),
+			0,
 			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT
 		);
 		
