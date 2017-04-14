@@ -17,15 +17,13 @@
 #define OF_KEY_ACTION2      KEY_R
 #define OF_KEY_ACTION3      KEY_V
 
+#define ACTIVESTATE_BUNKER 0
+#define ACTIVESTATE_WORLD 1
+
+extern UBYTE g_ubActiveState;
+
 void gsGameCreate(void);
 void gsGameLoop(void);
 void gsGameDestroy(void);
-
-extern tView *g_pGameView;
-extern tVPort *g_pGameMainVPort;
-extern tSimpleBufferManager *g_pGameBfr;
-extern tCameraManager *g_pCamera;
-extern tBob *g_pSiloHighlight;
-
 
 #endif

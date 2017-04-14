@@ -4,6 +4,7 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/building.h"
+#include "gamestates/game/world.h"
 
 #define PROJECTILE_SPEED      (2.0)
 #define PROJECTILE_FRAME_LIFE (((320-32)/4)/PROJECTILE_SPEED)
@@ -109,7 +110,7 @@ void projectileUndraw(void) {
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
 		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
-			bobUndraw(pProjectile->pBob, g_pGameBfr->pBuffer);
+			bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
 		--pProjectile;
 	}
 }
@@ -122,7 +123,7 @@ void projectileDraw(void) {
 	for(i = s_ubProjectileCount; i--;) {
 		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
 			bobDraw(
-				pProjectile->pBob, g_pGameBfr->pBuffer,
+				pProjectile->pBob, g_pWorldMainBfr->pBuffer,
 				pProjectile->fX-8, pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2
 			);
 		++pProjectile;

@@ -351,7 +351,6 @@ void bunkerProcess(void) {
 void bunkerShow(void) {
 	UBYTE i;
 	
-	logBlockBegin("bunkerShow()");
 	// Reset vehicle selection & platform state
 	s_ubChoice = 0;
 	while(!g_pLocalPlayer->pVehiclesLeft[s_ubChoice] && s_ubChoice < 4)
@@ -389,22 +388,19 @@ void bunkerShow(void) {
 			
 	viewLoad(s_pBunkerView);
 	bunkerSetPalette(15);
-	gameChangeLoop(bunkerProcess);
-	logBlockEnd("bunkerShow()");
+	g_ubActiveState = ACTIVESTATE_BUNKER;
 }
 
 void bunkerHide(void) {
 	UBYTE i;
 	
-	logBlockBegin("bunkerHide()");
 	bobUndraw(s_pPlatform, s_pBunkerBfr->pBuffer);
 	for(i = 0; i != 4; ++i)
 		if(g_pLocalPlayer->pVehiclesLeft[i])
 			bobUndraw(s_pVehicles[i].pBob, s_pBunkerBfr->pBuffer);
 	bobUndraw(s_pLamp, s_pBunkerBfr->pBuffer);
-	viewLoad(g_pGameView);
-	gameChangeLoop(worldGameLoop);	
-	logBlockEnd("bunkerHide()");
+
+	worldShow();
 }
 
 void bunkerDestroy(void) {

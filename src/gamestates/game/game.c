@@ -7,8 +7,6 @@
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/rand.h>
-#include <ace/utils/extview.h>
-#include <ace/utils/palette.h>
 #include "gamestates/game/map.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/world.h"
@@ -16,64 +14,51 @@
 #include "gamestates/game/player.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/projectile.h"
-#include "gamestates/game/hud.h"
+#include "gamestates/game/data.h"
+#include "gamestates/game/sim.h"
 
-tView *g_pGameView;
-tVPort *g_pGameMainVPort;
-tSimpleBufferManager *g_pGameBfr;
-tCameraManager *g_pCamera;
-tBitMap *s_pTiles;
-tBob *g_pSiloHighlight;
+UBYTE g_ubActiveState;
 
 void gsGameCreate(void) {
 	UBYTE i;
 	
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
+	
+	// Setup players
 	teamsInit();
-	
-	// Prepare view & viewport
-	g_pGameView = viewCreate(V_GLOBAL_CLUT);
-	g_pGameMainVPort = vPortCreate(g_pGameView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT-64-1, GAME_BPP, 0);
-	g_pGameBfr = simpleBufferCreate(g_pGameMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
-	hudCreate();
-	if(!g_pGameBfr) {
-		logWrite("Buffer creation failed");
-		gamePopState();
-		return;
-	}
-	g_pCamera = g_pGameBfr->pCameraManager;
-	logWrite("Allocated buffer\n");
-	paletteLoad("data/amidb32.plt", g_pGameMainVPort->pPalette, 32);
-	
-	// Load gfx
-	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	g_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
-	
-	// Load player
 	playerListCreate(1);
 	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
 	
-	// Load map
-	mapCreate(g_pGameMainVPort, s_pTiles, "data/maps/test.txt");
+	// Create everything needed to display world view
+	worldCreate();
 	
 	// Prepare bunker gfx
 	bunkerCreate();
 	
-	// Display view with its viewports
-	viewLoad(g_pGameView);
+	// Start game in bunker
+	bunkerShow();
 	logBlockEnd("gsGameCreate()");
 }
 
 void gsGameLoop(void) {
-	bunkerShow();
+	dataRecv();
+
+	simVehicles();
+	simProjectiles();
+	simTurrets();
+
+	dataSend();
+
+	if(g_ubActiveState == ACTIVESTATE_BUNKER)
+		bunkerProcess();
+	else
+		worldProcess();
 }
 
 void gsGameDestroy(void) {
 	bunkerDestroy();
-	viewDestroy(g_pGameView);
-	bobUniqueDestroy(g_pSiloHighlight);
-	bitmapDestroy(s_pTiles);
+	worldDestroy();
 	mapDestroy();
 	
 	playerListDestroy();

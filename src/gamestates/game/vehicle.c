@@ -7,6 +7,7 @@
 #include "gamestates/game/team.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/projectile.h"
+#include "gamestates/game/world.h"
 #include "vehicletypes.h"
 
 tVehicle *vehicleCreate(UBYTE ubVehicleType) {
@@ -222,14 +223,14 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 void vehicleDraw(tVehicle *pVehicle) {
 	bobDraw(
 		pVehicle->pBob,
-		g_pGameBfr->pBuffer,
+		g_pWorldMainBfr->pBuffer,
 		pVehicle->fX - VEHICLE_BODY_WIDTH/2,
 		pVehicle->fY - VEHICLE_BODY_HEIGHT/2
 	);
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
 		bobDraw(
 			pVehicle->pAuxBob,
-			g_pGameBfr->pBuffer,
+			g_pWorldMainBfr->pBuffer,
 			pVehicle->fX - g_pTurretCoords[angleToFrame(pVehicle->ubTurretAngle)].sUwCoord.uwX,
 			pVehicle->fY - g_pTurretCoords[angleToFrame(pVehicle->ubTurretAngle)].sUwCoord.uwY
 		);
@@ -239,10 +240,10 @@ void vehicleUndraw(tVehicle *pVehicle) {
 if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
 		bobUndraw(
 			pVehicle->pAuxBob,
-			g_pGameBfr->pBuffer
+			g_pWorldMainBfr->pBuffer
 		);
 	bobUndraw(
 		pVehicle->pBob,
-		g_pGameBfr->pBuffer
+		g_pWorldMainBfr->pBuffer
 	);
 }

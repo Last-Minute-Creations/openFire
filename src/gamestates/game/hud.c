@@ -4,12 +4,13 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
+#include "gamestates/game/world.h"
 
 tVPort *s_pHudVPort;
 tSimpleBufferManager *s_pHudBfr;
 
 void hudCreate(void) {
-	s_pHudVPort = vPortCreate(g_pGameView, WINDOW_SCREEN_WIDTH, 64, GAME_BPP, 0);
+	s_pHudVPort = vPortCreate(g_pWorldView, WINDOW_SCREEN_WIDTH, 64, GAME_BPP, 0);
 	s_pHudBfr = simpleBufferCreate(s_pHudVPort, WINDOW_SCREEN_WIDTH, 64, 0);
 	
 	// Initial draw on buffer
