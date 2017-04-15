@@ -24,9 +24,14 @@ void gsGameCreate(void) {
 	
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
-	
-	// Setup players
+
+	// Setup teams
 	teamsInit();
+
+	// Load map
+	mapCreate("data/maps/test.txt");
+
+	// Add players
 	playerListCreate(1);
 	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
 	

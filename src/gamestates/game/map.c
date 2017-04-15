@@ -30,8 +30,14 @@ tTile **g_pMap;
 UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 char g_szMapName[256];
+
 tBitMap *s_pTileset;
 tBitMap *s_pBuffer;
+
+void mapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
+	s_pTileset = pTileset;
+	s_pBuffer = pDst;
+}
 
 UBYTE isWater(UBYTE ubMapTile) {
 	return ubMapTile == MAP_LOGIC_WATER;
@@ -80,17 +86,14 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	return ubOut;
 }
 
-void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
-	UBYTE x, y, ubTileIdx, ubOutTile;
+void mapCreate(char *szPath) {
+	UBYTE x, y, ubTileIdx;
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
 	char szHeaderBfr[256];
 	
-	logBlockBegin("mapCreate(pVPort: %p, pTileset: %p, szPath: %s)", pVPort, pTileset, szPath);
+	logBlockBegin("mapCreate(szPath: %s)", szPath);
 
-	pManager = (tSimpleBufferManager*)vPortGetManager(pVPort, VPM_SCROLL);
-	s_pBuffer = pManager->pBuffer;
-	s_pTileset = pTileset;
 	
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
@@ -118,7 +121,51 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 	}
 	fclose(pMapFile);
 	
-	// 2nd data pass - generate graphics based on logic tiles
+	// 2nd data pass - generate additional logic
+	for(x = 0; x != g_uwMapTileWidth; ++x) {
+		for(y = 0; y != g_uwMapTileHeight; ++y) {
+			ubTileIdx = g_pMap[x][y].ubIdx;
+			switch(ubTileIdx) {
+				case MAP_LOGIC_WATER:
+					break;
+				case MAP_LOGIC_SPAWN1:
+					teamAddSpawn(TEAM_GREEN, x, y);
+					break;
+				case MAP_LOGIC_SPAWN2:
+					teamAddSpawn(TEAM_BROWN, x, y);
+					break;
+				case MAP_LOGIC_ROAD:
+					break;
+				case MAP_LOGIC_WALL:
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
+					break;
+				case MAP_LOGIC_FLAG1:
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
+					// TODO: register flag
+					break;
+				case MAP_LOGIC_FLAG2:
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
+					// TODO: register flag
+					break;
+				case MAP_LOGIC_SENTRY1:
+				case MAP_LOGIC_SENTRY2:
+					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
+					// TODO: register turret
+					break;
+				case MAP_LOGIC_DIRT:
+				default:
+					break;
+			}
+		}
+	}
+
+	logBlockEnd("mapCreate()");
+}
+
+void mapRedraw() {
+	UWORD x, y;
+	UBYTE ubTileIdx, ubOutTile;
+
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
 			ubTileIdx = g_pMap[x][y].ubIdx;
@@ -128,34 +175,25 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 					break;
 				case MAP_LOGIC_SPAWN1:
 					ubOutTile = MAP_TILE_SPAWN1;
-					teamAddSpawn(TEAM_GREEN, x, y);
 					break;
 				case MAP_LOGIC_SPAWN2:
 					ubOutTile = MAP_TILE_SPAWN2;
-					teamAddSpawn(TEAM_BROWN, x, y);
 					break;
 				case MAP_LOGIC_ROAD:
 					ubOutTile = MAP_TILE_ROAD + mapCheckNeighbours(x, y, isRoadFriend);
 					break;
 				case MAP_LOGIC_WALL:
 					ubOutTile = MAP_TILE_WALL + mapCheckNeighbours(x, y, isWall);
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
 					break;
 				case MAP_LOGIC_FLAG1:
 					ubOutTile = MAP_TILE_FLAG1L;
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
-					// TODO: register flag
 					break;
 				case MAP_LOGIC_FLAG2:
 					ubOutTile = MAP_TILE_FLAG2L;
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
-					// TODO: register flag
 					break;
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
 					ubOutTile = MAP_TILE_TURRET;
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
-					// TODO: register turret
 					break;
 				case MAP_LOGIC_DIRT:
 				default:
@@ -165,8 +203,6 @@ void mapCreate(tVPort *pVPort, tBitMap *pTileset, char *szPath) {
 			mapDrawTile(x, y, ubOutTile);
 		}
 	}
-	
-	logBlockEnd("mapCreate()");
 }
 
 void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {

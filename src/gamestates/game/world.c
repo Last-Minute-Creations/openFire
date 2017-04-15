@@ -41,8 +41,9 @@ UBYTE worldCreate(void) {
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
 	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
 
-	// Load map
-	mapCreate(s_pWorldMainVPort, s_pTiles, "data/maps/test.txt");
+	// Draw map
+	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
+	mapRedraw();
 
 	return 1;
 }

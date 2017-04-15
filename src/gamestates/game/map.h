@@ -49,17 +49,22 @@ extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 extern char g_szMapName[256];
 
 void mapCreate(
-	IN tVPort *pVPort,
-	IN tBitMap *pTileset,
 	IN char *szPath
 );
 
 void mapDestroy(void);
 
+void mapRedraw();
+
 void mapDrawTile(
 	IN UBYTE ubX,
 	IN UBYTE ubY,
 	IN UBYTE ubTileIdx
+);
+
+void mapSetSrcDst(
+	IN tBitMap *pTileset,
+	IN tBitMap *pDst
 );
 
 extern tTile **g_pMap;
