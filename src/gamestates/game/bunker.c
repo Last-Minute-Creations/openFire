@@ -274,13 +274,7 @@ void bunkerProcessChoice() {
 	// TODO: on timer - update lights on vehicle platform
 }
 
-void bunkerProcess(void) {
-		
-	if (keyUse(KEY_ESCAPE)) {
-		gamePopState();
-		return;
-	}
-	
+void bunkerProcess(void) {	
 	switch(s_ubMode) {
 		case BUNKER_MODE_CHOICE:
 			bunkerProcessChoice();
@@ -407,13 +401,16 @@ void bunkerDestroy(void) {
 	UBYTE i;
 	
 	logBlockBegin("bunkerDestroy()");
+	
 	viewLoad(0);
 	viewDestroy(s_pBunkerView);
 	bobUniqueDestroy(s_pLamp);
 	bobUniqueDestroy(s_pPlatform);
+
 	// Free vehicles bob
 	bunkerVehiclesDestroy();
 	bitmapMaskDestroy(s_pVehiclesMask);
 	bitmapDestroy(s_pVehiclesBitmap);
-	logBlockEnd("BunkerDestroy()");
+	
+	logBlockEnd("bunkerDestroy()");
 }

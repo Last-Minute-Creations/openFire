@@ -4,15 +4,13 @@
 #include <ace/config.h>
 #include "gamestates/game/vehicle.h"
 
-#define TEAM_GREEN 0
-#define TEAM_BROWN 1
-
 typedef struct _tPlayer {
 	// General
 	char szName[20];
 	UBYTE ubTeam;
 	UBYTE ubCurrentVehicleType;
 	tVehicle *pCurrentVehicle;
+	tSteerRequest sSteerRequest;
 	
 	// Vehicles available
 	UBYTE pVehiclesLeft[4];
@@ -51,6 +49,10 @@ void playerHideInBunker(
 );
 
 void playerLoseVehicle(
+	IN tPlayer *pPlayer
+);
+
+void playerSteerVehicle(
 	IN tPlayer *pPlayer
 );
 

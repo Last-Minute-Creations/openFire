@@ -47,6 +47,11 @@ void gsGameCreate(void) {
 }
 
 void gsGameLoop(void) {
+	if(keyCheck(KEY_ESCAPE)) {
+		gamePopState(); // Pop to threaded loader so it can free stuff
+		return;
+	}
+
 	dataRecv();
 
 	simVehicles();
@@ -62,9 +67,13 @@ void gsGameLoop(void) {
 }
 
 void gsGameDestroy(void) {
+	logBlockBegin("gsGameDestroy()");
+
 	bunkerDestroy();
 	worldDestroy();
 	mapDestroy();
 	
 	playerListDestroy();
+
+	logBlockEnd("gsGameDestroy()");
 }

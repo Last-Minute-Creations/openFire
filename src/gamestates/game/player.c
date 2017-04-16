@@ -4,6 +4,7 @@
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
 #include "gamestates/game/vehicle.h"
+#include "gamestates/game/world.h"
 
 void playerListCreate(UBYTE ubPlayerLimit) {
 	g_ubPlayerLimit = ubPlayerLimit;
@@ -74,6 +75,7 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleDestroy(pPlayer->pCurrentVehicle);
 	pPlayer->pCurrentVehicle = 0;
+	worldHide();
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {

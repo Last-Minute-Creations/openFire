@@ -13,8 +13,8 @@ typedef struct _tBobSource {
 typedef struct _tBob {
 	tBobSource sSource;
 	tBitMap* pBg;
-	UWORD uwPrevX;
 	UWORD uwPrevY;
+	UWORD uwPrevX;
 	UWORD uwOffsY;
 	UWORD uwHeight;
 } tBob;

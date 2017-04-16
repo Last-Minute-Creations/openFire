@@ -4,8 +4,8 @@
 #include <ace/config.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
-#include "gamestates/game/bob.h"
 #include "vehicletypes.h"
+#include "gamestates/game/map.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN 25
@@ -46,6 +46,7 @@ typedef struct {
 	UBYTE ubFuel;
 	UBYTE ubLife;
 	UBYTE ubCooldown; ///< Cooldown timer after fire
+	UBYTE ubIsOnSilo;
 } tVehicle;
 
 tVehicle *vehicleCreate(

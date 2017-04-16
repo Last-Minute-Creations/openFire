@@ -7,9 +7,16 @@
 #define TEAM_GREEN 0
 #define TEAM_BROWN 1
 
-typedef struct {
-	UBYTE ubSpawnX;
-	UBYTE ubSpawnY;
+#define TEAM_MAX_SILOS 3
+
+typedef struct _tSilo {
+	UBYTE ubTileY;
+	UBYTE ubTileX;
+} tSilo;
+
+typedef struct _tTeam {
+	UBYTE ubSiloCount;
+	tSilo pSilos[TEAM_MAX_SILOS];
 } tTeam;
 
 void teamsInit(void);

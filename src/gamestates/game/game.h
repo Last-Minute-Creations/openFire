@@ -3,6 +3,7 @@
 
 #include <ace/config.h>
 #include <ace/managers/viewport/simplebuffer.h>
+#include <ace/managers/key.h>
 #include "gamestates/game/bob.h"
 
 #define GAME_BPP 5

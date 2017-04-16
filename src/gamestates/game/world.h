@@ -8,6 +8,10 @@
 extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;
 
+extern UBYTE g_ubDoSiloHighlight;
+extern UWORD g_uwSiloHighlightTileY;
+extern UWORD g_uwSiloHighlightTileX;
+
 UBYTE worldCreate(void);
 void worldDestroy(void);
 void worldProcess(void);
@@ -17,6 +21,6 @@ void worldDraw(void);
 void worldShow(void);
 void worldHide(void);
 
-UBYTE worldProcessInput(void);
+void worldProcessInput(void);
 
 #endif

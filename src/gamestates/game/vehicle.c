@@ -23,8 +23,8 @@ tVehicle *vehicleCreate(UBYTE ubVehicleType) {
 	
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
-	pVehicle->fX = (g_pTeams[TEAM_GREEN].ubSpawnX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
-	pVehicle->fY = (g_pTeams[TEAM_GREEN].ubSpawnY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	pVehicle->fX = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	pVehicle->fY = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
 	pVehicle->ubBodyAngle = ANGLE_90;
 	pVehicle->ubTurretAngle = ANGLE_90;
 	pVehicle->ubBaseAmmo = pVehicle->pType->ubMaxBaseAmmo;
@@ -32,6 +32,8 @@ tVehicle *vehicleCreate(UBYTE ubVehicleType) {
 	pVehicle->ubFuel = pVehicle->pType->ubMaxFuel;
 	pVehicle->ubLife = pVehicle->pType->ubMaxLife;
 	pVehicle->bRotDiv = 0;
+	logWrite("Created vehicle %hu @%f,%f\n", ubVehicleType, pVehicle->fX, pVehicle->fY);
+	logWrite("Spawn is at tile %hu, %hu\n", g_pTeams[TEAM_GREEN].pSilos[0].ubTileX, g_pTeams[TEAM_GREEN].pSilos[0].ubTileY);
 	
 	// Create bob
 	pVehicle->pBob = bobCreate(

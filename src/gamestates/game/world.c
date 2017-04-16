@@ -14,13 +14,20 @@
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/hud.h"
 
+// Viewport stuff
 tView *g_pWorldView;
 tVPort *s_pWorldMainVPort;
 tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *s_pWorldCamera;
 tBitMap *s_pTiles;
+
+// Silo highlight
+// TODO: struct?
 tBob *s_pSiloHighlight;
-UBYTE s_ubIsSiloHighlighted;
+UBYTE s_ubWasSiloHighlighted;
+UBYTE g_ubDoSiloHighlight;
+UWORD g_uwSiloHighlightTileY;
+UWORD g_uwSiloHighlightTileX;
 
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
@@ -45,6 +52,10 @@ UBYTE worldCreate(void) {
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	mapRedraw();
 
+	// Initial values
+	s_ubWasSiloHighlighted = 0;
+	g_ubDoSiloHighlight = 0;
+
 	return 1;
 }
 
@@ -63,103 +74,68 @@ void worldHide(void) {
 	bunkerShow();
 }
 
+void worldDraw(void) {
+	UBYTE ubPlayer;
+
+	// Silo highlight
+	if(g_ubDoSiloHighlight)
+		bobDraw(
+			s_pSiloHighlight, g_pWorldMainBfr->pBuffer,
+			g_uwSiloHighlightTileX << MAP_TILE_SIZE,
+			g_uwSiloHighlightTileY << MAP_TILE_SIZE
+		);
+
+	// Vehicles
+	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
+		if(g_pPlayers[ubPlayer].pCurrentVehicle)
+			vehicleDraw(g_pPlayers[ubPlayer].pCurrentVehicle);
+
+	// Projectiles
+	projectileDraw();
+
+	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
+}
+
+void worldUndraw(void) {
+	UBYTE ubPlayer;
+
+	// Projectiles
+	projectileUndraw();
+
+	// Vehicles
+	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
+		if(g_pPlayers[ubPlayer].pCurrentVehicle)
+			vehicleUndraw(g_pPlayers[ubPlayer].pCurrentVehicle);
+
+	// Silo highlight
+	if(s_ubWasSiloHighlighted)
+		bobUndraw(
+			s_pSiloHighlight, g_pWorldMainBfr->pBuffer
+		);
+}
+
 void worldProcess(void) {
-	UWORD uwLocalX, uwLocalY, uwLocalTileX, uwLocalTileY;
+	UWORD uwLocalX, uwLocalY;
 	
-	// Player input
-	if(!worldProcessInput())
-		return;
+	// World-specific & steering-irrelevant player input
+	worldProcessInput();
 	
 	uwLocalX = g_pLocalPlayer->pCurrentVehicle->fX;
 	uwLocalY = g_pLocalPlayer->pCurrentVehicle->fY;
-	uwLocalTileX = uwLocalX >> MAP_TILE_SIZE;
-	uwLocalTileY = uwLocalY >> MAP_TILE_SIZE;
 	
-	// Update camera
-	cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
-	
-	// Draw objects on map
-	if(g_pMap[uwLocalTileX][uwLocalTileY].ubIdx == MAP_LOGIC_SPAWN1) {
-		UWORD uwSiloDiffX, uwSiloDiffY;
-		
-		uwSiloDiffX = uwLocalX - (uwLocalTileX << MAP_TILE_SIZE);
-		uwSiloDiffY = uwLocalY - (uwLocalTileY << MAP_TILE_SIZE);
-		if(uwSiloDiffX > 12 && uwSiloDiffX < 18 && uwSiloDiffY > 12 && uwSiloDiffY < 18)
-			s_ubIsSiloHighlighted = 1;
-		else
-			s_ubIsSiloHighlighted = 0;
-	}
-	else
-		s_ubIsSiloHighlighted = 0;
-	if(s_ubIsSiloHighlighted)
-		bobDraw(
-			s_pSiloHighlight, g_pWorldMainBfr->pBuffer,
-			uwLocalTileX << MAP_TILE_SIZE, uwLocalTileY << MAP_TILE_SIZE
-		);
-	else if(g_pMap[uwLocalTileX][uwLocalTileY].ubIdx == MAP_LOGIC_WATER) {
-		playerLoseVehicle(g_pLocalPlayer);
-		bunkerShow();
-		return;
-	}
-	projectileProcess();
+	// TODO: Update HUD vport
 
-	if(g_pLocalPlayer->pCurrentVehicle)
-		vehicleDraw(g_pLocalPlayer->pCurrentVehicle);
-	projectileDraw();
+	// Update main vport
+	vPortWaitForEnd(s_pWorldMainVPort);
+	worldUndraw();
+	cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
+	worldDraw();
 	
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
-	vPortWaitForEnd(s_pWorldMainVPort);
-		
-	// Undraw objects
-	projectileUndraw();
-	if(g_pLocalPlayer->pCurrentVehicle) {
-		vehicleUndraw(g_pLocalPlayer->pCurrentVehicle);
-		if(s_ubIsSiloHighlighted)
-			bobUndraw(s_pSiloHighlight, g_pWorldMainBfr->pBuffer);
-	}
 }
 
-UBYTE worldProcessInput(void) {
-	tSteerRequest sReq;
-	
-	if (keyUse(KEY_ESCAPE)) {
-		gamePopState();
-		return 0;
-	}
-
+void worldProcessInput(void) {
 	if(keyUse(KEY_C))
 		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "bufDump.bmp");
-	
-	sReq.ubForward     = keyCheck(OF_KEY_FORWARD);
-	sReq.ubBackward    = keyCheck(OF_KEY_BACKWARD);
-	sReq.ubLeft        = keyCheck(OF_KEY_LEFT);
-	sReq.ubRight       = keyCheck(OF_KEY_RIGHT);
-	sReq.ubTurretLeft  = keyCheck(OF_KEY_TURRET_LEFT);
-	sReq.ubTurretRight = keyCheck(OF_KEY_TURRET_RIGHT);
-	sReq.ubAction1     = keyCheck(OF_KEY_ACTION1);
-	sReq.ubAction2     = keyCheck(OF_KEY_ACTION2);
-	sReq.ubAction3     = keyCheck(OF_KEY_ACTION3);
-	
-	if(sReq.ubAction1 && s_ubIsSiloHighlighted) {
-		playerHideInBunker(g_pLocalPlayer);
-		bunkerShow();
-		return 0;
-	}
-
-	switch(g_pLocalPlayer->ubCurrentVehicleType) {
-		case VEHICLE_TYPE_TANK:
-			vehicleSteerTank(g_pLocalPlayer->pCurrentVehicle, &sReq);
-			break;
-		case VEHICLE_TYPE_JEEP:
-			vehicleSteerJeep(g_pLocalPlayer->pCurrentVehicle, &sReq);
-			break;
-	}
-	return 1;
-}
-
-/**
- *  @todo Optimization by non-masked silo highlight (alternative bunker tile)?
- */
-void worldGameLoop(void) {
 }
