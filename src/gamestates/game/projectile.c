@@ -62,6 +62,7 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 	float fSin, fCos;
 	UBYTE i, ubAngle;
 	
+	// Find free projectile
 	pProjectile = 0;
 	for(i = 0; i != s_ubProjectileCount; ++i) {
 		if(s_pProjectiles[i].ubType == PROJECTILE_TYPE_OFF) {
@@ -100,7 +101,7 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 }
 
 void projectileDestroy(tProjectile *pProjectile) {
-	pProjectile->ubType = PROJECTILE_TYPE_OFF;
+	pProjectile->ubType = PROJECTILE_TYPE_OFFING;
 }
 
 void projectileUndraw(void) {
@@ -110,6 +111,8 @@ void projectileUndraw(void) {
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
 		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
+			if(pProjectile->ubType == PROJECTILE_TYPE_OFFING)
+				pProjectile->ubType = PROJECTILE_TYPE_OFF;
 			bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
 		--pProjectile;
 	}
@@ -121,7 +124,7 @@ void projectileDraw(void) {
 	
 	pProjectile = &s_pProjectiles[0];
 	for(i = s_ubProjectileCount; i--;) {
-		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
+		if(pProjectile->ubType > PROJECTILE_TYPE_OFFING)
 			bobDraw(
 				pProjectile->pBob, g_pWorldMainBfr->pBuffer,
 				pProjectile->fX-8, pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2

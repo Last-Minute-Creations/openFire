@@ -6,9 +6,10 @@
 #include "gamestates/game/bob.h"
 
 #define PROJECTILE_TYPE_OFF    0
-#define PROJECTILE_TYPE_CANNON 1
-#define PROJECTILE_TYPE_NADE   2
-#define PROJECTILE_TYPE_ROCKET 3
+#define PROJECTILE_TYPE_OFFING 1
+#define PROJECTILE_TYPE_CANNON 2
+#define PROJECTILE_TYPE_NADE   3
+#define PROJECTILE_TYPE_ROCKET 4
 
 typedef struct _tProjectile {
 	tVehicle *pOwner;  ///< Owner for scoring kills
