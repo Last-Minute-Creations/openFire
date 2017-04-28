@@ -67,7 +67,6 @@ void worldDestroy(void) {
 
 void worldShow(void) {
 	viewLoad(g_pWorldView);
-	g_ubActiveState = ACTIVESTATE_WORLD;
 }
 
 void worldHide(void) {

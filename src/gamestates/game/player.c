@@ -15,7 +15,7 @@ void playerListDestroy() {
 	UBYTE i;
 	
 	for(i = 0; i != g_ubPlayerLimit; ++i)
-		if(g_pPlayers[i].szName[0])
+		if(g_pPlayers[i].ubState != PLAYER_STATE_OFF)
 			playerRemoveByPtr(&g_pPlayers[i]);
 	memFree(g_pPlayers, sizeof(tPlayer));
 }
@@ -32,9 +32,9 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		if(g_pPlayers[i].szName[0])
 			continue;
 		pPlayer = &g_pPlayers[i];
-		memset(pPlayer, 0, sizeof(tPlayer));
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
+		pPlayer->ubState = PLAYER_STATE_BUNKERED;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
@@ -59,8 +59,8 @@ void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 void playerRemoveByPtr(tPlayer *pPlayer) {
 	if(pPlayer->pCurrentVehicle)
 		vehicleDestroy(pPlayer->pCurrentVehicle);
-	if(!pPlayer->szName[0]) {
-		logWrite("ERR: Tried to remove non-existing player: %p", pPlayer);
+	if(!pPlayer->ubState == PLAYER_STATE_OFF) {
+		logWrite("ERR: Tried to remove offline player: %p", pPlayer);
 		return;
 	}
 	memset(pPlayer, 0, sizeof(tPlayer));
@@ -75,6 +75,7 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleDestroy(pPlayer->pCurrentVehicle);
 	pPlayer->pCurrentVehicle = 0;
+	pPlayer->ubState = PLAYER_STATE_BUNKERED;
 	if(pPlayer == g_pLocalPlayer)
 		worldHide();
 }
@@ -84,6 +85,8 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->pCurrentVehicle = 0;
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
+	pPlayer->ubState = PLAYER_STATE_DEAD;
+	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
 }
 
 tPlayer *g_pPlayers;

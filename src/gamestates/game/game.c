@@ -17,8 +17,6 @@
 #include "gamestates/game/data.h"
 #include "gamestates/game/sim.h"
 
-UBYTE g_ubActiveState;
-
 void gsGameCreate(void) {
 	UBYTE i;
 	
@@ -41,8 +39,11 @@ void gsGameCreate(void) {
 	// Prepare bunker gfx
 	bunkerCreate();
 	
-	// Start game in bunker
-	bunkerShow();
+	// Select first view
+	if(g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED)
+		bunkerShow();
+	else
+		worldShow();
 	logBlockEnd("gsGameCreate()");
 }
 
@@ -52,18 +53,30 @@ void gsGameLoop(void) {
 		return;
 	}
 
+	custom.color[0] = 0x0080;
 	dataRecv();
-	simVehicles();
+	custom.color[0] = 0x300;
+	simPlayers();
+	custom.color[0] = 0x600;
 	simProjectiles();
+	custom.color[0] = 0x900;
 	simTurrets();
+	custom.color[0] = 0x0008;
 	dataSend();
+	custom.color[0] = 0x0000;
 
-	if(g_ubActiveState == ACTIVESTATE_BUNKER) {
+	if(
+		g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED ||
+		g_pLocalPlayer->ubState == PLAYER_STATE_SURFACING
+	) {
+		custom.color[0] = 0x0880;
 		bunkerProcess();
 	}
 	else {
+		custom.color[0] = 0x0088;
 		worldProcess();
 	}
+	custom.color[0] = 0x0000;
 }
 
 void gsGameDestroy(void) {

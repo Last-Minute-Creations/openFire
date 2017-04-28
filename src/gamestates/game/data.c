@@ -11,7 +11,7 @@ void dataRecv(void) {
 	// TODO: dataRecv: ???
 
 	
-	if(g_ubActiveState == ACTIVESTATE_WORLD) {
+	if(g_pLocalPlayer->ubState == PLAYER_STATE_DRIVING) {
 		// Receive player's steer request
 		tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
 		pReq->ubForward     = keyCheck(OF_KEY_FORWARD);

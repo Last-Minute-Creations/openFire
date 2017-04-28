@@ -13,18 +13,19 @@
 #include "gamestates/game/map.h"
 
 // Initial config
-#define GFX_SKY_HEIGHT (50)
+#define GFX_SKY_HEIGHT           50
 // Surface gfx:
-#define GFX_SURFACE_HEIGHT (32)
-#define GFX_SURFACE_SKY_HEIGHT (21)
-#define GFX_SURFACE_ALPHA_HEIGHT (6)
+#define GFX_SURFACE_HEIGHT       32
+#define GFX_SURFACE_SKY_HEIGHT   21
+#define GFX_SURFACE_ALPHA_HEIGHT 6
 // Placement offsets
-#define GFX_SURFACE_OFFS (GFX_SKY_HEIGHT - GFX_SURFACE_SKY_HEIGHT)
-#define GFX_SHAFT_OFFS (GFX_SURFACE_OFFS + GFX_SURFACE_HEIGHT - GFX_SURFACE_ALPHA_HEIGHT)
+#define GFX_SURFACE_OFFS         (GFX_SKY_HEIGHT - GFX_SURFACE_SKY_HEIGHT)
+#define GFX_SHAFT_OFFS           (GFX_SURFACE_OFFS + GFX_SURFACE_HEIGHT \
+                                  - GFX_SURFACE_ALPHA_HEIGHT)
 // Hangars' Y pos refer to its bottom line
-#define HANGAR_HI_Y (GFX_SHAFT_OFFS + 54)
-#define HANGAR_LO_Y (GFX_SHAFT_OFFS + 92)
-#define HANGAR_SHAFT_DIST 18
+#define HANGAR_HI_Y              (GFX_SHAFT_OFFS + 54)
+#define HANGAR_LO_Y              (GFX_SHAFT_OFFS + 92)
+#define HANGAR_SHAFT_DIST        18
 
 #define GFX_LAMP_DELTAY 4
 
@@ -33,12 +34,12 @@
 #define GFX_COLOR_SKY 24
 
 // Bunker gamestate modes
-#define BUNKER_MODE_INVALID 0
-#define BUNKER_MODE_CHOICE 1
+#define BUNKER_MODE_INVALID             0
+#define BUNKER_MODE_CHOICE              1
 #define BUNKER_MODE_ELEVATOR_TO_VEHICLE 2
 #define BUNKER_MODE_VEHICLE_TO_ELEVATOR 3
 #define BUNKER_MODE_ELEVATOR_TO_SURFACE 4
-#define BUNKER_MODE_MAP 5
+#define BUNKER_MODE_MAP                 5
 
 #define BUNKER_ANIM_FRAMES 100
 #define BUNKER_FADE_FRAMES 16
@@ -322,8 +323,13 @@ void bunkerProcess(void) {
 			--s_uwPlatformY;
 			bobDraw(s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer, s_pVehicles[s_ubChoice].uwX, s_pVehicles[s_ubChoice].uwY);
 			bobDraw(s_pPlatform, s_pBunkerBfr->pBuffer, s_pPlatform->uwPrevX, s_uwPlatformY);
-			if(BUNKER_ANIM_FRAMES - s_uwFrameCount < BUNKER_FADE_FRAMES)
+			if(BUNKER_ANIM_FRAMES - s_uwFrameCount < BUNKER_FADE_FRAMES) {
+				if(g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED) {
+					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
+					g_pLocalPlayer->uwCooldown = BUNKER_FADE_FRAMES;
+				}
 				bunkerSetPalette(BUNKER_ANIM_FRAMES - s_uwFrameCount);
+			}
 			if(s_uwFrameCount >= BUNKER_ANIM_FRAMES) {
 				bunkerHide();
 				return;
@@ -382,7 +388,6 @@ void bunkerShow(void) {
 			
 	viewLoad(s_pBunkerView);
 	bunkerSetPalette(15);
-	g_ubActiveState = ACTIVESTATE_BUNKER;
 }
 
 void bunkerHide(void) {

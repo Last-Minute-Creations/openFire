@@ -18,9 +18,6 @@
 #define OF_KEY_ACTION2      KEY_R
 #define OF_KEY_ACTION3      KEY_V
 
-#define ACTIVESTATE_BUNKER 0
-#define ACTIVESTATE_WORLD 1
-
 extern UBYTE g_ubActiveState;
 
 void gsGameCreate(void);
