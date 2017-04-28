@@ -39,14 +39,20 @@
 #define MAP_TILE_WALL   48
 #define MAP_TILE_TURRET 64
 
-typedef struct {
+typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx
 	UBYTE ubData; ///< Data field. For buildings/gates used as idx in obj array.
 } tTile;
+
+typedef struct _tTileCoord {
+	UBYTE ubX;
+	UBYTE ubY;
+} tTileCoord;
 	
 extern UWORD g_uwMapWidth, g_uwMapHeight;
 extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 extern char g_szMapName[256];
+extern tTile **g_pMap;
 
 void mapCreate(
 	IN char *szPath
@@ -66,6 +72,13 @@ void mapSetSrcDst(
 	IN tBitMap *pTileset,
 	IN tBitMap *pDst
 );
+
+void mapRequestUpdateTile(
+	IN UBYTE ubX,
+	IN UBYTE ubY
+);
+
+void mapUpdateTiles(void);
 
 extern tTile **g_pMap;
 

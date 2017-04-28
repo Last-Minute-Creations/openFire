@@ -75,7 +75,8 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleDestroy(pPlayer->pCurrentVehicle);
 	pPlayer->pCurrentVehicle = 0;
-	worldHide();
+	if(pPlayer == g_pLocalPlayer)
+		worldHide();
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {

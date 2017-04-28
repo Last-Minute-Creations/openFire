@@ -53,17 +53,17 @@ void gsGameLoop(void) {
 	}
 
 	dataRecv();
-
 	simVehicles();
 	simProjectiles();
 	simTurrets();
-
 	dataSend();
 
-	if(g_ubActiveState == ACTIVESTATE_BUNKER)
+	if(g_ubActiveState == ACTIVESTATE_BUNKER) {
 		bunkerProcess();
-	else
+	}
+	else {
 		worldProcess();
+	}
 }
 
 void gsGameDestroy(void) {

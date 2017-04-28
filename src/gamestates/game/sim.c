@@ -43,8 +43,8 @@ void simVehicles(void) {
 				//      but don't destroy vehicles which are descending/ascending
 			}
 			else if(
-				(g_pLocalPlayer->ubTeam == TEAM_GREEN && ubTileType == MAP_LOGIC_SPAWN1) ||
-				(g_pLocalPlayer->ubTeam == TEAM_BROWN && ubTileType == MAP_LOGIC_SPAWN2)
+				(pPlayer->ubTeam == TEAM_GREEN && ubTileType == MAP_LOGIC_SPAWN1) ||
+				(pPlayer->ubTeam == TEAM_BROWN && ubTileType == MAP_LOGIC_SPAWN2)
 			) {
 				// Standing on own, unoccupied silo
 				uwSiloDx = uwVx & ((1 << MAP_TILE_SIZE) - 1);

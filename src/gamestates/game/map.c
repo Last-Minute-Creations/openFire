@@ -31,6 +31,9 @@ UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 char g_szMapName[256];
 
+tTileCoord g_pTilesToRedraw[9] = {{0, 0}};
+UBYTE g_ubPendingTileCount;
+
 tBitMap *s_pTileset;
 tBitMap *s_pBuffer;
 
@@ -93,7 +96,7 @@ void mapCreate(char *szPath) {
 	char szHeaderBfr[256];
 	
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
-
+	g_ubPendingTileCount = 0;
 	
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
@@ -222,4 +225,26 @@ void mapDestroy(void) {
 	}
 	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");
+}
+
+void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
+	++g_ubPendingTileCount;
+	g_pTilesToRedraw[g_ubPendingTileCount].ubX = ubTileX;
+	g_pTilesToRedraw[g_ubPendingTileCount].ubY = ubTileY;
+}
+
+/**
+ * @todo Redraw proper tile type.
+ */
+void mapUpdateTiles(void) {
+	while(g_ubPendingTileCount) {
+		blitCopyAligned(
+			s_pTileset, 0, MAP_TILE_DIRT << MAP_TILE_SIZE,
+			s_pBuffer,
+			g_pTilesToRedraw[g_ubPendingTileCount].ubX << MAP_TILE_SIZE,
+			g_pTilesToRedraw[g_ubPendingTileCount].ubY << MAP_TILE_SIZE,
+			1 << MAP_TILE_SIZE, 1 << MAP_TILE_SIZE
+		);
+		--g_ubPendingTileCount;
+	}
 }

@@ -75,6 +75,8 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 	
 	pProjectile->pOwner = pOwner;
 	pProjectile->ubType = ubType;
+	pProjectile->pBob->uwPrevX = 0;
+	pProjectile->pBob->uwPrevY = 0;
 	
 	// Angle
 	if(pOwner->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
@@ -110,10 +112,11 @@ void projectileUndraw(void) {
 	
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
-		if(pProjectile->ubType != PROJECTILE_TYPE_OFF)
+		if(pProjectile->ubType != PROJECTILE_TYPE_OFF) {
 			if(pProjectile->ubType == PROJECTILE_TYPE_OFFING)
 				pProjectile->ubType = PROJECTILE_TYPE_OFF;
 			bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
+		}
 		--pProjectile;
 	}
 }
@@ -179,7 +182,7 @@ void projectileProcess(void) {
 			if(buildingDamage(ubBuildingIdx, 10) == BUILDING_DESTROYED) {
 				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
 				g_pMap[ubMapX][ubMapY].ubData = 0;
-				mapDrawTile(ubMapX, ubMapY, MAP_TILE_DIRT);
+				mapRequestUpdateTile(ubMapX, ubMapY);
 			}
 			projectileDestroy(pProjectile);
 			continue;

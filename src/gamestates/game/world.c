@@ -129,6 +129,7 @@ void worldProcess(void) {
 	vPortWaitForEnd(s_pWorldMainVPort);
 	worldUndraw();
 	cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
+	mapUpdateTiles();
 	worldDraw();
 	
 	viewProcessManagers(g_pWorldView);
