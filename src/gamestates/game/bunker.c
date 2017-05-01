@@ -53,6 +53,7 @@ UWORD s_uwFrameCount;
 UWORD s_uwPlatformY;
 
 UWORD s_pBasePalette[32];
+UBYTE s_ubWasAction1;
 
 tView *s_pBunkerView;
 tVPort *s_pBunkerVPort;
@@ -217,15 +218,15 @@ void bunkerProcessChoice() {
 	// Process player input - selection change
 	ubSelectionChanged = 1;
 	ubPrevChoice = s_ubChoice;
-	if(keyUse(OF_KEY_LEFT) && (s_ubChoice & 1))
+	if(g_pLocalPlayer->sSteerRequest.ubLeft && (s_ubChoice & 1))
 		--s_ubChoice;
-	else if(keyUse(OF_KEY_RIGHT) && !(s_ubChoice & 1))
+	else if(g_pLocalPlayer->sSteerRequest.ubRight && !(s_ubChoice & 1))
 		++s_ubChoice;
-	else if(keyUse(OF_KEY_BACKWARD) && s_ubChoice < 2)
+	else if(g_pLocalPlayer->sSteerRequest.ubBackward && s_ubChoice < 2)
 		s_ubChoice += 2;
-	else if(keyUse(OF_KEY_FORWARD) && s_ubChoice >= 2)
+	else if(g_pLocalPlayer->sSteerRequest.ubForward && s_ubChoice >= 2)
 		s_ubChoice -= 2;
-	else if(keyUse(OF_KEY_ACTION1)) {
+	else if(g_pLocalPlayer->sSteerRequest.ubAction1 && !s_ubWasAction1) {
 		if(g_pLocalPlayer->pVehiclesLeft[s_ubChoice]) {
 			if(s_ubChoice > 1)
 				s_ubMode = BUNKER_MODE_VEHICLE_TO_ELEVATOR;
@@ -273,9 +274,12 @@ void bunkerProcessChoice() {
 			);
 	}
 	// TODO: on timer - update lights on vehicle platform
+
+	// Process fire posEdge
+	s_ubWasAction1 = g_pLocalPlayer->sSteerRequest.ubAction1;
 }
 
-void bunkerProcess(void) {	
+void bunkerProcess(void) {
 	switch(s_ubMode) {
 		case BUNKER_MODE_CHOICE:
 			bunkerProcessChoice();
@@ -388,6 +392,7 @@ void bunkerShow(void) {
 			
 	viewLoad(s_pBunkerView);
 	bunkerSetPalette(15);
+	s_ubWasAction1 = 1;
 }
 
 void bunkerHide(void) {

@@ -77,29 +77,24 @@ void simPlayers(void) {
 	UBYTE ubPlayer;
 	tPlayer *pPlayer;
 
-	logWrite("Current state: ");
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
 		pPlayer = &g_pPlayers[ubPlayer];
 		switch(pPlayer->ubState) {
 			case PLAYER_STATE_OFF:
-				logWrite("OFF\n");
 				continue;
 			case PLAYER_STATE_DEAD:
-				logWrite("DEAD\n");
 				if(!pPlayer->uwCooldown)
 					pPlayer->ubState = PLAYER_STATE_BUNKERED;
 				else
 					--pPlayer->uwCooldown;
 				continue;
 			case PLAYER_STATE_SURFACING:
-				logWrite("SURFACING\n");
 				if(!pPlayer->uwCooldown)
 					pPlayer->ubState = PLAYER_STATE_DRIVING;
 				else
 					--pPlayer->uwCooldown;
 				continue;
 			case PLAYER_STATE_DRIVING:
-				logWrite("DRIVING\n");
 				simPlayerVehicle(pPlayer);
 				continue;
 		}
