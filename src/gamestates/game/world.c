@@ -114,20 +114,21 @@ void worldUndraw(void) {
 }
 
 void worldProcess(void) {
-	UWORD uwLocalX, uwLocalY;
 	
 	// World-specific & steering-irrelevant player input
 	worldProcessInput();
-	
-	uwLocalX = g_pLocalPlayer->pCurrentVehicle->fX;
-	uwLocalY = g_pLocalPlayer->pCurrentVehicle->fY;
 	
 	// TODO: Update HUD vport
 
 	// Update main vport
 	vPortWaitForEnd(s_pWorldMainVPort);
 	worldUndraw();
-	cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
+	if(g_pLocalPlayer->pCurrentVehicle) {
+		UWORD uwLocalX, uwLocalY;
+		uwLocalX = g_pLocalPlayer->pCurrentVehicle->fX;
+		uwLocalY = g_pLocalPlayer->pCurrentVehicle->fY;
+		cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
+	}
 	mapUpdateTiles();
 	worldDraw();
 	
