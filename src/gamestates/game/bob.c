@@ -19,6 +19,7 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 	pBob->sSource.pMask = pMask;
 	pBob->uwOffsY = uwFrameIdx*uwFrameHeight;
 	pBob->uwHeight = uwFrameHeight;
+	pBob->ubFlags = BOB_FLAG_START_DRAWING;
 	
 	// BG buffer
 	pBob->pBg = bitmapCreate(
@@ -39,6 +40,11 @@ void bobDestroy(tBob *pBob) {
 	bitmapDestroy(pBob->pBg);
 	memFree(pBob, sizeof(tBob));
 	logBlockEnd("bobDestroy()");
+}
+
+void bobSetSource(tBob *pBob, tBobSource *pSource) {
+	pBob->sSource.pBitmap = pSource->pBitmap;
+	pBob->sSource.pMask = pSource->pMask;
 }
 
 tBob *bobUniqueCreate(char *szBitmapPath, char *szMaskPath, UWORD uwFrameHeight, UWORD uwFrameIdx) {
@@ -87,12 +93,16 @@ void bobChangeFrame(tBob *pBob, UWORD uwFrameIdx) {
  *  @todo Change to blitCopy when it gets stable
  */
 void bobUndraw(tBob *pBob, tBitMap *pDest) {
+	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING)
+		return;
 	BltBitMap(
 		pBob->pBg, 0, 0,
-		pDest, pBob->uwPrevX, pBob->uwPrevY,
+		pDest, pBob->sPrevCoord.sUwCoord.uwX, pBob->sPrevCoord.sUwCoord.uwY,
 		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
 		0xC0, 0xFF, 0
-	);	
+	);
+	if(pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
+		pBob->ubFlags = BOB_FLAG_NODRAW;
 }
 
 /**
@@ -100,6 +110,8 @@ void bobUndraw(tBob *pBob, tBitMap *pDest) {
  */
 void bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) { 
 	// Save BG
+	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
+		return;
 	BltBitMap(
 		pDest, uwX, uwY,
 		pBob->pBg, 0, 0,
@@ -116,6 +128,9 @@ void bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	);
 	
 	// Update bob position
-	pBob->uwPrevX = uwX;
-	pBob->uwPrevY = uwY;
+	pBob->sPrevCoord.sUwCoord.uwX = uwX;
+	pBob->sPrevCoord.sUwCoord.uwY = uwY;
+
+	if(pBob->ubFlags == BOB_FLAG_START_DRAWING)
+		pBob->ubFlags = BOB_FLAG_DRAW;
 }

@@ -14,7 +14,7 @@ void simPlayerVehicle(tPlayer *pPlayer) {
 	UWORD uwSiloDx, uwSiloDy;
 	UBYTE ubTileType;
 
-	pVehicle = pPlayer->pCurrentVehicle;
+	pVehicle = &pPlayer->sVehicle;
 
 	uwVx = pVehicle->fX;
 	uwVy = pVehicle->fY;
@@ -62,10 +62,10 @@ void simPlayerVehicle(tPlayer *pPlayer) {
 	// Calculate vehicle positions based on steer requests
 	switch(pPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
-			vehicleSteerTank(pPlayer->pCurrentVehicle, &pPlayer->sSteerRequest);
+			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
 			break;
 		case VEHICLE_TYPE_JEEP:
-			vehicleSteerJeep(pPlayer->pCurrentVehicle, &pPlayer->sSteerRequest);
+			vehicleSteerJeep(pVehicle, &pPlayer->sSteerRequest);
 			break;
 	}
 }

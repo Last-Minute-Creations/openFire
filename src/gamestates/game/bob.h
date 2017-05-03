@@ -5,6 +5,15 @@
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
 
+/// Used when bob is inactive - no undraw, no draw
+#define BOB_FLAG_NODRAW        0
+/// Used when bob is going to be inactive - undraw, no draw
+#define BOB_FLAG_STOP_DRAWING  1
+/// Used when bob is going to be active - no undraw, draw
+#define BOB_FLAG_START_DRAWING 2
+/// Used when bob is active - undraw, draw
+#define BOB_FLAG_DRAW          4
+
 typedef struct _tBobSource {
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;	
@@ -13,10 +22,10 @@ typedef struct _tBobSource {
 typedef struct _tBob {
 	tBobSource sSource;
 	tBitMap* pBg;
-	UWORD uwPrevY;
-	UWORD uwPrevX;
+	tUwCoordYX sPrevCoord;
 	UWORD uwOffsY;
 	UWORD uwHeight;
+	UBYTE ubFlags;
 } tBob;
 
 tBob *bobCreate(
@@ -28,6 +37,11 @@ tBob *bobCreate(
 
 void bobDestroy(
 	IN tBob *pBob
+);
+
+void bobSetSource(
+	IN tBob *pBob,
+	IN tBobSource *pSource
 );
 
 tBob *bobUniqueCreate(

@@ -19,7 +19,7 @@ typedef struct _tPlayer {
 	UBYTE ubCurrentVehicleType;
 	UBYTE ubState;
 	UWORD uwCooldown;
-	tVehicle *pCurrentVehicle;
+	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
 	
 	// Vehicles available

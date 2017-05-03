@@ -49,11 +49,12 @@ typedef struct {
 	UBYTE ubIsOnSilo;
 } tVehicle;
 
-tVehicle *vehicleCreate(
+void vehicleInit(
+	IN tVehicle *pVehicle,
 	IN UBYTE ubVehicleType
 );
 
-void vehicleDestroy(
+void vehicleUnset(
 	tVehicle *pVehicle
 );
 

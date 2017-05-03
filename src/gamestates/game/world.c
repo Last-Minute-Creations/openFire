@@ -86,8 +86,7 @@ void worldDraw(void) {
 
 	// Vehicles
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
-		if(g_pPlayers[ubPlayer].pCurrentVehicle)
-			vehicleDraw(g_pPlayers[ubPlayer].pCurrentVehicle);
+		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Projectiles
 	projectileDraw();
@@ -103,8 +102,7 @@ void worldUndraw(void) {
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
-		if(g_pPlayers[ubPlayer].pCurrentVehicle)
-			vehicleUndraw(g_pPlayers[ubPlayer].pCurrentVehicle);
+		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Silo highlight
 	if(s_ubWasSiloHighlighted)
@@ -123,10 +121,10 @@ void worldProcess(void) {
 	// Update main vport
 	vPortWaitForEnd(s_pWorldMainVPort);
 	worldUndraw();
-	if(g_pLocalPlayer->pCurrentVehicle) {
+	if(g_pLocalPlayer->sVehicle.ubLife) {
 		UWORD uwLocalX, uwLocalY;
-		uwLocalX = g_pLocalPlayer->pCurrentVehicle->fX;
-		uwLocalY = g_pLocalPlayer->pCurrentVehicle->fY;
+		uwLocalX = g_pLocalPlayer->sVehicle.fX;
+		uwLocalY = g_pLocalPlayer->sVehicle.fY;
 		cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
 	}
 	mapUpdateTiles();

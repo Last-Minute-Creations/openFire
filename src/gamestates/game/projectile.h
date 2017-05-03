@@ -6,10 +6,9 @@
 #include "gamestates/game/bob.h"
 
 #define PROJECTILE_TYPE_OFF    0
-#define PROJECTILE_TYPE_OFFING 1
-#define PROJECTILE_TYPE_CANNON 2
-#define PROJECTILE_TYPE_NADE   3
-#define PROJECTILE_TYPE_ROCKET 4
+#define PROJECTILE_TYPE_CANNON 1
+#define PROJECTILE_TYPE_NADE   2
+#define PROJECTILE_TYPE_ROCKET 3
 
 typedef struct _tProjectile {
 	tVehicle *pOwner;  ///< Owner for scoring kills
@@ -19,7 +18,7 @@ typedef struct _tProjectile {
 	float fDx;         ///< Delta X per frame.
 	float fDy;         ///< Ditto, delta Y.
 	UWORD uwFrameLife; ///< Projectile life, in remaining frame count.
-	UBYTE ubType;      ///< See PRJECTILE_TYPE_* defines.
+	UBYTE ubType;      ///< See PROJECTILE_TYPE_* defines.
 } tProjectile;
 
 void projectileListCreate(

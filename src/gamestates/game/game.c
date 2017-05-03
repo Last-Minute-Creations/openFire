@@ -53,30 +53,28 @@ void gsGameLoop(void) {
 		return;
 	}
 
-	custom.color[0] = 0x0080;
-	dataRecv();
-	custom.color[0] = 0x300;
-	simPlayers();
-	custom.color[0] = 0x600;
-	simProjectiles();
-	custom.color[0] = 0x900;
-	simTurrets();
-	custom.color[0] = 0x0008;
-	dataSend();
-	custom.color[0] = 0x0000;
+	dataRecv();       // Receives steer requests & positions of other players
+	simPlayers();     // Simulates players: vehicle positions, death states, etc.
+	simTurrets();     // Simulates turrets: targeting, rotation & projectile spawn
+	simProjectiles(); // Simulates projectiles: new positions, damage
+	dataSend();       // Sends data to other players
 
 	if(
 		g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED ||
 		g_pLocalPlayer->ubState == PLAYER_STATE_SURFACING
 	) {
-		custom.color[0] = 0x0880;
-		bunkerProcess();
+		bunkerProcess(); // Process bunker view: decisions on steer request, 
 	}
 	else {
-		custom.color[0] = 0x0088;
+		// Undraw projectiles
+		// Undraw vehicles
+		// Undraw silo
+		// Update camera
+		// Draw silo
+		// Draw vehicles
+		// Draw projectiles
 		worldProcess();
 	}
-	custom.color[0] = 0x0000;
 }
 
 void gsGameDestroy(void) {

@@ -296,7 +296,7 @@ void bunkerProcess(void) {
 			bobDraw(
 				s_pPlatform,
 				s_pBunkerBfr->pBuffer,
-				s_pPlatform->uwPrevX,
+				s_pPlatform->sPrevCoord.sUwCoord.uwX,
 				s_uwPlatformY
 			);
 			if(s_uwPlatformY == HANGAR_HI_Y) {
@@ -305,12 +305,12 @@ void bunkerProcess(void) {
 			++s_uwFrameCount;
 			break;
 		case BUNKER_MODE_VEHICLE_TO_ELEVATOR:
-			if(s_pVehicles[s_ubChoice].uwX == s_pPlatform->uwPrevX) {
+			if(s_pVehicles[s_ubChoice].uwX == s_pPlatform->sPrevCoord.sUwCoord.uwX) {
 				s_ubMode = BUNKER_MODE_ELEVATOR_TO_SURFACE;
 				break;
 			}
 			bobUndraw(s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer);
-			if(s_pVehicles[s_ubChoice].uwX > s_pPlatform->uwPrevX)
+			if(s_pVehicles[s_ubChoice].uwX > s_pPlatform->sPrevCoord.sUwCoord.uwX)
 				--s_pVehicles[s_ubChoice].uwX;
 			else
 				++s_pVehicles[s_ubChoice].uwX;
@@ -325,8 +325,14 @@ void bunkerProcess(void) {
 			bobUndraw(s_pPlatform, s_pBunkerBfr->pBuffer);
 			--s_pVehicles[s_ubChoice].uwY;
 			--s_uwPlatformY;
-			bobDraw(s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer, s_pVehicles[s_ubChoice].uwX, s_pVehicles[s_ubChoice].uwY);
-			bobDraw(s_pPlatform, s_pBunkerBfr->pBuffer, s_pPlatform->uwPrevX, s_uwPlatformY);
+			bobDraw(
+				s_pVehicles[s_ubChoice].pBob, s_pBunkerBfr->pBuffer,
+				s_pVehicles[s_ubChoice].uwX, s_pVehicles[s_ubChoice].uwY
+			);
+			bobDraw(
+				s_pPlatform, s_pBunkerBfr->pBuffer,
+				s_pPlatform->sPrevCoord.sUwCoord.uwX, s_uwPlatformY
+			);
 			if(BUNKER_ANIM_FRAMES - s_uwFrameCount < BUNKER_FADE_FRAMES) {
 				if(g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED) {
 					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;

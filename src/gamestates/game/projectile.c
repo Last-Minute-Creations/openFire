@@ -34,6 +34,7 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 			s_pCannonBitmap, s_pCannonMask,
 			PROJECTILE_CANNON_HEIGHT, 0
 		);
+		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 	}
 	
 	logBlockEnd("projectileListCreate()");
@@ -75,8 +76,6 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 	
 	pProjectile->pOwner = pOwner;
 	pProjectile->ubType = ubType;
-	pProjectile->pBob->uwPrevX = 0;
-	pProjectile->pBob->uwPrevY = 0;
 	
 	// Angle
 	if(pOwner->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
@@ -99,11 +98,13 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 	
 	// Bob
 	bobChangeFrame(pProjectile->pBob, angleToFrame(ubAngle));
+	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
 	return pProjectile;
 }
 
 void projectileDestroy(tProjectile *pProjectile) {
-	pProjectile->ubType = PROJECTILE_TYPE_OFFING;
+	pProjectile->ubType = PROJECTILE_TYPE_OFF;
+	pProjectile->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
 }
 
 void projectileUndraw(void) {
@@ -112,11 +113,7 @@ void projectileUndraw(void) {
 	
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
-		if(pProjectile->ubType != PROJECTILE_TYPE_OFF) {
-			if(pProjectile->ubType == PROJECTILE_TYPE_OFFING)
-				pProjectile->ubType = PROJECTILE_TYPE_OFF;
-			bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
-		}
+		bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
 		--pProjectile;
 	}
 }
@@ -127,11 +124,10 @@ void projectileDraw(void) {
 	
 	pProjectile = &s_pProjectiles[0];
 	for(i = s_ubProjectileCount; i--;) {
-		if(pProjectile->ubType > PROJECTILE_TYPE_OFFING)
-			bobDraw(
-				pProjectile->pBob, g_pWorldMainBfr->pBuffer,
-				pProjectile->fX-8, pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2
-			);
+		bobDraw(
+			pProjectile->pBob, g_pWorldMainBfr->pBuffer,
+			pProjectile->fX-8, pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2
+		);
 		++pProjectile;
 	}
 }
@@ -147,16 +143,16 @@ void projectileProcess(void) {
 		if(pProjectile->ubType == PROJECTILE_TYPE_OFF)
 			continue;
 		
-		// Increment position
-		pProjectile->fX += pProjectile->fDx;
-		pProjectile->fY += pProjectile->fDy;
-		
 		// Verify projectile lifespan
 		if(!pProjectile->uwFrameLife) {
 			projectileDestroy(pProjectile);
 			continue;
 		}
 		--pProjectile->uwFrameLife;
+		
+		// Increment position
+		pProjectile->fX += pProjectile->fDx;
+		pProjectile->fY += pProjectile->fDy;
 		
 		// Check collision with vehicles
 		/*

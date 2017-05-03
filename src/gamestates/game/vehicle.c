@@ -10,16 +10,12 @@
 #include "gamestates/game/world.h"
 #include "vehicletypes.h"
 
-tVehicle *vehicleCreate(UBYTE ubVehicleType) {
-	tVehicle *pVehicle;
+void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 	
-	logBlockBegin("vehicleCreate(ubVehicleType: %hhu)", ubVehicleType);
-	pVehicle = memAllocFast(sizeof(tVehicle));
-	if(!pVehicle) {
-		logWrite("Can't alloc mem for vehicle!");
-		logBlockEnd("vehicleCreate()");
-		return 0;
-	}
+	logBlockBegin(
+		"vehicleInit(pVehicle: %p, ubVehicleType: %hhu)",
+		pVehicle, ubVehicleType
+	);
 	
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
@@ -35,32 +31,29 @@ tVehicle *vehicleCreate(UBYTE ubVehicleType) {
 	logWrite("Created vehicle %hu @%f,%f\n", ubVehicleType, pVehicle->fX, pVehicle->fY);
 	logWrite("Spawn is at tile %hu, %hu\n", g_pTeams[TEAM_GREEN].pSilos[0].ubTileX, g_pTeams[TEAM_GREEN].pSilos[0].ubTileY);
 	
-	// Create bob
-	pVehicle->pBob = bobCreate(
-		pVehicle->pType->sMainSource.pBitmap, pVehicle->pType->sMainSource.pMask,
-		VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
-	);
-	
+	// Set main bob frames
+	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
+	bobChangeFrame(pVehicle->pBob, angleToFrame(ANGLE_90));
+	pVehicle->pBob->ubFlags = BOB_FLAG_START_DRAWING;
+
+	// Set aux bob frames
 	if(ubVehicleType == VEHICLE_TYPE_TANK) {
-		pVehicle->pAuxBob = bobCreate(
-			pVehicle->pType->sAuxSource.pBitmap, pVehicle->pType->sAuxSource.pMask,
-			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
-		);
+		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource);
+		pVehicle->pAuxBob->uwHeight = VEHICLE_TURRET_HEIGHT;
+		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ANGLE_90));
+		pVehicle->pAuxBob->ubFlags = BOB_FLAG_START_DRAWING;
 	}
 	else
-		pVehicle->pAuxBob = 0;
+		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
 	
 	pVehicle->ubCooldown = 0;
 	
-	logBlockEnd("vehicleCreate()");
-	return pVehicle;
+	logBlockEnd("vehicleInit()");
 }
 
-void vehicleDestroy(tVehicle *pVehicle) {
-	bobDestroy(pVehicle->pBob);
-	if(pVehicle->pAuxBob)
-		bobDestroy(pVehicle->pAuxBob);
-	memFree(pVehicle, sizeof(tVehicle));
+void vehicleUnset(tVehicle *pVehicle) {
+	pVehicle->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	pVehicle->pAuxBob->ubFlags = BOB_FLAG_STOP_DRAWING;
 }
 
 UBYTE vehicleCollides(float fX, float fY, tBCoordYX *pCollisionPoints) {

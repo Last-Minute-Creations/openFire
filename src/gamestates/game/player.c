@@ -7,16 +7,36 @@
 #include "gamestates/game/world.h"
 
 void playerListCreate(UBYTE ubPlayerLimit) {
+	UBYTE i;
+
 	g_ubPlayerLimit = ubPlayerLimit;
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
+	for(i = 0; i != ubPlayerLimit; ++i) {
+		g_pPlayers[i].sVehicle.pBob = bobCreate(
+			g_pVehicleTypes[0].sMainSource.pBitmap,
+			g_pVehicleTypes[0].sMainSource.pMask,
+			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
+		);
+		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
+
+		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
+			g_pVehicleTypes[0].sAuxSource.pBitmap,
+			g_pVehicleTypes[0].sAuxSource.pMask,
+			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
+		);
+		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+	}
 }
 
 void playerListDestroy() {
 	UBYTE i;
 	
-	for(i = 0; i != g_ubPlayerLimit; ++i)
+	for(i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].ubState != PLAYER_STATE_OFF)
 			playerRemoveByPtr(&g_pPlayers[i]);
+		bobDestroy(g_pPlayers[i].sVehicle.pBob);
+		bobDestroy(g_pPlayers[i].sVehicle.pAuxBob);
+	}
 	memFree(g_pPlayers, sizeof(tPlayer));
 }
 
@@ -38,6 +58,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
+		logWrite("Player %s joined team %hu, player idx: %hu\n", szName, ubTeam, i);
 		return pPlayer;
 	}
 	logWrite("Can't add player %s - no more slots\n", szName);
@@ -57,8 +78,8 @@ void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 }
 
 void playerRemoveByPtr(tPlayer *pPlayer) {
-	if(pPlayer->pCurrentVehicle)
-		vehicleDestroy(pPlayer->pCurrentVehicle);
+	if(pPlayer->sVehicle.ubLife)
+		vehicleUnset(&pPlayer->sVehicle);
 	if(!pPlayer->ubState == PLAYER_STATE_OFF) {
 		logWrite("ERR: Tried to remove offline player: %p", pPlayer);
 		return;
@@ -69,20 +90,18 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
-	pPlayer->pCurrentVehicle = vehicleCreate(ubVehicleType);
+	vehicleInit(&pPlayer->sVehicle, ubVehicleType);
 }
 
 void playerHideInBunker(tPlayer *pPlayer) {
-	vehicleDestroy(pPlayer->pCurrentVehicle);
-	pPlayer->pCurrentVehicle = 0;
+	vehicleUnset(&pPlayer->sVehicle);
 	pPlayer->ubState = PLAYER_STATE_BUNKERED;
 	if(pPlayer == g_pLocalPlayer)
 		worldHide();
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {
-	vehicleDestroy(pPlayer->pCurrentVehicle);
-	pPlayer->pCurrentVehicle = 0;
+	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_DEAD;
