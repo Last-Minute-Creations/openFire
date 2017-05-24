@@ -61,7 +61,8 @@ void turretDestroy(UWORD uwIdx) {
 void turretProcess(void) {
 	UBYTE ubPlayerIdx, ubTurretIdx;
 	tPlayer *pPlayer, *pClosestPlayer;
-	UWORD uwClosestDist, uwDist;
+	UWORD uwClosestDist, uwDist, uwDx, uwDy;
+	UBYTE ubDestAngle;
 	tTurret *pTurret;
 
 	for(ubTurretIdx = 0; ubTurretIdx != s_ubMaxTurrets; ++ubTurretIdx) {
@@ -81,8 +82,8 @@ void turretProcess(void) {
 				continue;
 
 			// Calculate distance between turret & player
-			UWORD uwDx = pTurret->uwX - pPlayer->sVehicle.fX;
-			UWORD uwDy = pTurret->uwY - pPlayer->sVehicle.fY;
+			uwDx = pPlayer->sVehicle.fX - pTurret->uwX;
+			uwDy = pPlayer->sVehicle.fY - pTurret->uwY;
 			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(uwDx*uwDx + uwDy*uwDy)));
 			if(uwDist < TURRET_MIN_DISTANCE && uwDist <= uwClosestDist) {
 				pClosestPlayer = pPlayer;
@@ -93,8 +94,24 @@ void turretProcess(void) {
 		// Anything in range?
 		if(!pClosestPlayer)
 			continue;
+		uwDx = pClosestPlayer->sVehicle.fX - pTurret->uwX;
+		uwDy = pClosestPlayer->sVehicle.fY - pTurret->uwY;
 
-		if(1) {
+		// Determine destination angle
+		// ubDestAngle = ((pi + atan2(uwDx, uwDy)) * 64)/(2*pi) * 2
+		ubDestAngle = ANGLE_90 + 2 * fix16_to_int(
+			fix16_div(
+				fix16_mul(
+					fix16_add(fix16_pi, fix16_atan2(fix16_from_int(uwDx), fix16_from_int(-uwDy))),
+					fix16_from_int(64)
+				),
+				fix16_pi*2
+			)
+		);
+		if(ubDestAngle >= ANGLE_360)
+			ubDestAngle -= ANGLE_360;
+
+		if(pTurret->ubAngle != ubDestAngle) {
 			// TODO: Rotate turret into enemy position
 			pTurret->ubAngle += 2;
 			while(pTurret->ubAngle >= ANGLE_360)
