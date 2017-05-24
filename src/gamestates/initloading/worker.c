@@ -8,6 +8,7 @@
 
 #include "vehicletypes.h"
 #include "gamestates/game/projectile.h"
+#include "gamestates/game/turret.h"
 
 #define WORKER_REQUEST_WORK 0
 #define WORKER_REQUEST_KILL 8
@@ -32,10 +33,17 @@ inline void workerDoStuff(void (*fn)(void)) {
 	}
 }
 
+/**
+ * Allocates & calculates stuff for rest of game.
+ */
 void workerMain(void) {
 	// Vehicle stuff
 	logWrite("Working on vehicles...\n");
 	vehicleTypesCreate(g_pWorkerProgress);
+
+	// Turret stuff
+	logWrite("Loading brown turret frames...\n");
+	vehicleTypeBobSourceLoad("turret_brown", &g_sBrownTurretSource, &g_pWorkerProgress[3]);
 
 	// Generate math table
 	logWrite("Generating sine table...\n");
@@ -76,7 +84,12 @@ void workerDestroy(void) {
 	logBlockEnd("workerDestroy()");
 }
 
+/**
+ * Cleans up allocated stuff during loading.
+ */
 void workerCleanup(void) {
 	projectileListDestroy();
 	vehicleTypesDestroy();
+	bitmapDestroy(g_sBrownTurretSource.pBitmap);
+	bitmapMaskDestroy(g_sBrownTurretSource.pMask);
 }

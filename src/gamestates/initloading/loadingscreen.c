@@ -5,12 +5,22 @@
 #include <ace/managers/blit.h>
 #include "config.h"
 #include "gamestates/initloading/worker.h"
+#include "gamestates/game/turret.h"
 
 #define LOADINGSCREEN_PROGRESS_WIDTH 256
 #define LOADINGSCREEN_PROGRESS_HEIGHT 32
 #define LOADINGSCREEN_COLOR_PROGRESS_OUTLINE 1
 #define LOADINGSCREEN_COLOR_PROGRESS_FILL 15
 #define LOADINGSCREEN_COLOR_BG 0
+
+/**
+ * Progress values:
+ * - 0: tank base
+ * - 1: tank turret
+ * - 2: jeep base
+ * - 3: brown turret
+ */
+#define LOADINGSCREEN_BOBSOURCE_COUNT 4
 
 static tView *s_pView;
 static tVPort *s_pVPort;
@@ -54,26 +64,22 @@ void loadingScreenSetProgress(UBYTE ubProgress) {
 	logBlockEnd("loadingScreenSetProgress()");
 }
 
-#define LOADINGSCREEN_BOBSOURCE_COUNT 3
-
-/**
- * Progress values:
- * - 0: tank base
- * - 1: tank turret
- * - 2: jeep base
- */
 void loadingScreenUpdate(void) {
-	static BYTE prevFrameProgress[VEHICLE_TYPE_COUNT] = {-1};
+	static BYTE pPrevFrameProgress[LOADINGSCREEN_BOBSOURCE_COUNT] = {-1};
 	static tBobSource *pSources[LOADINGSCREEN_BOBSOURCE_COUNT] = {
 		&g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource,
 		&g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource,
-		&g_pVehicleTypes[VEHICLE_TYPE_JEEP].sMainSource
+		&g_pVehicleTypes[VEHICLE_TYPE_JEEP].sMainSource,
+		&g_sBrownTurretSource
 	};
 	UBYTE i;
+	BYTE bProgress;
 	UWORD uwFrameX, uwFrameY;
-	for(i = 0; i != VEHICLE_TYPE_COUNT; ++i) {
-		if(prevFrameProgress[i] < g_pWorkerProgress[i]) {
-			if(i < 3) {
+	for(i = 0; i != LOADINGSCREEN_BOBSOURCE_COUNT+0; ++i) {
+		bProgress = g_pWorkerProgress[i];
+		if(i < LOADINGSCREEN_BOBSOURCE_COUNT) {
+			if(pPrevFrameProgress[i] < bProgress) {
+				// Draw recently loaded bob source frames
 				uwFrameX = (WINDOW_SCREEN_WIDTH-VEHICLE_BODY_WIDTH*LOADINGSCREEN_BOBSOURCE_COUNT)/2 + VEHICLE_BODY_WIDTH*i;
 				uwFrameY = (WINDOW_SCREEN_HEIGHT-LOADINGSCREEN_PROGRESS_HEIGHT)/2 - VEHICLE_BODY_HEIGHT - 8;
 				// Erase background
@@ -91,10 +97,12 @@ void loadingScreenUpdate(void) {
 					VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
 					pSources[i]->pMask->pData
 				);
+				pPrevFrameProgress[i] = bProgress;
 			}
-			else
-				logWrite("ERR: Unknown progress type\n");
-			prevFrameProgress[i] = g_pWorkerProgress[i];
+		}
+		else {
+			// Indicate other progress
+			logWrite("ERR: Unknown progress type\n");
 		}
 	}
 }

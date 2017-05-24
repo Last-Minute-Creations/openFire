@@ -5,6 +5,7 @@
 #include "gamestates/game/world.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/team.h"
+#include "gamestates/game/turret.h"
 
 #include <ace/managers/key.h>
 
@@ -110,4 +111,5 @@ void simProjectiles(void) {
 
 void simTurrets(void) {
 	// TODO simTurrets
+	turretProcess();
 }

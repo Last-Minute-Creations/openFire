@@ -5,6 +5,7 @@
 #include <ace/utils/extview.h>
 #include "gamestates/game/team.h"
 #include "gamestates/game/building.h"
+#include "gamestates/game/turret.h"
 
 #define MAP_TILE_WATER  0
 #define MAP_TILE_SPAWN1 1
@@ -97,6 +98,8 @@ void mapCreate(char *szPath) {
 	
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
 	g_ubPendingTileCount = 0;
+
+	turretListCreate(64);
 	
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
@@ -197,6 +200,10 @@ void mapRedraw() {
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
 					ubOutTile = MAP_TILE_TURRET;
+					turretCreate(
+						x, y,
+						ubTileIdx == MAP_LOGIC_SENTRY1 ? TEAM_GREEN : TEAM_BROWN
+					);
 					break;
 				case MAP_LOGIC_DIRT:
 				default:
@@ -225,6 +232,8 @@ void mapDestroy(void) {
 	}
 	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");
+
+	turretListDestroy();
 }
 
 void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {

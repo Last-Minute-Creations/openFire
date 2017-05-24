@@ -13,6 +13,7 @@
 #include "gamestates/game/map.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/hud.h"
+#include "gamestates/game/turret.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -74,7 +75,7 @@ void worldHide(void) {
 }
 
 void worldDraw(void) {
-	UBYTE ubPlayer;
+	UBYTE ubPlayer, ubTurret;
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight)
@@ -88,6 +89,9 @@ void worldDraw(void) {
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
+	// Turrets
+	turretDrawAll();
+
 	// Projectiles
 	projectileDraw();
 
@@ -99,6 +103,9 @@ void worldUndraw(void) {
 
 	// Projectiles
 	projectileUndraw();
+
+	// Turrets
+	turretUndrawAll();
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
