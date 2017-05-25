@@ -99,7 +99,7 @@ void mapCreate(char *szPath) {
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
 	g_ubPendingTileCount = 0;
 
-	turretListCreate(64);
+	turretListCreate(32);
 	
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");

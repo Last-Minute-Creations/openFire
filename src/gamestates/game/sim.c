@@ -110,6 +110,5 @@ void simProjectiles(void) {
 }
 
 void simTurrets(void) {
-	// TODO simTurrets
 	turretProcess();
 }

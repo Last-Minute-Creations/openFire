@@ -24,6 +24,10 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 }
 
 void turretListDestroy(void) {
+	int i;
+	for(i = 0; i != s_ubMaxTurrets; ++i) {
+		bobDestroy(s_pTurretList[i].pBob);
+	}
 	memFree(s_pTurretList, s_ubMaxTurrets * sizeof(tTurret));
 }
 
@@ -113,7 +117,16 @@ void turretProcess(void) {
 
 		if(pTurret->ubAngle != ubDestAngle) {
 			// TODO: Rotate turret into enemy position
-			pTurret->ubAngle += 2;
+			WORD wDelta;
+			wDelta = ubDestAngle - pTurret->ubAngle;
+			if((wDelta > 0 && wDelta < ANGLE_180) || wDelta + ANGLE_360 < ANGLE_180) {
+				// Rotate clockwise
+				pTurret->ubAngle += 2;
+			}
+			else {
+				// Rotate anti-clockwise
+				pTurret->ubAngle += ANGLE_360 - 2;
+			}
 			while(pTurret->ubAngle >= ANGLE_360)
 				pTurret->ubAngle -= ANGLE_360;
 			bobChangeFrame(pTurret->pBob, angleToFrame(pTurret->ubAngle));

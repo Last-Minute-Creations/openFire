@@ -1,4 +1,5 @@
 #include "gamestates/game/world.h"
+#include <ace/managers/log.h>
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/blit.h>
@@ -30,6 +31,8 @@ UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
 
+tAvg *s_pTurretDrawAvg, *s_pTurretUndrawAvg;
+
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
 	g_pWorldView = viewCreate(V_GLOBAL_CLUT);
@@ -57,10 +60,16 @@ UBYTE worldCreate(void) {
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
 
+	s_pTurretDrawAvg = logAvgCreate("turretDrawAll", 50);
+	s_pTurretUndrawAvg = logAvgCreate("turretUndrawAll", 50);
+
 	return 1;
 }
 
 void worldDestroy(void) {
+	logAvgDestroy(s_pTurretDrawAvg);
+	logAvgDestroy(s_pTurretUndrawAvg);
+
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
@@ -90,7 +99,9 @@ void worldDraw(void) {
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Turrets
+	logAvgBegin(s_pTurretDrawAvg);
 	turretDrawAll();
+	logAvgEnd(s_pTurretDrawAvg);
 
 	// Projectiles
 	projectileDraw();
@@ -105,7 +116,9 @@ void worldUndraw(void) {
 	projectileUndraw();
 
 	// Turrets
+	logAvgBegin(s_pTurretUndrawAvg);
 	turretUndrawAll();
+	logAvgEnd(s_pTurretUndrawAvg);
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
