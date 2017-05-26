@@ -1,4 +1,5 @@
 #include "gamestates/initloading/loadingscreen.h"
+#include <clib/dos_protos.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -13,18 +14,10 @@
 #define LOADINGSCREEN_COLOR_PROGRESS_FILL 15
 #define LOADINGSCREEN_COLOR_BG 0
 
-/**
- * Progress values:
- * - 0: tank base
- * - 1: tank turret
- * - 2: jeep base
- * - 3: brown turret
- */
-#define LOADINGSCREEN_BOBSOURCE_COUNT 4
-
 static tView *s_pView;
 static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
+BYTE g_pLoadProgress[LOADINGSCREEN_BOBSOURCE_COUNT] = {-1};
 
 void loadingScreenCreate(void) {
 	// Create View & VPort
@@ -76,9 +69,9 @@ void loadingScreenUpdate(void) {
 	BYTE bProgress;
 	UWORD uwFrameX, uwFrameY;
 	for(i = 0; i != LOADINGSCREEN_BOBSOURCE_COUNT+0; ++i) {
-		bProgress = g_pWorkerProgress[i];
+		bProgress = g_pLoadProgress[i];
 		if(i < LOADINGSCREEN_BOBSOURCE_COUNT) {
-			if(pPrevFrameProgress[i] < bProgress) {
+			if(pPrevFrameProgress[i] != bProgress) {
 				// Draw recently loaded bob source frames
 				uwFrameX = (WINDOW_SCREEN_WIDTH-VEHICLE_BODY_WIDTH*LOADINGSCREEN_BOBSOURCE_COUNT)/2 + VEHICLE_BODY_WIDTH*i;
 				uwFrameY = (WINDOW_SCREEN_HEIGHT-LOADINGSCREEN_PROGRESS_HEIGHT)/2 - VEHICLE_BODY_HEIGHT - 8;
@@ -92,7 +85,7 @@ void loadingScreenUpdate(void) {
 				// Draw next frame
 				blitCopyMask(
 					pSources[i]->pBitmap,
-					0, VEHICLE_BODY_WIDTH*g_pWorkerProgress[i],
+					0, VEHICLE_BODY_WIDTH*g_pLoadProgress[i],
 					s_pBuffer->pBuffer, uwFrameX, uwFrameY,
 					VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
 					pSources[i]->pMask->pData

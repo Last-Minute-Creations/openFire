@@ -7,6 +7,7 @@
 #include <ace/managers/log.h>
 
 #include "vehicletypes.h"
+#include "gamestates/initloading/loadingscreen.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/turret.h"
 
@@ -23,7 +24,6 @@ typedef struct _tSeg {
 
 UWORD s_uwWorkerRequest; ///< Worker reads this and does stuff.
 UBYTE g_ubWorkerStep;
-BYTE g_pWorkerProgress[VEHICLE_TYPE_COUNT] = {-1};
 
 inline void workerDoStuff(void (*fn)(void)) {
 	if(fn)
@@ -39,11 +39,11 @@ inline void workerDoStuff(void (*fn)(void)) {
 void workerMain(void) {
 	// Vehicle stuff
 	logWrite("Working on vehicles...\n");
-	vehicleTypesCreate(g_pWorkerProgress);
+	vehicleTypesCreate(g_pLoadProgress);
 
 	// Turret stuff
 	logWrite("Loading brown turret frames...\n");
-	vehicleTypeBobSourceLoad("turret_brown", &g_sBrownTurretSource, &g_pWorkerProgress[3]);
+	vehicleTypeBobSourceLoad("turret_brown", &g_sBrownTurretSource, &g_pLoadProgress[3]);
 
 	// Generate math table
 	logWrite("Generating sine table...\n");

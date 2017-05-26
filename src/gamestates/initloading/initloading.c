@@ -57,6 +57,7 @@ void gsInitLoadingLoop(void) {
 			gameClose();
 			break;
 	}
+	Delay(2);
 }
 
 void gsInitLoadingDestroy(void) {
