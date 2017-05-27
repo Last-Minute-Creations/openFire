@@ -68,7 +68,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 void playerRemoveByIdx(UBYTE ubPlayerIdx) {	
 	if(ubPlayerIdx > g_ubPlayerLimit) {
 		logWrite(
-			"ERR: Tried to remove player %hhu, player limit %hhu",
+			"ERR: Tried to remove player %hhu, player limit %hhu\n",
 			ubPlayerIdx,
 			g_ubPlayerLimit
 		);
@@ -81,7 +81,7 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 	if(pPlayer->sVehicle.ubLife)
 		vehicleUnset(&pPlayer->sVehicle);
 	if(!pPlayer->ubState == PLAYER_STATE_OFF) {
-		logWrite("ERR: Tried to remove offline player: %p", pPlayer);
+		logWrite("ERR: Tried to remove offline player: %p\n", pPlayer);
 		return;
 	}
 	memset(pPlayer, 0, sizeof(tPlayer));
