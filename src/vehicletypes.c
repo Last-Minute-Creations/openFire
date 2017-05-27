@@ -1,5 +1,6 @@
 #include "vehicletypes.h"
 #include <math.h>
+#include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
 #include <ace/libfixmath/fix16.h>
 #include "gamestates/game/bob.h"
@@ -26,7 +27,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	UWORD x,y;
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;
-	UWORD uwFrameOffs;
+	UWORD uwFrameOffs, uwFrameWidth;
 	
 	if(pProgress)
 		*pProgress = -1;
@@ -35,22 +36,34 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		"vehicleBobSourceLoad(szName: %s, pBobSource: %p)",
 		szName, pBobSource
 	);
+
+	// Load first frame to determine sizes
+	strcpy(szFullFileName, "data/vehicles/");
+	strcat(szFullFileName, szName);
+	strcat(szFullFileName, ".bm");
+	tBitMap *pFirstFrame = bitmapCreateFromFile(szFullFileName);
+	logWrite("Read first frame\n");
+	uwFrameWidth = bitmapGetByteWidth(pFirstFrame)*8;
 	
-	pChunkySrc = memAllocFast(VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
-	pChunkyRotated = memAllocFast(VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
+	pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
+	pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
 	
 	// Create huge-ass bitmap for all frames
 	pBitmap = bitmapCreate(
-		VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT * VEHICLE_BODY_ANGLE_COUNT, 5, 0
+		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT, 5, 0
 	);
 	if(!pBitmap) {
 		logWrite("Couldn't allocate bitmap\n");
 		goto fail;
 	}
+
+	// Copy first frame to main bitmap
+	blitCopyAligned(pFirstFrame, 0, 0, pBitmap, 0, 0, uwFrameWidth, uwFrameWidth);
+	bitmapDestroy(pFirstFrame);
 	
 	// Create huge-ass mask
 	pMask = bitmapMaskCreate(
-		VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT * VEHICLE_BODY_ANGLE_COUNT
+		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
 	);
 	if(!pMask) {
 		logWrite("Couldn't allocate vehicle mask\n");
@@ -58,13 +71,6 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	}
 	pBobSource->pBitmap = pBitmap;
 	pBobSource->pMask = pMask;
-	
-	// Load source bitmap as first frame
-	strcpy(szFullFileName, "data/vehicles/");
-	strcat(szFullFileName, szName);
-	strcat(szFullFileName, ".bm");
-	bitmapLoadFromFile(pBitmap, szFullFileName, 0, 0);
-	logWrite("Read first frame\n");
 
 	// Load first frame's mask
 	strcpy(szFullFileName, "data/vehicles/");
@@ -78,7 +84,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
 	fread(
 		pMask->pData, sizeof(UWORD),
-		(VEHICLE_BODY_WIDTH>>4) * (VEHICLE_BODY_HEIGHT),
+		(uwFrameWidth>>4) * (uwFrameWidth),
 		pMaskFile
 	);
 	fclose(pMaskFile);
@@ -89,24 +95,24 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 
 	// Convert first frame & its mask to 6bpp chunky
 	UWORD uwMaskChunk;
-	for(y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
+	for(y = 0; y != uwFrameWidth; ++y) {
 		// Read bitmap row to chunky
-		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*VEHICLE_BODY_WIDTH]);
+		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*uwFrameWidth]);
 		if(VEHICLE_BODY_WIDTH > 16)
-			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*VEHICLE_BODY_WIDTH+16]);
+			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*uwFrameWidth+16]);
 		
 		// Add mask bit to chunky pixels
-		uwMaskChunk = pMask->pData[y*(VEHICLE_BODY_WIDTH>>4)];
+		uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
 		for(x = 0; x != 16; ++x) {
 			if(uwMaskChunk & (1 << 15))
-				pChunkySrc[y*VEHICLE_BODY_WIDTH + x] |= 1 << 5;
+				pChunkySrc[y*uwFrameWidth + x] |= 1 << 5;
 			uwMaskChunk <<= 1;
 		}
-		if(VEHICLE_BODY_WIDTH > 16) {
-			uwMaskChunk = pMask->pData[y*(VEHICLE_BODY_WIDTH>>4) + 1];
+		if(uwFrameWidth > 16) {
+			uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4) + 1];
 			for(x = 0; x != 16; ++x) {
 				if(uwMaskChunk & (1 << 15))
-					pChunkySrc[y*VEHICLE_BODY_WIDTH + 16 + x] |= 1 << 5;
+					pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << 5;
 				uwMaskChunk <<= 1;
 			}
 		}
@@ -119,29 +125,29 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 			//-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT,
 			fix16_from_float(-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT),
 			0,
-			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT
+			uwFrameWidth, uwFrameWidth
 		);
 		
 		// Convert rotated chunky frame to planar on huge-ass bitmap
-		for(y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
-			for(x = 0; x != (VEHICLE_BODY_WIDTH>>4); ++x)
+		for(y = 0; y != uwFrameWidth; ++y) {
+			for(x = 0; x != (uwFrameWidth>>4); ++x)
 				chunkyToPlanar16(
-					&pChunkyRotated[(y*VEHICLE_BODY_WIDTH) + (x<<4)],
-					x<<4, y + VEHICLE_BODY_HEIGHT*ubFrame,
+					&pChunkyRotated[(y*uwFrameWidth) + (x<<4)],
+					x<<4, y + uwFrameWidth*ubFrame,
 					pBitmap
 				);
 		}
 
 		// Extract mask from rotated chunky & write it to planar mask
 		uwMaskChunk = 0;
-		uwFrameOffs = ubFrame * VEHICLE_BODY_HEIGHT * (VEHICLE_BODY_WIDTH>>4);
-		for(y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
-			for(x = 0; x != VEHICLE_BODY_WIDTH; ++x) {
+		uwFrameOffs = ubFrame * uwFrameWidth * (uwFrameWidth>>4);
+		for(y = 0; y != uwFrameWidth; ++y) {
+			for(x = 0; x != uwFrameWidth; ++x) {
 				uwMaskChunk <<= 1;
-				if(pChunkyRotated[x + y*VEHICLE_BODY_WIDTH] & (1 << 5))
+				if(pChunkyRotated[x + y*uwFrameWidth] & (1 << 5))
 					uwMaskChunk = (uwMaskChunk | 1);
 				if((x & 15) == 15) {
-					pMask->pData[uwFrameOffs + y*(VEHICLE_BODY_WIDTH>>4) + (x>>4)] = uwMaskChunk;
+					pMask->pData[uwFrameOffs + y*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
 					uwMaskChunk = 0;
 				}
 			}
@@ -150,8 +156,8 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 			*pProgress = ubFrame;
 	}
 	
-	memFree(pChunkySrc, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
-	memFree(pChunkyRotated, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
+	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
+	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	logBlockEnd("vehicleBobSourceLoad()");
 	if(pProgress)
 		*pProgress = 0;
@@ -163,8 +169,8 @@ fail:
 		bitmapMaskDestroy(pMask);
 	if(pBitmap)
 		bitmapDestroy(pBitmap);
-	memFree(pChunkySrc, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
-	memFree(pChunkyRotated, VEHICLE_BODY_WIDTH * VEHICLE_BODY_HEIGHT);
+	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
+	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	logBlockEnd("vehicleBobSourceLoad()");
 	return 0;
 }
