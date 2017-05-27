@@ -18,7 +18,10 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	s_ubMaxTurrets = ubMaxTurrets;
 	s_pTurretList = memAllocFast(ubMaxTurrets * sizeof(tTurret));
 	for(i = 0; i != s_ubMaxTurrets; ++i) {
-		s_pTurretList[i].pBob = bobCreate(g_sBrownTurretSource.pBitmap, g_sBrownTurretSource.pMask, TURRET_BOB_SIZE, 0);
+		s_pTurretList[i].pBob = bobCreate(
+			g_sBrownTurretSource.pBitmap, g_sBrownTurretSource.pMask,
+			TURRET_BOB_SIZE, 0
+		);
 		s_pTurretList[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 	}
 }
@@ -44,8 +47,8 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret = &s_pTurretList[i];
 
 	// Initial values
-	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
-	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
+	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
 	pTurret->ubHp = TURRET_MAX_HP;
 	pTurret->ubTeam = ubTeam;
 	pTurret->ubAngle = ANGLE_90;
@@ -146,8 +149,8 @@ void turretDrawAll(void) {
 		bobDraw(
 			pTurret->pBob,
 			g_pWorldMainBfr->pBuffer,
-			pTurret->uwX - VEHICLE_BODY_WIDTH/2,
-			pTurret->uwY - VEHICLE_BODY_HEIGHT/2
+			pTurret->uwX - TURRET_BOB_SIZE/2,
+			pTurret->uwY - TURRET_BOB_SIZE/2
 		);
 	}
 }

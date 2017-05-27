@@ -43,7 +43,7 @@ void workerMain(void) {
 
 	// Turret stuff
 	logWrite("Loading brown turret frames...\n");
-	vehicleTypeBobSourceLoad("turret_brown", &g_sBrownTurretSource, &g_pLoadProgress[3]);
+	vehicleTypeBobSourceLoad("turret_brown_16", &g_sBrownTurretSource, &g_pLoadProgress[3]);
 
 	// Generate math table
 	logWrite("Generating sine table...\n");

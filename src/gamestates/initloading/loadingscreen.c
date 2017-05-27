@@ -68,6 +68,8 @@ void loadingScreenUpdate(void) {
 	UBYTE i;
 	BYTE bProgress;
 	UWORD uwFrameX, uwFrameY;
+	UWORD uwBobSize;
+
 	for(i = 0; i != LOADINGSCREEN_BOBSOURCE_COUNT+0; ++i) {
 		bProgress = g_pLoadProgress[i];
 		if(i < LOADINGSCREEN_BOBSOURCE_COUNT) {
@@ -83,11 +85,14 @@ void loadingScreenUpdate(void) {
 					LOADINGSCREEN_COLOR_BG
 				);
 				// Draw next frame
+				uwBobSize = (bitmapGetByteWidth(pSources[i]->pBitmap) << 3);
 				blitCopyMask(
 					pSources[i]->pBitmap,
-					0, VEHICLE_BODY_WIDTH*g_pLoadProgress[i],
-					s_pBuffer->pBuffer, uwFrameX, uwFrameY,
-					VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
+					0, uwBobSize*g_pLoadProgress[i],
+					s_pBuffer->pBuffer,
+					uwFrameX + (VEHICLE_BODY_WIDTH - uwBobSize)/2,
+					uwFrameY + (VEHICLE_BODY_WIDTH - uwBobSize)/2,
+					uwBobSize, uwBobSize,
 					pSources[i]->pMask->pData
 				);
 				pPrevFrameProgress[i] = bProgress;
