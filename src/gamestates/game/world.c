@@ -20,7 +20,7 @@
 tView *g_pWorldView;
 tVPort *s_pWorldMainVPort;
 tSimpleBufferManager *g_pWorldMainBfr;
-tCameraManager *s_pWorldCamera;
+tCameraManager *g_pWorldCamera;
 tBitMap *s_pTiles;
 
 // Silo highlight
@@ -33,18 +33,20 @@ UWORD g_uwSiloHighlightTileX;
 
 tAvg *s_pTurretDrawAvg, *s_pTurretUndrawAvg;
 
+tCopBlock *s_pSprite1Lines[256-64];
+
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
 	g_pWorldView = viewCreate(V_GLOBAL_CLUT);
-	s_pWorldMainVPort = vPortCreate(g_pWorldView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT-64-1, GAME_BPP, 0);
+	s_pWorldMainVPort = vPortCreate(g_pWorldView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT-64-1, WORLD_BPP, 0);
 	g_pWorldMainBfr = simpleBufferCreate(s_pWorldMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
 		gamePopState();
 		return 0;
 	}
-	paletteLoad("data/amidb32.plt", s_pWorldMainVPort->pPalette, 32);
-	s_pWorldCamera = g_pWorldMainBfr->pCameraManager;
+	paletteLoad("data/amidb16.plt", s_pWorldMainVPort->pPalette, 16);
+	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
 
@@ -145,7 +147,7 @@ void worldProcess(void) {
 		UWORD uwLocalX, uwLocalY;
 		uwLocalX = g_pLocalPlayer->sVehicle.fX;
 		uwLocalY = g_pLocalPlayer->sVehicle.fY;
-		cameraCenterAt(s_pWorldCamera, uwLocalX, uwLocalY);
+		cameraCenterAt(g_pWorldCamera, uwLocalX, uwLocalY);
 	}
 	mapUpdateTiles();
 	worldDraw();
