@@ -157,6 +157,8 @@ void worldProcess(void) {
 	
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
+	if(keyUse(KEY_K))
+		copDumpBlocks();
 }
 
 void worldProcessInput(void) {
