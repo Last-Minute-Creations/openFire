@@ -10,9 +10,11 @@
 
 #define LOADINGSCREEN_PROGRESS_WIDTH 256
 #define LOADINGSCREEN_PROGRESS_HEIGHT 32
-#define LOADINGSCREEN_COLOR_PROGRESS_OUTLINE 1
-#define LOADINGSCREEN_COLOR_PROGRESS_FILL 15
+#define LOADINGSCREEN_COLOR_PROGRESS_OUTLINE 14
+#define LOADINGSCREEN_COLOR_PROGRESS_FILL 8
 #define LOADINGSCREEN_COLOR_BG 0
+
+#define LOADINGSCREEN_BPP 4
 
 static tView *s_pView;
 static tVPort *s_pVPort;
@@ -23,10 +25,10 @@ void loadingScreenCreate(void) {
 	// Create View & VPort
 	s_pView = viewCreate(V_GLOBAL_CLUT);
 	s_pVPort = vPortCreate(
-		s_pView,	WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, WINDOW_SCREEN_BPP, 0
+		s_pView,	WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, LOADINGSCREEN_BPP, 0
 	);
 	s_pBuffer = simpleBufferCreate(s_pVPort, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, BMF_CLEAR);
-	paletteLoad("data/amidb32.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
+	paletteLoad("data/amidb16.plt", s_pVPort->pPalette, 1 << LOADINGSCREEN_BPP);
 	viewLoad(s_pView);
 
 	blitRect(
