@@ -1,4 +1,5 @@
 #include "gamestates/initloading/initloading.h"
+#include <clib/dos_protos.h>
 #include <ace/managers/game.h>
 #include <ace/managers/log.h>
 #include <ace/managers/viewport/simplebuffer.h>

@@ -33,12 +33,10 @@ UWORD g_uwSiloHighlightTileX;
 
 tAvg *s_pTurretDrawAvg, *s_pTurretUndrawAvg;
 
-tCopBlock *s_pSprite1Lines[256-64];
-
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
 	g_pWorldView = viewCreate(V_GLOBAL_CLUT);
-	s_pWorldMainVPort = vPortCreate(g_pWorldView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT-64-1, WORLD_BPP, 0);
+	s_pWorldMainVPort = vPortCreate(g_pWorldView, WORLD_VPORT_WIDTH, WORLD_VPORT_HEIGHT, WORLD_BPP, 0);
 	g_pWorldMainBfr = simpleBufferCreate(s_pWorldMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
@@ -46,9 +44,12 @@ UBYTE worldCreate(void) {
 		return 0;
 	}
 	paletteLoad("data/amidb16.plt", s_pWorldMainVPort->pPalette, 16);
+	paletteLoad("data/amidb16.plt", &s_pWorldMainVPort->pPalette[16], 16);
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
+
+	turretListCreate(32);
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
@@ -71,6 +72,8 @@ UBYTE worldCreate(void) {
 void worldDestroy(void) {
 	logAvgDestroy(s_pTurretDrawAvg);
 	logAvgDestroy(s_pTurretUndrawAvg);
+
+	turretListDestroy();
 
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);

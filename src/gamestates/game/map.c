@@ -7,26 +7,6 @@
 #include "gamestates/game/building.h"
 #include "gamestates/game/turret.h"
 
-#define MAP_TILE_WATER  0
-#define MAP_TILE_SPAWN1 1
-#define MAP_TILE_SPAWN2 2
-// Flag buildings - 'live' & destroyed
-#define MAP_TILE_FLAG1L 3
-#define MAP_TILE_FLAG2L 4
-#define MAP_TILE_FLAGD  5
-// Destroyed wall tile
-#define MAP_TILE_WALLD  6
-// Gates - horizontal & vertical, 'live' & destroyed
-#define MAP_TILE_GATEVL 7
-#define MAP_TILE_GATEVD 8
-#define MAP_TILE_GATEHL 9
-#define MAP_TILE_GATEHD 10
-// 16-variant tiles - base codes, ends 16 positions later.
-#define MAP_TILE_DIRT   16
-#define MAP_TILE_ROAD   32
-#define MAP_TILE_WALL   48
-#define MAP_TILE_TURRET 64
-
 tTile **g_pMap;
 UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
@@ -98,8 +78,6 @@ void mapCreate(char *szPath) {
 	
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
 	g_ubPendingTileCount = 0;
-
-	turretListCreate(32);
 	
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
@@ -199,7 +177,7 @@ void mapRedraw() {
 					break;
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
-					ubOutTile = MAP_TILE_TURRET;
+					ubOutTile = MAP_TILE_WALL;
 					turretCreate(
 						x, y,
 						ubTileIdx == MAP_LOGIC_SENTRY1 ? TEAM_GREEN : TEAM_BROWN
@@ -233,7 +211,6 @@ void mapDestroy(void) {
 	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");
 
-	turretListDestroy();
 }
 
 void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
