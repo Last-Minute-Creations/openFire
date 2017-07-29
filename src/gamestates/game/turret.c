@@ -296,6 +296,8 @@ void turretUpdateSprites(void) {
 					pCopBlock->ubDisabled = 0;
 					pCopBlock->uwCurrCount = 0;
 					
+					// TODO more precise wait - just before first turret,
+					// then first turret without own WAIT cmd
 					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwSpriteLine - 1);
 				}
 				if(uwDebug) {

@@ -28,19 +28,17 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;
 	UWORD uwFrameOffs, uwFrameWidth;
-	
+
+	logBlockBegin(
+		"vehicleBobSourceLoad(szName: %s, pBobSource: %p, pProgress: %p)",
+		szName, pBobSource, pProgress
+	);
+
 	if(pProgress)
 		*pProgress = -1;
 
-	logBlockBegin(
-		"vehicleBobSourceLoad(szName: %s, pBobSource: %p)",
-		szName, pBobSource
-	);
-
 	// Load first frame to determine sizes
-	strcpy(szFullFileName, "data/vehicles/");
-	strcat(szFullFileName, szName);
-	strcat(szFullFileName, ".bm");
+	sprintf(szFullFileName, "data/vehicles/%s.bm", szName);
 	tBitMap *pFirstFrame = bitmapCreateFromFile(szFullFileName);
 	logWrite("Read first frame\n");
 	uwFrameWidth = bitmapGetByteWidth(pFirstFrame)*8;
@@ -53,7 +51,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT, 5, 0
 	);
 	if(!pBitmap) {
-		logWrite("Couldn't allocate bitmap\n");
+		logWrite("ERR: Couldn't allocate bitmap\n");
 		goto fail;
 	}
 
@@ -66,19 +64,17 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
 	);
 	if(!pMask) {
-		logWrite("Couldn't allocate vehicle mask\n");
+		logWrite("ERR: Couldn't allocate vehicle mask\n");
 		goto fail;
 	}
 	pBobSource->pBitmap = pBitmap;
 	pBobSource->pMask = pMask;
 
 	// Load first frame's mask
-	strcpy(szFullFileName, "data/vehicles/");
-	strcat(szFullFileName, szName);
-	strcat(szFullFileName, ".msk");
+	sprintf(szFullFileName, "data/vehicles/%s.msk", szName);
 	pMaskFile = fopen(szFullFileName, "rb");
 	if(!pMaskFile) {
-		logWrite("Couldn't open mask file %s\n", szFullFileName);
+		logWrite("ERR: Couldn't open mask file %s\n", szFullFileName);
 		goto fail;
 	}
 	fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
@@ -93,7 +89,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	if(pProgress)
 		*pProgress = 0;
 
-	// Convert first frame & its mask to 6bpp chunky
+	// Convert first frame & its mask to bpl+mask chunky
 	UWORD uwMaskChunk;
 	for(y = 0; y != uwFrameWidth; ++y) {
 		// Read bitmap row to chunky

@@ -173,7 +173,7 @@ void bunkerCreate(void) {
 			blitCopyAligned(
 				pDirt, 0, (uwRand() & 3)*ubDirtSize,
 				s_pBunkerBfr->pBuffer, x, y,
-				ubDirtSize, 32
+				ubDirtSize, ubDirtSize
 			);
 	}
 	bitmapDestroy(pDirt);
