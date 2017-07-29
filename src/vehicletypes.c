@@ -90,8 +90,6 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	fclose(pMaskFile);
 	pMaskFile = 0;
 	logWrite("Read first frame mask\n");
-	if(pProgress)
-		*pProgress = 0;
 
 	// Convert first frame & its mask to bpl+mask chunky
 	UWORD uwMaskChunk;
@@ -117,7 +115,10 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 			}
 		}
 	}
-	
+
+	if(pProgress)
+		*pProgress = 0;
+
 	for(ubFrame = 1; ubFrame != VEHICLE_BODY_ANGLE_COUNT; ++ubFrame) {
 		// Rotate chunky source
 		chunkyRotate(
