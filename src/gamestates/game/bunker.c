@@ -69,7 +69,7 @@ tBob *s_pLamp;
 tBunkerVehicle s_pVehicles[4];
 
 void bunkerSetPalette(UBYTE ubLevel) {
-	paletteDim(s_pBasePalette, s_pBunkerVPort->pPalette, 1 << GAME_BPP, ubLevel);
+	paletteDim(s_pBasePalette, s_pBunkerVPort->pPalette, 32, ubLevel);
 	s_ubDoUpdateCLUT = 1;
 }
 
@@ -161,7 +161,7 @@ void bunkerCreate(void) {
 		return;
 	}
 	logWrite("Allocated buffer\n");
-	paletteLoad("data/amidb32.plt", s_pBasePalette, 1 << GAME_BPP);
+	paletteLoad("data/amidb16.plt", s_pBasePalette, 1 << GAME_BPP);
 	
 	s_ubChoice = 0;
 		
