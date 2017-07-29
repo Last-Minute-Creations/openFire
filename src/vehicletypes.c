@@ -47,8 +47,12 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
 	
 	// Create huge-ass bitmap for all frames
+	UBYTE ubFlags = 0;
+	if(bitmapIsInterleaved(pFirstFrame))
+		ubFlags = BMF_INTERLEAVED;
 	pBitmap = bitmapCreate(
-		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT, 5, 0
+		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT,
+		pFirstFrame->Depth, ubFlags
 	);
 	if(!pBitmap) {
 		logWrite("ERR: Couldn't allocate bitmap\n");
@@ -101,14 +105,14 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
 		for(x = 0; x != 16; ++x) {
 			if(uwMaskChunk & (1 << 15))
-				pChunkySrc[y*uwFrameWidth + x] |= 1 << 5;
+				pChunkySrc[y*uwFrameWidth + x] |= 1 << pBitmap->Depth;
 			uwMaskChunk <<= 1;
 		}
 		if(uwFrameWidth > 16) {
 			uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4) + 1];
 			for(x = 0; x != 16; ++x) {
 				if(uwMaskChunk & (1 << 15))
-					pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << 5;
+					pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << pBitmap->Depth;
 				uwMaskChunk <<= 1;
 			}
 		}
@@ -140,7 +144,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		for(y = 0; y != uwFrameWidth; ++y) {
 			for(x = 0; x != uwFrameWidth; ++x) {
 				uwMaskChunk <<= 1;
-				if(pChunkyRotated[x + y*uwFrameWidth] & (1 << 5))
+				if(pChunkyRotated[x + y*uwFrameWidth] & (1 << pBitmap->Depth))
 					uwMaskChunk = (uwMaskChunk | 1);
 				if((x & 15) == 15) {
 					pMask->pData[uwFrameOffs + y*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
@@ -148,6 +152,8 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 				}
 			}
 		}
+
+		// Update progress
 		if(pProgress)
 			*pProgress = ubFrame;
 	}
