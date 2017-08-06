@@ -16,7 +16,6 @@ typedef struct _tTurret {
 	UWORD uwY;
 	UWORD uwX;
 	UBYTE ubAngle;
-	tBob *pBob;
 } tTurret;
 
 extern tBobSource g_sBrownTurretSource;
@@ -44,8 +43,6 @@ void turretDestroy(
 
 void turretProcess(void);
 
-void turretDrawAll(void);
-
-void turretUndrawAll(void);
+void turretUpdateSprites(void);
 
 #endif

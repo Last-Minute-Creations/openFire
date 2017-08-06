@@ -28,14 +28,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 
 	s_ubMaxTurrets = ubMaxTurrets;
 	s_pTurretList = memAllocFast(ubMaxTurrets * sizeof(tTurret));
-	// Flat turret list
-	for(i = 0; i != s_ubMaxTurrets; ++i) {
-		s_pTurretList[i].pBob = bobCreate(
-			g_sBrownTurretSource.pBitmap, g_sBrownTurretSource.pMask,
-			TURRET_BOB_SIZE, 0
-		);
-		s_pTurretList[i].pBob->ubFlags = BOB_FLAG_NODRAW;
-	}
+
 	// Tile-based turret list
 	// TODO proper dimensions
 	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * 20);
@@ -66,9 +59,6 @@ void turretListDestroy(void) {
 
 	bitmapDestroy(s_pTurretTest);
 
-	for(i = 0; i != s_ubMaxTurrets; ++i) {
-		bobDestroy(s_pTurretList[i].pBob);
-	}
 	memFree(s_pTurretList, s_ubMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
@@ -103,8 +93,6 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->ubHp = TURRET_MAX_HP;
 	pTurret->ubTeam = ubTeam;
 	pTurret->ubAngle = ANGLE_90;
-	bobChangeFrame(pTurret->pBob, angleToFrame(pTurret->ubAngle));
-	pTurret->pBob->ubFlags = BOB_FLAG_START_DRAWING;
 
 	// Add to tile-based list
 	s_pTurretTiles[uwTileX][uwTileY] = i;
@@ -120,7 +108,6 @@ void turretDestroy(UWORD uwIdx) {
 		return;
 	}
 	pTurret = &s_pTurretList[uwIdx];
-	pTurret->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
 
 	// Remove from tile-based list
 	uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
@@ -196,7 +183,6 @@ void turretProcess(void) {
 			}
 			while(pTurret->ubAngle >= ANGLE_360)
 				pTurret->ubAngle -= ANGLE_360;
-			bobChangeFrame(pTurret->pBob, angleToFrame(pTurret->ubAngle));
 		}
 		else {
 			// TODO: Fire
@@ -373,33 +359,5 @@ void turretUpdateSprites(void) {
 			TURRET_MAX_PROCESS_RANGE_Y
 		);
 		logBlockEnd("turretUpdateSprites()");
-	}
-}
-
-void turretDrawAll(void) {
-	turretUpdateSprites();
-	return;
-	WORD uwTurret;
-	tTurret *pTurret;
-	for(uwTurret = 0; uwTurret != s_ubMaxTurrets; ++uwTurret) {
-		pTurret = &s_pTurretList[uwTurret];
-		bobDraw(
-			pTurret->pBob,
-			g_pWorldMainBfr->pBuffer,
-			pTurret->uwX - TURRET_BOB_SIZE/2,
-			pTurret->uwY - TURRET_BOB_SIZE/2
-		);
-	}
-
-}
-
-void turretUndrawAll(void) {
-	return;
-	UWORD uwTurret;
-	for(uwTurret = 0; uwTurret != s_ubMaxTurrets; ++uwTurret) {
-		bobUndraw(
-			s_pTurretList[uwTurret].pBob,
-			g_pWorldMainBfr->pBuffer
-		);
 	}
 }

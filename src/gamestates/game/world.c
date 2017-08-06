@@ -31,7 +31,7 @@ UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
 
-tAvg *s_pTurretDrawAvg, *s_pTurretUndrawAvg;
+tAvg *s_pTurretDrawAvg;
 
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
@@ -64,14 +64,12 @@ UBYTE worldCreate(void) {
 	g_ubDoSiloHighlight = 0;
 
 	s_pTurretDrawAvg = logAvgCreate("turretDrawAll", 50);
-	s_pTurretUndrawAvg = logAvgCreate("turretUndrawAll", 50);
 
 	return 1;
 }
 
 void worldDestroy(void) {
 	logAvgDestroy(s_pTurretDrawAvg);
-	logAvgDestroy(s_pTurretUndrawAvg);
 
 	turretListDestroy();
 
@@ -105,7 +103,7 @@ void worldDraw(void) {
 
 	// Turrets
 	logAvgBegin(s_pTurretDrawAvg);
-	turretDrawAll();
+	turretUpdateSprites();
 	logAvgEnd(s_pTurretDrawAvg);
 
 	// Projectiles
@@ -119,11 +117,6 @@ void worldUndraw(void) {
 
 	// Projectiles
 	projectileUndraw();
-
-	// Turrets
-	logAvgBegin(s_pTurretUndrawAvg);
-	turretUndrawAll();
-	logAvgEnd(s_pTurretUndrawAvg);
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
