@@ -20,6 +20,8 @@ tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
 static UWORD **s_pTurretTiles;                           // Approx. 2KiB
 static tCopBlock *s_pTurretCopBlocks[TURRET_MAX_PROCESS_RANGE_Y][TURRET_SPRITE_HEIGHT]; // Approx. 10KiB
 
+tBitMap *s_pTurretTest;
+
 void turretListCreate(UBYTE ubMaxTurrets) {
 	int i, t;
 	logBlockBegin("turretListCreate(ubMaxTurrets: %hu)", ubMaxTurrets);
@@ -52,6 +54,8 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 			);
 	}
 
+	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
+
 	logBlockEnd("turretListCreate()");
 }
 
@@ -59,6 +63,8 @@ void turretListDestroy(void) {
 	int i, t;
 
 	logBlockBegin("turretListDestroy()");
+
+	bitmapDestroy(s_pTurretTest);
 
 	for(i = 0; i != s_ubMaxTurrets; ++i) {
 		bobDestroy(s_pTurretList[i].pBob);
@@ -163,7 +169,7 @@ void turretProcess(void) {
 		uwDy = pClosestPlayer->sVehicle.fY - pTurret->uwY;
 
 		// Determine destination angle
-		// ubDestAngle = ((pi + atan2(uwDx, uwDy)) * 64)/(2*pi) * 2
+		// calc: ubDestAngle = ((pi + atan2(uwDx, uwDy)) * 64)/(2*pi) * 2
 		ubDestAngle = ANGLE_90 + 2 * fix16_to_int(
 			fix16_div(
 				fix16_mul(
@@ -223,7 +229,7 @@ void turretUpdateSprites(void) {
 	// Sprite's visible lines
 	UWORD uwFirstVisibleSpriteLine, uwLastVisibleSpriteLine; 
 	// Iterators, counters, flags
-	UWORD uwTileX, uwTileY, uwSpriteLine;
+	UWORD uwTileX, uwTileY, uwScreenLine;
 	UWORD uwPrevTurretIs2TilesAway;
 	UWORD uwTurretsInRow;
 
@@ -291,31 +297,33 @@ void turretUpdateSprites(void) {
 				// Reset CopBlock cmd count
 				if(uwDebug)
 					logWrite("Copper lines %d,%d are enabled\n", wSpriteBeginOnScreenY, wSpriteEndOnScreenY);
-				for(uwSpriteLine = wSpriteBeginOnScreenY; uwSpriteLine <= wSpriteEndOnScreenY; ++uwSpriteLine) {
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine-wSpriteBeginOnScreenY];
+				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 0;
 					pCopBlock->uwCurrCount = 0;
+
+					copMove(pCopList, pCopBlock, &custom.spr[1].ctl, 1 << 7);
 					
 					// TODO more precise wait - just before first turret,
 					// then first turret without own WAIT cmd
-					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwSpriteLine - 1);
+					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
 				}
 				if(uwDebug) {
-					if(uwSpriteLine <= wSpriteBeginOnScreenY+15)
-						logWrite("Trailing offscreen copper lines %d,%d are disabled\n", uwSpriteLine, wSpriteBeginOnScreenY+15);
+					if(uwScreenLine <= wSpriteBeginOnScreenY+15)
+						logWrite("Trailing offscreen copper lines %d,%d are disabled\n", uwScreenLine, wSpriteBeginOnScreenY+15);
 					else
 						logWrite("No trailing offscreen copper lines\n");
 				}
-				while(uwSpriteLine <= wSpriteBeginOnScreenY+15) {
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine-wSpriteBeginOnScreenY];
+				while(uwScreenLine <= wSpriteBeginOnScreenY+15) {
+					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 1;
-					++uwSpriteLine;
+					++uwScreenLine;
 				}
 			}
 			//if(uwPrevTurretIs2TilesAway) {
 			if(0) {
-				for(uwSpriteLine = wSpriteBeginOnScreenY; uwSpriteLine <= wSpriteEndOnScreenY; ++uwSpriteLine) {
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine-wSpriteBeginOnScreenY];
+				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					// Add directly MOVEs 'cuz there's no time for anything else
 					copMove(pCopList, pCopBlock, &custom.spr[0].pos, (0x44 + (wSpriteBeginOnScreenY << 8)) |wSpriteBeginOnScreenX);
 					copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0xFFFF);
@@ -323,37 +331,37 @@ void turretUpdateSprites(void) {
 				}
 			}
 			else {
+				const UWORD uwCopperInsCount = 7;
 				WORD wCopVPos = WORLD_VPORT_BEGIN_Y;
-				WORD wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - 4*4) & 0xfffe);
+				WORD wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
 				if(wCopHPos < 0) {
 					wCopHPos += 0xE2;
 					--wCopVPos;
 				}
 				else if(wCopHPos >= 0xE2)
 					wCopHPos -= 0xE2;
-				for(uwSpriteLine = wSpriteBeginOnScreenY; uwSpriteLine <= wSpriteEndOnScreenY; ++uwSpriteLine) {
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine-wSpriteBeginOnScreenY];
+				UWORD uwSpriteLine;
+				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+					uwSpriteLine = (uwScreenLine - wSpriteBeginOnScreenY)*(s_pTurretTest->BytesPerRow >> 1);
+					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					// Do a WAIT
-					// FIXME copper coords are not screen coords
-					// VPOS could be ignored here 
 					tCopWaitCmd *pWaitCmd = (tCopWaitCmd*)&pCopBlock->pCmds[pCopBlock->uwCurrCount];
-					copSetWait(pWaitCmd, wCopHPos, wCopVPos + uwSpriteLine);
-					// pWaitCmd->bfVE = 0;
+					copSetWait(pWaitCmd, wCopHPos, wCopVPos + uwScreenLine);
+					// pWaitCmd->bfVE = 0; // VPOS could be ignored here
 					++pCopBlock->uwCurrCount;
 					// Add MOVEs
-					// copMove(
-					// 	pCopList, pCopBlock, &custom.spr[0].pos,
-					// 	((44 + wSpriteBeginOnScreenY) << 8) | ((0x48 + wSpriteBeginOnScreenX) >> 1)
-					// );
-					copMove(
-						pCopList, pCopBlock, &custom.spr[0].pos,
-						/*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1))
-					);
-					if(uwSpriteLine < wSpriteEndOnScreenY) {
-						copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0xFFFF);
-						copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0x8001);
+					UWORD uwSpritePos = /*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1));
+					copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
+					copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);
+					if(uwScreenLine < wSpriteEndOnScreenY) {
+						copMove(pCopList, pCopBlock, &custom.spr[1].datab, ((UWORD*)s_pTurretTest->Planes[3])[uwSpriteLine]);
+						copMove(pCopList, pCopBlock, &custom.spr[1].dataa, ((UWORD*)s_pTurretTest->Planes[2])[uwSpriteLine]);
+						copMove(pCopList, pCopBlock, &custom.spr[0].datab, ((UWORD*)s_pTurretTest->Planes[1])[uwSpriteLine]);
+						copMove(pCopList, pCopBlock, &custom.spr[0].dataa, ((UWORD*)s_pTurretTest->Planes[0])[uwSpriteLine]);
 					}
 					else {
+						copMove(pCopList, pCopBlock, &custom.spr[1].datab, 0);
+						copMove(pCopList, pCopBlock, &custom.spr[1].dataa, 0);
 						copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0);
 						copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0);
 					}
@@ -368,6 +376,7 @@ void turretUpdateSprites(void) {
 			// Disable copper rows
 			if(uwDebug)
 				logWrite("All copper lines are disabled 'cuz no turret\n");
+			UWORD uwSpriteLine;
 			for(uwSpriteLine = 0; uwSpriteLine < TURRET_SPRITE_HEIGHT; ++uwSpriteLine)
 				s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine]->ubDisabled = 1;
 		}

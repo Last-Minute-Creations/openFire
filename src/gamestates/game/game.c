@@ -17,6 +17,8 @@
 #include "gamestates/game/data.h"
 #include "gamestates/game/sim.h"
 
+#include "gamestates/game/turret.h"
+
 void gsGameCreate(void) {
 	UBYTE i;
 	
