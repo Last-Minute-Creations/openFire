@@ -342,7 +342,7 @@ void turretUpdateSprites(void) {
 					wCopHPos -= 0xE2;
 				UWORD uwSpriteLine;
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
-					uwSpriteLine = (uwScreenLine - wSpriteBeginOnScreenY)*(s_pTurretTest->BytesPerRow >> 1);
+					uwSpriteLine = (uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(s_pTurretTest->BytesPerRow >> 1);
 					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					// Do a WAIT
 					tCopWaitCmd *pWaitCmd = (tCopWaitCmd*)&pCopBlock->pCmds[pCopBlock->uwCurrCount];
