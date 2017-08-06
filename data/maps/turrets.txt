@@ -2,21 +2,21 @@ Turret test
 20x20
 ....................
 ..  2##########F  ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
+..                ..
 ..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
-..S S S S S S S S ..
+..                ..
 ..  f##########1  ..
 ....................
 ....................

@@ -199,12 +199,9 @@ void turretUpdateSprites(void) {
 	tCopList *pCopList = g_pWorldView->pCopList;
 	tCopBlock *pCopBlock;
 	tTurret *pTurret;
-	UWORD uwDebug = 0;
-
-	if(keyUse(KEY_L)) {
-		uwDebug = 1;
-		logBlockBegin("turretUpdateSprites");
-	}
+	UWORD uwSpriteLine;
+	const UWORD uwCopperInsCount = 8;
+	WORD wCopVPos, wCopHPos;
 
 	// Tiles range to process
 	UWORD uwFirstTileX, uwFirstTileY, uwLastTileX, uwLastTileY;
@@ -230,9 +227,6 @@ void turretUpdateSprites(void) {
 	uwFirstTileY = uwCameraY >> MAP_TILE_SIZE;
 	uwLastTileX  = (uwCameraX + WORLD_VPORT_WIDTH -1) >> MAP_TILE_SIZE;
 	uwLastTileY  = (uwCameraY + WORLD_VPORT_HEIGHT -1) >> MAP_TILE_SIZE;
-
-	if(uwDebug)
-		logWrite("Camera pos %u,%u, so scanning tiles: %u,%u to %u,%u\n", uwCameraX, uwCameraY, uwFirstTileX, uwFirstTileY, uwLastTileX, uwLastTileY);
 
 	// Iterate thru visible tile rows
 	for(uwTileY = uwFirstTileY; uwTileY <= uwLastTileY; ++uwTileY) {
@@ -262,8 +256,6 @@ void turretUpdateSprites(void) {
 
 		// Iterate thru row's visible columns
 		uwTurretsInRow = 0;
-		if(uwDebug)
-			logWrite("Y tile: %u, line: %u\n", uwTileY, wSpriteBeginOnScreenY);
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
 			// Get turret from tile, skip if there is none
 			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
@@ -272,13 +264,16 @@ void turretUpdateSprites(void) {
 
 			// Update turret sprites
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
-			if(uwDebug) {
-				logWrite("Found turret at %u,%u, onscreen pos: %d,%d\n", uwTileX, uwTileY, wSpriteBeginOnScreenX, wSpriteBeginOnScreenY);
+			wCopVPos = WORLD_VPORT_BEGIN_Y;
+			wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
+			if(wCopHPos < 0) {
+				wCopHPos += 0xE2;
+				--wCopVPos;
 			}
+			else if(wCopHPos >= 0xE2)
+				wCopHPos -= 0xE2;
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
-				if(uwDebug)
-					logWrite("Copper lines %d,%d are enabled\n", wSpriteBeginOnScreenY, wSpriteEndOnScreenY);
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
 					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 0;
@@ -290,28 +285,12 @@ void turretUpdateSprites(void) {
 					// then first turret without own WAIT cmd
 					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
 				}
-				if(uwDebug) {
-					if(uwScreenLine <= wSpriteBeginOnScreenY+15)
-						logWrite("Trailing offscreen copper lines %d,%d are disabled\n", uwScreenLine, wSpriteBeginOnScreenY+15);
-					else
-						logWrite("No trailing offscreen copper lines\n");
-				}
 				while(uwScreenLine <= wSpriteBeginOnScreenY+15) {
 					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 1;
 					++uwScreenLine;
 				}
 			}
-			UWORD uwSpriteLine;
-			const UWORD uwCopperInsCount = 8;
-			WORD wCopVPos = WORLD_VPORT_BEGIN_Y;
-			WORD wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
-			if(wCopHPos < 0) {
-				wCopHPos += 0xE2;
-				--wCopVPos;
-			}
-			else if(wCopHPos >= 0xE2)
-				wCopHPos -= 0xE2;
 			for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
 				const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
 				pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
@@ -344,20 +323,10 @@ void turretUpdateSprites(void) {
 		}
 		if(!uwTurretsInRow) {
 			// Disable copper rows
-			if(uwDebug)
-				logWrite("All copper lines are disabled 'cuz no turret\n");
 			UWORD uwSpriteLine;
 			for(uwSpriteLine = 0; uwSpriteLine < TURRET_SPRITE_HEIGHT; ++uwSpriteLine)
 				s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine]->ubDisabled = 1;
 		}
 	}
 	pCopList->ubStatus = STATUS_REORDER;
-	if(uwDebug) {
-		logWrite(
-			"Processed %hu rows: %hu,%hu; max range: %hu\n",
-			(uwLastTileY - uwFirstTileY + 1), uwFirstTileY, uwLastTileY,
-			TURRET_MAX_PROCESS_RANGE_Y
-		);
-		logBlockEnd("turretUpdateSprites()");
-	}
 }
