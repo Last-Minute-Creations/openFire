@@ -212,6 +212,7 @@ void turretUpdateSprites(void) {
 	UWORD uwCopBlockIdx = 0;
 	tCopList *pCopList = g_pWorldView->pCopList;
 	tCopBlock *pCopBlock;
+	tTurret *pTurret;
 	UWORD uwDebug = 0;
 
 	if(keyUse(KEY_L)) {
@@ -230,7 +231,6 @@ void turretUpdateSprites(void) {
 	UWORD uwFirstVisibleSpriteLine, uwLastVisibleSpriteLine; 
 	// Iterators, counters, flags
 	UWORD uwTileX, uwTileY, uwScreenLine;
-	UWORD uwPrevTurretIs2TilesAway;
 	UWORD uwTurretsInRow;
 
 	UWORD uwCameraX = g_pWorldCamera->uPos.sUwCoord.uwX;
@@ -276,18 +276,14 @@ void turretUpdateSprites(void) {
 
 		// Iterate thru row's visible columns
 		uwTurretsInRow = 0;
-		uwPrevTurretIs2TilesAway = 0;
-		if(uwDebug) {
+		if(uwDebug)
 			logWrite("Y tile: %u, line: %u\n", uwTileY, wSpriteBeginOnScreenY);
-		}
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
-			// No turret?
-			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF) {
-				uwPrevTurretIs2TilesAway = 0;
+			// Get turret from tile, skip if there is none
+			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
 				continue;
-			}
+			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
 
-			// TODO sprites should alternate
 			// Update turret sprites
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			if(uwDebug) {
@@ -320,57 +316,45 @@ void turretUpdateSprites(void) {
 					++uwScreenLine;
 				}
 			}
-			//if(uwPrevTurretIs2TilesAway) {
-			if(0) {
-				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
-					// Add directly MOVEs 'cuz there's no time for anything else
-					copMove(pCopList, pCopBlock, &custom.spr[0].pos, (0x44 + (wSpriteBeginOnScreenY << 8)) |wSpriteBeginOnScreenX);
-					copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0xFFFF);
-					copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0x8001);
-				}
+			UWORD uwSpriteLine;
+			const UWORD uwCopperInsCount = 8;
+			WORD wCopVPos = WORLD_VPORT_BEGIN_Y;
+			WORD wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
+			if(wCopHPos < 0) {
+				wCopHPos += 0xE2;
+				--wCopVPos;
 			}
-			else {
-				const UWORD uwCopperInsCount = 7;
-				WORD wCopVPos = WORLD_VPORT_BEGIN_Y;
-				WORD wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
-				if(wCopHPos < 0) {
-					wCopHPos += 0xE2;
-					--wCopVPos;
+			else if(wCopHPos >= 0xE2)
+				wCopHPos -= 0xE2;
+			for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+				const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
+				pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
+				// Do a WAIT
+				tCopWaitCmd *pWaitCmd = (tCopWaitCmd*)&pCopBlock->pCmds[pCopBlock->uwCurrCount];
+				copSetWait(pWaitCmd, wCopHPos, wCopVPos + uwScreenLine);
+				// pWaitCmd->bfVE = 0; // VPOS could be ignored here
+				++pCopBlock->uwCurrCount;
+				// Add MOVEs
+				uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
+				UWORD uwSpritePos = /*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1));
+				copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
+				copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);
+				if(uwScreenLine < wSpriteEndOnScreenY) {
+					copMove(pCopList, pCopBlock, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
+					copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
+					copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
+					copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
 				}
-				else if(wCopHPos >= 0xE2)
-					wCopHPos -= 0xE2;
-				UWORD uwSpriteLine;
-				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
-					uwSpriteLine = (uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(s_pTurretTest->BytesPerRow >> 1);
-					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
-					// Do a WAIT
-					tCopWaitCmd *pWaitCmd = (tCopWaitCmd*)&pCopBlock->pCmds[pCopBlock->uwCurrCount];
-					copSetWait(pWaitCmd, wCopHPos, wCopVPos + uwScreenLine);
-					// pWaitCmd->bfVE = 0; // VPOS could be ignored here
-					++pCopBlock->uwCurrCount;
-					// Add MOVEs
-					UWORD uwSpritePos = /*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1));
-					copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
-					copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);
-					if(uwScreenLine < wSpriteEndOnScreenY) {
-						copMove(pCopList, pCopBlock, &custom.spr[1].datab, ((UWORD*)s_pTurretTest->Planes[3])[uwSpriteLine]);
-						copMove(pCopList, pCopBlock, &custom.spr[1].dataa, ((UWORD*)s_pTurretTest->Planes[2])[uwSpriteLine]);
-						copMove(pCopList, pCopBlock, &custom.spr[0].datab, ((UWORD*)s_pTurretTest->Planes[1])[uwSpriteLine]);
-						copMove(pCopList, pCopBlock, &custom.spr[0].dataa, ((UWORD*)s_pTurretTest->Planes[0])[uwSpriteLine]);
-					}
-					else {
-						copMove(pCopList, pCopBlock, &custom.spr[1].datab, 0);
-						copMove(pCopList, pCopBlock, &custom.spr[1].dataa, 0);
-						copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0);
-						copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0);
-					}
+				else {
+					copMove(pCopList, pCopBlock, &custom.spr[1].datab, 0);
+					copMove(pCopList, pCopBlock, &custom.spr[1].dataa, 0);
+					copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0);
+					copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0);
 				}
 			}
 			++uwTurretsInRow;
 			// Force 1 empty tile
 			++uwTileX;
-			uwPrevTurretIs2TilesAway = 1;
 		}
 		if(!uwTurretsInRow) {
 			// Disable copper rows

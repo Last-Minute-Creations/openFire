@@ -49,7 +49,7 @@ UBYTE worldCreate(void) {
 
 	hudCreate();
 
-	turretListCreate(32);
+	turretListCreate(128);
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
