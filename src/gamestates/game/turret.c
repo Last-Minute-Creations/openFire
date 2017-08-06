@@ -27,7 +27,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	logBlockBegin("turretListCreate(ubMaxTurrets: %hu)", ubMaxTurrets);
 
 	s_ubMaxTurrets = ubMaxTurrets;
-	s_pTurretList = memAllocFast(ubMaxTurrets * sizeof(tTurret));
+	s_pTurretList = memAllocFastClear(ubMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
 	// TODO proper dimensions
