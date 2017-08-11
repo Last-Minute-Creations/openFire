@@ -281,12 +281,7 @@ void turretUpdateSprites(void) {
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
 			wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4));
-			if(wCopHPos < 0) {
-				wCopHPos += 0xE2;
-				--wCopVPos;
-			}
-			else if(wCopHPos >= 0xE2)
-				wCopHPos -= 0xE2; // Screen continues @ pos 0
+			// always > 0, always < 0xE2 'cuz only 8px after 0xE2
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
@@ -294,9 +289,8 @@ void turretUpdateSprites(void) {
 					pCopBlock->ubDisabled = 0;
 					pCopBlock->uwCurrCount = 0;
 					
-					// TODO more precise wait - just before first turret,
-					// then first turret without own WAIT cmd
-					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
+					// TODO then first turret without own WAIT cmd?
+					copBlockWait(pCopList, pCopBlock, wCopHPos - 2*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
 				}
 				// If sprite was trimmed from top, disable remaining copBlock lines
 				while(uwScreenLine <= wSpriteBeginOnScreenY+15) {
