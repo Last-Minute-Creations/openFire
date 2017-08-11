@@ -19,6 +19,7 @@ static tTurret *s_pTurretList;
 tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
 static UWORD **s_pTurretTiles;                           // Approx. 2KiB
 static tCopBlock *s_pTurretCopBlocks[TURRET_MAX_PROCESS_RANGE_Y][TURRET_SPRITE_HEIGHT]; // Approx. 10KiB
+static tCopBlock *s_pInitCopBlock;
 
 tBitMap *s_pTurretTest;
 
@@ -39,18 +40,24 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD)*20);
 	}
 
+	// Attach sprites
+	s_pInitCopBlock = copBlockCreate(
+		g_pWorldView->pCopList, 2, 0x48-3*4 - 2, WORLD_VPORT_BEGIN_Y - 1
+	);
+	copMove(g_pWorldView->pCopList, s_pInitCopBlock, &custom.spr[1].ctl, 1 << 7);
+
 	// CopBlocks for turret display
 	// TODO: more precise copper instruction count?
 	for(t = 0; t != TURRET_MAX_PROCESS_RANGE_Y; ++t) {
 		for(i = 0; i != TURRET_SPRITE_HEIGHT; ++i)
 			s_pTurretCopBlocks[t][i] = copBlockCreate(
 				g_pWorldView->pCopList, WORLD_VPORT_WIDTH/8,
-				0xE2-3*4,WORLD_VPORT_BEGIN_Y + (t << MAP_TILE_SIZE) + i - 1
+				0x48-3*4,WORLD_VPORT_BEGIN_Y + (t << MAP_TILE_SIZE) + i - 1
 			);
 	}
 
 	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
-	s_pAvg = logAvgCreate("turretUpdateSprites()", 50);
+	s_pAvg = logAvgCreate("turretUpdateSprites()", 50*5);
 
 	logBlockEnd("turretListCreate()");
 }
@@ -74,6 +81,7 @@ void turretListDestroy(void) {
 		for(i = 0; i != TURRET_SPRITE_HEIGHT; ++i)
 			copBlockDestroy(g_pWorldView->pCopList, s_pTurretCopBlocks[t][i]);
 	}
+	copBlockDestroy(g_pWorldView->pCopList, s_pInitCopBlock);
 
 	logAvgDestroy(s_pAvg);
 
@@ -285,10 +293,6 @@ void turretUpdateSprites(void) {
 					pCopBlock->ubDisabled = 0;
 					pCopBlock->uwCurrCount = 0;
 					
-					// Attach sprites
-					// TODO could be done globally, I guess
-					copMove(pCopList, pCopBlock, &custom.spr[1].ctl, 1 << 7);
-					
 					// TODO more precise wait - just before first turret,
 					// then first turret without own WAIT cmd
 					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
@@ -318,7 +322,7 @@ void turretUpdateSprites(void) {
 				copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
-				// Avg turretUpdateSprites():  29.682 ms, min:  29.422 ms, max:  33.428 ms
+				// Avg turretUpdateSprites():  17.510 ms, min:  28.822 ms, max:  30.940 ms
 			}
 			++uwTurretsInRow;
 			// Force 1 empty tile
