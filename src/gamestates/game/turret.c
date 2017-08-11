@@ -75,7 +75,6 @@ void turretListDestroy(void) {
 			copBlockDestroy(g_pWorldView->pCopList, s_pTurretCopBlocks[t][i]);
 	}
 
-	logAvgWrite(s_pAvg);
 	logAvgDestroy(s_pAvg);
 
 	logBlockEnd("turretListDestroy()");
@@ -268,7 +267,7 @@ void turretUpdateSprites(void) {
 			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
 				continue;
 			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
-
+			
 			// Update turret sprites
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
@@ -278,20 +277,23 @@ void turretUpdateSprites(void) {
 				--wCopVPos;
 			}
 			else if(wCopHPos >= 0xE2)
-				wCopHPos -= 0xE2;
+				wCopHPos -= 0xE2; // Screen continues @ pos 0
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
 					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 0;
 					pCopBlock->uwCurrCount = 0;
-
+					
+					// Attach sprites
+					// TODO could be done globally, I guess
 					copMove(pCopList, pCopBlock, &custom.spr[1].ctl, 1 << 7);
 					
 					// TODO more precise wait - just before first turret,
 					// then first turret without own WAIT cmd
 					copBlockWait(pCopList, pCopBlock, 0xE2 - 3*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
 				}
+				// If sprite was trimmed from top, disable remaining copBlock lines
 				while(uwScreenLine <= wSpriteBeginOnScreenY+15) {
 					pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 					pCopBlock->ubDisabled = 1;
@@ -316,7 +318,7 @@ void turretUpdateSprites(void) {
 				copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
-				// Avg turretUpdateSprites():  26.212 ms, min:  29.636 ms, max:  30.089 ms
+				// Avg turretUpdateSprites():  29.682 ms, min:  29.422 ms, max:  33.428 ms
 			}
 			++uwTurretsInRow;
 			// Force 1 empty tile
