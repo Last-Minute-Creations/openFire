@@ -310,7 +310,7 @@ void turretUpdateSprites(void) {
 				++pCopBlock->uwCurrCount;
 				// Add MOVEs
 				uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
-				UWORD uwSpritePos = /*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1));
+				UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1); // No need for VPos 'cuz WAIT ensures same line
 				copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
 				copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);
 				copMove(pCopList, pCopBlock, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
