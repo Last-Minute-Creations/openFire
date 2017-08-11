@@ -22,6 +22,8 @@ static tCopBlock *s_pTurretCopBlocks[TURRET_MAX_PROCESS_RANGE_Y][TURRET_SPRITE_H
 
 tBitMap *s_pTurretTest;
 
+static tAvg *s_pAvg;
+
 void turretListCreate(UBYTE ubMaxTurrets) {
 	int i, t;
 	logBlockBegin("turretListCreate(ubMaxTurrets: %hu)", ubMaxTurrets);
@@ -48,6 +50,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	}
 
 	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
+	s_pAvg = logAvgCreate("turretUpdateSprites()", 50);
 
 	logBlockEnd("turretListCreate()");
 }
@@ -71,6 +74,9 @@ void turretListDestroy(void) {
 		for(i = 0; i != TURRET_SPRITE_HEIGHT; ++i)
 			copBlockDestroy(g_pWorldView->pCopList, s_pTurretCopBlocks[t][i]);
 	}
+
+	logAvgWrite(s_pAvg);
+	logAvgDestroy(s_pAvg);
 
 	logBlockEnd("turretListDestroy()");
 }
@@ -195,6 +201,7 @@ void turretProcess(void) {
 // Assuming that at most half of row tiles may have turret, 5x6 turret tiles
 // But also, because of scroll, there'll be 7 turret rows and 6 cols.
 void turretUpdateSprites(void) {
+	logAvgBegin(s_pAvg);
 	UWORD uwCopBlockIdx = 0;
 	tCopList *pCopList = g_pWorldView->pCopList;
 	tCopBlock *pCopBlock;
@@ -291,6 +298,7 @@ void turretUpdateSprites(void) {
 					++uwScreenLine;
 				}
 			}
+			
 			for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
 				const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
 				pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
@@ -304,18 +312,11 @@ void turretUpdateSprites(void) {
 				UWORD uwSpritePos = /*((44 + wSpriteBeginOnScreenY) << 8) |*/ (63 + (wSpriteBeginOnScreenX >> 1));
 				copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
 				copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);
-				if(uwScreenLine < wSpriteEndOnScreenY) {
-					copMove(pCopList, pCopBlock, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
-					copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
-					copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
-					copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
-				}
-				else {
-					copMove(pCopList, pCopBlock, &custom.spr[1].datab, 0);
-					copMove(pCopList, pCopBlock, &custom.spr[1].dataa, 0);
-					copMove(pCopList, pCopBlock, &custom.spr[0].datab, 0);
-					copMove(pCopList, pCopBlock, &custom.spr[0].dataa, 0);
-				}
+				copMove(pCopList, pCopBlock, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
+				copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
+				copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
+				copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
+				// Avg turretUpdateSprites():  26.212 ms, min:  29.636 ms, max:  30.089 ms
 			}
 			++uwTurretsInRow;
 			// Force 1 empty tile
@@ -329,4 +330,5 @@ void turretUpdateSprites(void) {
 		}
 	}
 	pCopList->ubStatus = STATUS_REORDER;
+	logAvgEnd(s_pAvg);
 }
