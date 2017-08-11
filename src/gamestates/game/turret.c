@@ -233,7 +233,8 @@ void turretUpdateSprites(void) {
 	UWORD uwCameraX = g_pWorldCamera->uPos.sUwCoord.uwX;
 	UWORD uwCameraY = g_pWorldCamera->uPos.sUwCoord.uwY;
 	// This is equivalent to number of cols/rows trimmed by view, if negative
-	wSpriteOffsX = (TURRET_SPRITE_OFFS>>1) - (uwCameraX & ((1 << MAP_TILE_SIZE) -1));
+	// OffsX needs to be even 'cuz sprite pos lsbit is always 0
+	wSpriteOffsX = ((TURRET_SPRITE_OFFS>>1) - (uwCameraX & ((1 << MAP_TILE_SIZE) -1))) & 0xfffe;
 	wSpriteOffsY = (TURRET_SPRITE_OFFS>>1) - (uwCameraY & ((1 << MAP_TILE_SIZE) -1));
 
 	// Tile range to be checked
@@ -279,7 +280,7 @@ void turretUpdateSprites(void) {
 			// Update turret sprites
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
-			wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4) & 0xfffe);
+			wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4));
 			if(wCopHPos < 0) {
 				wCopHPos += 0xE2;
 				--wCopVPos;
@@ -322,7 +323,7 @@ void turretUpdateSprites(void) {
 				copMove(pCopList, pCopBlock, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
 				copMove(pCopList, pCopBlock, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
-				// Avg turretUpdateSprites():  17.510 ms, min:  28.822 ms, max:  30.940 ms
+				// Avg turretUpdateSprites():  14.034 ms, min:  28.770 ms, max:  32.772 ms
 			}
 			++uwTurretsInRow;
 			// Force 1 empty tile
