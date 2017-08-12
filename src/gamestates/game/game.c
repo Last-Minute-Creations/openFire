@@ -29,7 +29,7 @@ void gsGameCreate(void) {
 	teamsInit();
 
 	// Load map
-	mapCreate("data/maps/turretsFull.txt");
+	mapCreate("data/maps/turrets.txt");
 
 	// Add players
 	playerListCreate(1);

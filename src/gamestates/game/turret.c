@@ -2,6 +2,7 @@
 
 #include <ace/managers/memory.h>
 #include <ace/managers/key.h>
+#include <ace/managers/blit.h>
 #include <ace/utils/custom.h>
 #include <ace/libfixmath/fix16.h>
 #include "gamestates/game/world.h"
@@ -19,7 +20,7 @@ static tTurret *s_pTurretList;
 tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
 static UWORD **s_pTurretTiles;                           // Approx. 2KiB
 static tCopBlock *s_pTurretCopBlocks[TURRET_MAX_PROCESS_RANGE_Y][TURRET_SPRITE_HEIGHT]; // Approx. 10KiB
-static tCopBlock *s_pInitCopBlock;
+static tCopBlock *s_pInitCopBlock, *s_pCleanupCopBlock;
 
 tBitMap *s_pTurretTest;
 
@@ -42,12 +43,18 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 
 	// Attach sprites
 	s_pInitCopBlock = copBlockCreate(
-		g_pWorldView->pCopList, 2, 0x48-3*4 - 2, WORLD_VPORT_BEGIN_Y - 1
+		g_pWorldView->pCopList, 2, 0x48-3*4 - 2*4, WORLD_VPORT_BEGIN_Y - 1
 	);
 	copMove(g_pWorldView->pCopList, s_pInitCopBlock, &custom.spr[1].ctl, 1 << 7);
 
+	// Cleanup block for sprites trimmed from bottom
+	s_pCleanupCopBlock = copBlockCreate(
+		g_pWorldView->pCopList, 2, 0x48-2*4, WORLD_VPORT_BEGIN_Y + WORLD_VPORT_HEIGHT
+	);
+	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[1].ctl, 0);
+	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[0].ctl, 0);
+
 	// CopBlocks for turret display
-	// TODO: more precise copper instruction count?
 	for(t = 0; t != TURRET_MAX_PROCESS_RANGE_Y; ++t) {
 		for(i = 0; i != TURRET_SPRITE_HEIGHT; ++i)
 			s_pTurretCopBlocks[t][i] = copBlockCreate(
@@ -59,6 +66,19 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
 	s_pAvg = logAvgCreate("turretUpdateSprites()", 50*5);
 
+	// Force blank last line of turret gfx
+	for(UWORD uwFrame = 0; uwFrame != VEHICLE_BODY_ANGLE_COUNT; ++uwFrame) {
+		blitRect(
+			g_sBrownTurretSource.pBitmap,
+			0, TURRET_SPRITE_HEIGHT*uwFrame + TURRET_SPRITE_HEIGHT-1,
+			16, 1, 0
+		);
+	}
+	blitRect(
+		s_pTurretTest, 0, TURRET_SPRITE_HEIGHT-1,
+		16, 1, 0
+	);
+		
 	logBlockEnd("turretListCreate()");
 }
 
@@ -82,6 +102,7 @@ void turretListDestroy(void) {
 			copBlockDestroy(g_pWorldView->pCopList, s_pTurretCopBlocks[t][i]);
 	}
 	copBlockDestroy(g_pWorldView->pCopList, s_pInitCopBlock);
+	copBlockDestroy(g_pWorldView->pCopList, s_pCleanupCopBlock);
 
 	logAvgDestroy(s_pAvg);
 
@@ -250,9 +271,19 @@ void turretUpdateSprites(void) {
 		if(wSpriteBeginOnScreenY < 0) {
 			// Sprite is trimmed from top
 			uwFirstVisibleSpriteLine = -wSpriteOffsY;
+			if(uwFirstVisibleSpriteLine >= TURRET_SPRITE_HEIGHT) {
+				// Row has only visible lines below turret sprite
+				// Disable copper rows
+				// TODO shouldn't be needed 'cuz it should cope under full load anyway
+				UWORD uwSpriteLine;
+				for(uwSpriteLine = 0; uwSpriteLine < TURRET_SPRITE_HEIGHT; ++uwSpriteLine)
+					s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwSpriteLine]->ubDisabled = 1;
+				continue;
+			}
+			
 			uwLastVisibleSpriteLine = TURRET_SPRITE_HEIGHT-1;
 			wSpriteBeginOnScreenY = 0;
-			wSpriteEndOnScreenY = wSpriteOffsY + TURRET_SPRITE_HEIGHT;
+			wSpriteEndOnScreenY = wSpriteOffsY + TURRET_SPRITE_HEIGHT-1;
 		}
 		else {
 			// Sprite is not trimmed on top - may be on bottom
@@ -260,8 +291,8 @@ void turretUpdateSprites(void) {
 			wSpriteEndOnScreenY = wSpriteBeginOnScreenY + TURRET_SPRITE_HEIGHT-1;
 			if(wSpriteEndOnScreenY >= WORLD_VPORT_HEIGHT) {
 				// Sprite is trimmed on bottom
-				uwLastVisibleSpriteLine = TURRET_SPRITE_HEIGHT + wSpriteEndOnScreenY - (WORLD_VPORT_HEIGHT-1);
 				wSpriteEndOnScreenY = WORLD_VPORT_HEIGHT-1;
+				uwLastVisibleSpriteLine = wSpriteEndOnScreenY - wSpriteBeginOnScreenY;
 			}
 			else {
 				// Sprite is not trimmed on bottom
@@ -280,7 +311,7 @@ void turretUpdateSprites(void) {
 			// Update turret sprites
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
-			wCopHPos = (0x48 + (wSpriteBeginOnScreenX/2 - uwCopperInsCount*4));
+			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 			// always > 0, always < 0xE2 'cuz only 8px after 0xE2
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
@@ -290,7 +321,7 @@ void turretUpdateSprites(void) {
 					pCopBlock->uwCurrCount = 0;
 					
 					// TODO then first turret without own WAIT cmd?
-					copBlockWait(pCopList, pCopBlock, wCopHPos - 2*4, WORLD_VPORT_BEGIN_Y + uwScreenLine - 1);
+					copBlockWait(pCopList, pCopBlock, wCopHPos - 2*4, wCopVPos + uwScreenLine);
 				}
 				// If sprite was trimmed from top, disable remaining copBlock lines
 				while(uwScreenLine <= wSpriteBeginOnScreenY+15) {
@@ -301,7 +332,8 @@ void turretUpdateSprites(void) {
 			}
 			
 			for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
-				const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
+				const UWORD **pPlanes = (UWORD**)s_pTurretTest->Planes;
+				// const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
 				pCopBlock = s_pTurretCopBlocks[uwTileY-uwFirstTileY][uwScreenLine-wSpriteBeginOnScreenY];
 				// Do a WAIT
 				tCopWaitCmd *pWaitCmd = (tCopWaitCmd*)&pCopBlock->pCmds[pCopBlock->uwCurrCount];
@@ -309,7 +341,8 @@ void turretUpdateSprites(void) {
 				// pWaitCmd->bfVE = 0; // VPOS could be ignored here
 				++pCopBlock->uwCurrCount;
 				// Add MOVEs
-				uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
+				uwSpriteLine = (uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(s_pTurretTest->BytesPerRow >> 1);
+				// uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine + uwScreenLine - wSpriteBeginOnScreenY)*(g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
 				UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1); // No need for VPos 'cuz WAIT ensures same line
 				copMove(pCopList, pCopBlock, &custom.spr[0].pos, uwSpritePos);
 				copMove(pCopList, pCopBlock, &custom.spr[1].pos, uwSpritePos);

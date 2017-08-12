@@ -13,7 +13,7 @@ Turret test
 ..                ..
 ..                ..
 ..                ..
-..                ..
+..S S S S S S S S ..
 ..                ..
 ..S S S S S S S S ..
 ..                ..
