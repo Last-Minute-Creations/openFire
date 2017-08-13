@@ -43,16 +43,17 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 
 	// Attach sprites
 	s_pInitCopBlock = copBlockCreate(
-		g_pWorldView->pCopList, 2, 0x48-3*4 - 2*4, WORLD_VPORT_BEGIN_Y - 1
+		g_pWorldView->pCopList, 2, 0x48-3*4 - 3*4, WORLD_VPORT_BEGIN_Y - 1
 	);
-	copMove(g_pWorldView->pCopList, s_pInitCopBlock, &custom.spr[1].ctl, 1 << 7);
+	copMove(g_pWorldView->pCopList, s_pInitCopBlock, &custom.spr[1].ctl, (1<<7) | 1);
+	copMove(g_pWorldView->pCopList, s_pInitCopBlock, &custom.spr[0].ctl, 1);
 
 	// Cleanup block for sprites trimmed from bottom
 	s_pCleanupCopBlock = copBlockCreate(
 		g_pWorldView->pCopList, 2, 0x48-2*4, WORLD_VPORT_BEGIN_Y + WORLD_VPORT_HEIGHT
 	);
-	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[1].ctl, 0);
-	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[0].ctl, 0);
+	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[1].ctl, 1);
+	copMove(g_pWorldView->pCopList, s_pCleanupCopBlock, &custom.spr[0].ctl, 1);
 
 	// CopBlocks for turret display
 	for(t = 0; t != TURRET_MAX_PROCESS_RANGE_Y; ++t) {
@@ -313,6 +314,11 @@ void turretUpdateSprites(void) {
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 			// always > 0, always < 0xE2 'cuz only 8px after 0xE2
+			if(wCopHPos >= 0xC8 && uwTileY == uwLastTileY) {
+				// If last sprite begins just at bottom-right end of screen, it garbles
+				// HUD's copperlist. So don't display it.
+				break;
+			}
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
