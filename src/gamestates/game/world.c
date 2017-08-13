@@ -143,7 +143,7 @@ void worldProcess(void) {
 		UWORD uwLocalX, uwLocalY;
 		uwLocalX = g_pLocalPlayer->sVehicle.fX;
 		uwLocalY = g_pLocalPlayer->sVehicle.fY;
-		cameraCenterAt(g_pWorldCamera, uwLocalX, uwLocalY);
+		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
 	mapUpdateTiles();
 	worldDraw();
