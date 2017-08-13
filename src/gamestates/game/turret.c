@@ -34,7 +34,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	s_pTurretList = memAllocFastClear(ubMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	// TODO proper dimensions
+	// TODO proper dimensions from map
 	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * 20);
 	for(i = 0; i != 20; ++i) {
 		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD)*20);
@@ -42,6 +42,9 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	}
 
 	// Attach sprites
+	// TODO vehicle/turret jitter could be fixed by setting lsbit in ctl
+	// accordingly. Updating this block would be needed. Could be easily done in
+	// static copperlists.
 	s_pInitCopBlock = copBlockCreate(
 		g_pWorldView->pCopList, 2, 0x48-3*4 - 3*4, WORLD_VPORT_BEGIN_Y - 1
 	);
@@ -170,8 +173,7 @@ void turretProcess(void) {
 			pPlayer = &g_pPlayers[ubPlayerIdx];
 
 			// Same team or not on map?
-			// TODO uncomment
-			if(/*pPlayer->ubTeam == pTurret->ubTeam ||*/ pPlayer->ubState != PLAYER_STATE_DRIVING)
+			if(pPlayer->ubTeam == pTurret->ubTeam || pPlayer->ubState != PLAYER_STATE_DRIVING)
 				continue;
 
 			// Calculate distance between turret & player
@@ -205,7 +207,6 @@ void turretProcess(void) {
 			ubDestAngle -= ANGLE_360;
 
 		if(pTurret->ubAngle != ubDestAngle) {
-			// TODO: Rotate turret into enemy position
 			WORD wDelta;
 			wDelta = ubDestAngle - pTurret->ubAngle;
 			if((wDelta > 0 && wDelta < ANGLE_180) || wDelta + ANGLE_360 < ANGLE_180) {
@@ -327,6 +328,7 @@ void turretUpdateSprites(void) {
 					pCopBlock->uwCurrCount = 0;
 					
 					// TODO then first turret without own WAIT cmd?
+					// Will be fixed with static copperlists
 					copBlockWait(pCopList, pCopBlock, wCopHPos - 2*4, wCopVPos + uwScreenLine);
 				}
 				// If sprite was trimmed from top, disable remaining copBlock lines
