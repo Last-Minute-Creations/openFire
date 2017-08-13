@@ -261,9 +261,14 @@ void turretUpdateSprites(void) {
 	wSpriteOffsY = (TURRET_SPRITE_OFFS>>1) - (uwCameraY & ((1 << MAP_TILE_SIZE) -1));
 
 	// Tile range to be checked
+	// If last sprite begins just at bottom-right end of screen, it garbles
+	// HUD's copperlist. So uwLastTileX is trimmed so that it won't try to display
+	// last sprite if there is only a bit of it.
+	// TODO uwLastTileY could be decreased a bit too to (-1 := -8?) 'cuz of
+	// 8 blank lines before sprite.
 	uwFirstTileX = uwCameraX >> MAP_TILE_SIZE;
 	uwFirstTileY = uwCameraY >> MAP_TILE_SIZE;
-	uwLastTileX  = (uwCameraX + WORLD_VPORT_WIDTH -1) >> MAP_TILE_SIZE;
+	uwLastTileX  = (uwCameraX + WORLD_VPORT_WIDTH -1-8) >> MAP_TILE_SIZE;
 	uwLastTileY  = (uwCameraY + WORLD_VPORT_HEIGHT -1) >> MAP_TILE_SIZE;
 
 	// Iterate thru visible tile rows
@@ -315,11 +320,6 @@ void turretUpdateSprites(void) {
 			wCopVPos = WORLD_VPORT_BEGIN_Y;
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 			// always > 0, always < 0xE2 'cuz only 8px after 0xE2
-			if(wCopHPos >= 0xC8 && uwTileY == uwLastTileY) {
-				// If last sprite begins just at bottom-right end of screen, it garbles
-				// HUD's copperlist. So don't display it.
-				break;
-			}
 			if(!uwTurretsInRow) {
 				// Reset CopBlock cmd count
 				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
