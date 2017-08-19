@@ -35,9 +35,22 @@ tAvg *s_pTurretDrawAvg;
 
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
-	g_pWorldView = viewCreate(V_GLOBAL_CLUT);
-	s_pWorldMainVPort = vPortCreate(g_pWorldView, WORLD_VPORT_WIDTH, WORLD_VPORT_HEIGHT, WORLD_BPP, 0);
-	g_pWorldMainBfr = simpleBufferCreate(s_pWorldMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
+	g_pWorldView = viewCreate(0,
+		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_DONE
+	);
+	s_pWorldMainVPort = vPortCreate(0,
+		TAG_VPORT_VIEW, g_pWorldView,
+		TAG_VPORT_HEIGHT, WORLD_VPORT_HEIGHT,
+		TAG_VPORT_BPP, WORLD_BPP,
+		TAG_DONE
+	);
+	g_pWorldMainBfr = simpleBufferCreate(0,
+		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, 20<<MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 20<<MAP_TILE_SIZE,
+		TAG_DONE
+	);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
 		gamePopState();
