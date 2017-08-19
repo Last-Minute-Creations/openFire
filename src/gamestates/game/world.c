@@ -31,12 +31,18 @@ UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
 
-tAvg *s_pTurretDrawAvg;
-
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
+	// Simple buffer for simplebuffer main: 6+4*2 = 14, hud: same
+	// Copperlist for turrets: 7*6*16 per turret row, lines: 6(7)
+	// 4704 for turrets, 3 for init, 3 for end, total 4710 cmds
+	// Grand copper total: 4710+14+14 = 4728
+	// const UWORD uwCopperInsCount = 4728;
+	const UWORD uwCopperInsCount = 29;
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
+		TAG_VIEW_COPLIST_RAW_COUNT, uwCopperInsCount,
 		TAG_DONE
 	);
 	s_pWorldMainVPort = vPortCreate(0,
@@ -49,6 +55,7 @@ UBYTE worldCreate(void) {
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, 20<<MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 20<<MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
 		TAG_DONE
 	);
 	if(!g_pWorldMainBfr) {
@@ -61,7 +68,9 @@ UBYTE worldCreate(void) {
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
-
+	copSetWait((tCopWaitCmd*)&g_pWorldView->pCopList->pBackBfr->pList[28], 0xFF, 0xFF);
+	copSetWait((tCopWaitCmd*)&g_pWorldView->pCopList->pFrontBfr->pList[28], 0xFF, 0xFF);
+	
 	turretListCreate(128);
 
 	// Load gfx
@@ -75,15 +84,10 @@ UBYTE worldCreate(void) {
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
-
-	s_pTurretDrawAvg = logAvgCreate("turretDrawAll", 50);
-
 	return 1;
 }
 
 void worldDestroy(void) {
-	logAvgDestroy(s_pTurretDrawAvg);
-
 	turretListDestroy();
 
 	viewDestroy(g_pWorldView);
@@ -115,9 +119,7 @@ void worldDraw(void) {
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Turrets
-	logAvgBegin(s_pTurretDrawAvg);
-	turretUpdateSprites();
-	logAvgEnd(s_pTurretDrawAvg);
+	// turretUpdateSprites();
 
 	// Projectiles
 	projectileDraw();
@@ -163,8 +165,6 @@ void worldProcess(void) {
 	
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
-	if(keyUse(KEY_K))
-		copDumpBlocks();
 }
 
 void worldProcessInput(void) {
