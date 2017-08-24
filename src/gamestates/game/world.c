@@ -37,8 +37,7 @@ UBYTE worldCreate(void) {
 	// Copperlist for turrets: 7*6*16 per turret row, lines: 6(7)
 	// 4704 for turrets, 3 for init, 3 for end, total 4710 cmds
 	// Grand copper total: 4710+14+14 = 4728
-	// const UWORD uwCopperInsCount = 4728;
-	const UWORD uwCopperInsCount = 29;
+	const UWORD uwCopperInsCount = 4728;
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
@@ -68,8 +67,6 @@ UBYTE worldCreate(void) {
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
-	copSetWait((tCopWaitCmd*)&g_pWorldView->pCopList->pBackBfr->pList[28], 0xFF, 0xFF);
-	copSetWait((tCopWaitCmd*)&g_pWorldView->pCopList->pFrontBfr->pList[28], 0xFF, 0xFF);
 	
 	turretListCreate(128);
 
@@ -119,7 +116,7 @@ void worldDraw(void) {
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Turrets
-	// turretUpdateSprites();
+	turretUpdateSprites();
 
 	// Projectiles
 	projectileDraw();
@@ -162,6 +159,9 @@ void worldProcess(void) {
 	}
 	mapUpdateTiles();
 	worldDraw();
+
+	if(keyUse(KEY_L))
+		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 	
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();

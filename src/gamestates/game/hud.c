@@ -17,7 +17,7 @@ void hudCreate(void) {
 	);
 	s_pHudBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pHudVPort,
-		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 14+0,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 4728-14,
 		TAG_DONE
 	);
 	
