@@ -348,9 +348,9 @@ void turretUpdateSprites(void) {
 
 			// Do a WAIT
 			copSetWait(&pCmdList[uwCopOffs+0].sWait, wCopHPos, wCopVPos);
-			// pWaitCmd->bfVE = 0; // VPOS could be ignored here
-			// Add MOVEs
-			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1); // No need for VPos 'cuz WAIT ensures same line
+			// pWaitCmd->bfVE = 0; // VPOS could be ignored here and only set on 1st line later
+			// Add MOVEs - no need setting VPos 'cuz WAIT ensures same line
+			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1);
 			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.spr[0].pos, uwSpritePos);
 			copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.spr[1].pos, uwSpritePos);
 			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
@@ -363,7 +363,7 @@ void turretUpdateSprites(void) {
 			uwCopOffs += 7;
 		}
 		if(uwTurretsInRow) {
-			WORD wRowsToCopy = wSpriteEndOnScreenY - wSpriteBeginOnScreenY-1;
+			WORD wRowsToCopy = wSpriteEndOnScreenY - wSpriteBeginOnScreenY;
 			UWORD uwCmdsPerRow = (uwCopOffs-uwRowStartCopOffs);
 			if(wRowsToCopy > 0) {
 				// Copy rows using blitter
@@ -371,14 +371,15 @@ void turretUpdateSprites(void) {
 					(UBYTE*)&pCmdList[uwRowStartCopOffs],	(UBYTE*)&pCmdList[uwCopOffs],
 					uwCmdsPerRow, wRowsToCopy*(sizeof(tCopCmd)/sizeof(UWORD))
 				);
+				WaitBlit();
 				// Things to manually change: sprxdaty(uwSpriteLine), waitcmd(wCopVPos)
 				// TODO: WAIT could optimized by copying one with VPOS compare disabled
 				// and then re-enabled only in topmost line.
 				// NOTE NOTE NOTE Not sure if this shouldn't wait for blitter to finish or
 				// at least give it a bit of headstart
-				/*
 				UWORD uwLineOffs = 0;
-				for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+				// for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
+				for(UWORD uwRow = 0; uwRow != wRowsToCopy; ++uwRow) {
 					uwSpriteLine += s_pTurretTest->BytesPerRow >> 1;
 					++uwLineOffs;
 					for(UWORD i = 0; i != uwTurretsInRow; ++i) {
@@ -386,7 +387,7 @@ void turretUpdateSprites(void) {
 						const UWORD **pPlanes = (UWORD**)s_pTurretTest->Planes;
 						// const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
 
-						pCmdList[uwCopOffs+0].sWait.bfWaitX = wCopVPos + uwLineOffs;
+						pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos + uwLineOffs;    // WAIT Y
 						pCmdList[uwCopOffs+3].sMove.bfValue = pPlanes[3][uwSpriteLine]; // spr1datb
 						pCmdList[uwCopOffs+4].sMove.bfValue = pPlanes[2][uwSpriteLine]; // spr1data
 						pCmdList[uwCopOffs+5].sMove.bfValue = pPlanes[1][uwSpriteLine]; // spr0datb
@@ -394,8 +395,7 @@ void turretUpdateSprites(void) {
 						uwCopOffs += 7;
 					}
 				}
-				*/
-				uwCopOffs += uwCmdsPerRow*wRowsToCopy;
+				// uwCopOffs += uwCmdsPerRow*wRowsToCopy;
 			}
 		}
 	}
@@ -409,5 +409,5 @@ void turretUpdateSprites(void) {
 	}
 	
 	logAvgEnd(s_pAvg);
-	// Avg turretUpdateSprites(copblock):  14.034 ms, min:  28.770 ms, max:  32.772 ms
+	// Avg turretUpdateSprites():   5.357 ms, min:   2.640 ms, max:   7.499 ms
 }
