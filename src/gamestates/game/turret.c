@@ -84,7 +84,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 		s_pTurretTest, 0, TURRET_SPRITE_HEIGHT-1,
 		16, 1, 0
 	);
-		
+
 	logBlockEnd("turretListCreate()");
 }
 
@@ -257,7 +257,7 @@ void turretUpdateSprites(void) {
 	UWORD uwSpriteLine;
 	const UWORD uwCopperInsCount = 8;
 	WORD wCopVPos, wCopHPos;
-	
+
 	// Tiles range to process
 	UWORD uwFirstTileX, uwFirstTileY, uwLastTileX, uwLastTileY;
 	// Offsets of sprite' beginning from top-left corner
@@ -266,18 +266,18 @@ void turretUpdateSprites(void) {
 	WORD wSpriteBeginOnScreenY, wSpriteEndOnScreenY;
 	WORD wSpriteBeginOnScreenX;
 	// Sprite's visible lines
-	UWORD uwFirstVisibleSpriteLine, uwLastVisibleSpriteLine; 
+	UWORD uwFirstVisibleSpriteLine;
 	// Iterators, counters, flags
-	UWORD uwTileX, uwTileY, uwScreenLine;
+	UWORD uwTileX, uwTileY;
 	UWORD uwTurretsInRow;
-	
+
 	UWORD uwCameraX = g_pWorldCamera->uPos.sUwCoord.uwX;
 	UWORD uwCameraY = g_pWorldCamera->uPos.sUwCoord.uwY;
 	// This is equivalent to number of cols/rows trimmed by view, if negative
 	// OffsX needs to be even 'cuz sprite pos lsbit is always 0
 	wSpriteOffsX = ((TURRET_SPRITE_OFFS>>1) - (uwCameraX & ((1 << MAP_TILE_SIZE) -1))) & 0xfffe;
 	wSpriteOffsY = (TURRET_SPRITE_OFFS>>1) - (uwCameraY & ((1 << MAP_TILE_SIZE) -1));
-	
+
 	// Tile range to be checked
 	// If last sprite begins just at bottom-right end of screen, it garbles
 	// HUD's copperlist. So uwLastTileX is trimmed so that it won't try to display
@@ -290,8 +290,9 @@ void turretUpdateSprites(void) {
 	UWORD uwRowStartCopOffs = 0;
 	tCopList *pCopList = g_pWorldView->pCopList;
 	tCopCmd *pCmdList = pCopList->pBackBfr->pList;
-	
+
 	// Iterate thru visible tile rows
+	UWORD **pTurretPlanes[6];
 	for(uwTileY = uwFirstTileY; uwTileY <= uwLastTileY; ++uwTileY) {
 		// Determine copperlist & sprite display lines
 		wSpriteBeginOnScreenY = wSpriteOffsY + ((uwTileY-uwFirstTileY) << MAP_TILE_SIZE);
@@ -299,13 +300,9 @@ void turretUpdateSprites(void) {
 			// Sprite is trimmed from top
 			uwFirstVisibleSpriteLine = -wSpriteOffsY;
 			if(uwFirstVisibleSpriteLine >= TURRET_SPRITE_HEIGHT) {
-				// Row has only visible lines below turret sprite
-				// Disable copper rows
-				// TODO shouldn't be needed 'cuz it should cope under full load anyway
+				// Row has only visible lines below screen
 				continue;
 			}
-			
-			uwLastVisibleSpriteLine = TURRET_SPRITE_HEIGHT-1;
 			wSpriteBeginOnScreenY = 0;
 			wSpriteEndOnScreenY = wSpriteOffsY + TURRET_SPRITE_HEIGHT-1;
 		}
@@ -316,11 +313,6 @@ void turretUpdateSprites(void) {
 			if(wSpriteEndOnScreenY >= WORLD_VPORT_HEIGHT) {
 				// Sprite is trimmed on bottom
 				wSpriteEndOnScreenY = WORLD_VPORT_HEIGHT-1;
-				uwLastVisibleSpriteLine = wSpriteEndOnScreenY - wSpriteBeginOnScreenY;
-			}
-			else {
-				// Sprite is not trimmed on bottom
-				uwLastVisibleSpriteLine = TURRET_SPRITE_HEIGHT-1;
 			}
 		}
 
@@ -336,19 +328,21 @@ void turretUpdateSprites(void) {
 				continue;
 			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
 
-			
-			// Update turret sprites
+			// Get proper turret sprite data
 			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			// 0 < wCopHPos < 0xE2 always 'cuz only 8px after 0xE2
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
-			
+
 			// Get turret gfx
 			const UWORD **pPlanes = (UWORD**)s_pTurretTest->Planes;
 			// const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
+			pTurretPlanes[uwTurretsInRow] = pPlanes;
 
 			// Do a WAIT
+			// TODO: VPOS could be ignored here and only set on 1st line later
 			copSetWait(&pCmdList[uwCopOffs+0].sWait, wCopHPos, wCopVPos);
-			// pWaitCmd->bfVE = 0; // VPOS could be ignored here and only set on 1st line later
+			// pCmdList[uwCopOffs+0].sWait.bfVE = 0;
+
 			// Add MOVEs - no need setting VPos 'cuz WAIT ensures same line
 			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1);
 			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.spr[0].pos, uwSpritePos);
@@ -362,40 +356,35 @@ void turretUpdateSprites(void) {
 			++uwTileX;
 			uwCopOffs += 7;
 		}
-		if(uwTurretsInRow) {
-			WORD wRowsToCopy = wSpriteEndOnScreenY - wSpriteBeginOnScreenY;
-			UWORD uwCmdsPerRow = (uwCopOffs-uwRowStartCopOffs);
-			if(wRowsToCopy > 0) {
-				// Copy rows using blitter
-				copyWithBlitter(
-					(UBYTE*)&pCmdList[uwRowStartCopOffs],	(UBYTE*)&pCmdList[uwCopOffs],
-					uwCmdsPerRow, wRowsToCopy*(sizeof(tCopCmd)/sizeof(UWORD))
-				);
-				WaitBlit();
-				// Things to manually change: sprxdaty(uwSpriteLine), waitcmd(wCopVPos)
-				// TODO: WAIT could optimized by copying one with VPOS compare disabled
-				// and then re-enabled only in topmost line.
-				// NOTE NOTE NOTE Not sure if this shouldn't wait for blitter to finish or
-				// at least give it a bit of headstart
-				UWORD uwLineOffs = 0;
-				// for(uwScreenLine = wSpriteBeginOnScreenY; uwScreenLine <= wSpriteEndOnScreenY; ++uwScreenLine) {
-				for(UWORD uwRow = 0; uwRow != wRowsToCopy; ++uwRow) {
-					uwSpriteLine += s_pTurretTest->BytesPerRow >> 1;
-					++uwLineOffs;
-					for(UWORD i = 0; i != uwTurretsInRow; ++i) {
-						// Get turret gfx
-						const UWORD **pPlanes = (UWORD**)s_pTurretTest->Planes;
-						// const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
+		if(!uwTurretsInRow)
+			continue;
+		WORD wRowsToCopy = wSpriteEndOnScreenY - wSpriteBeginOnScreenY;
+		UWORD uwCmdsPerRow = (uwCopOffs-uwRowStartCopOffs);
+		if(wRowsToCopy <= 0)
+			continue;
+		// Copy rows using blitter
+		copyWithBlitter(
+			(UBYTE*)&pCmdList[uwRowStartCopOffs],	(UBYTE*)&pCmdList[uwCopOffs],
+			uwCmdsPerRow, wRowsToCopy*(sizeof(tCopCmd)/sizeof(UWORD))
+		);
+		WaitBlit();
+		// TODO: WAIT could be optimized by copying one with VPOS compare disabled
+		// and then re-enabled only in topmost line.
+		// NOTE NOTE NOTE This should wait for blitter to finish or at least
+		// give it a bit of headstart
+		for(UWORD uwRow = 0; uwRow != wRowsToCopy; ++uwRow) {
+			uwSpriteLine += s_pTurretTest->BytesPerRow >> 1;
+			++wCopVPos;
+			for(UWORD i = 0; i != uwTurretsInRow; ++i) {
+				// Get turret gfx
+				const UWORD **pPlanes = pTurretPlanes[i];
 
-						pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos + uwLineOffs;    // WAIT Y
-						pCmdList[uwCopOffs+3].sMove.bfValue = pPlanes[3][uwSpriteLine]; // spr1datb
-						pCmdList[uwCopOffs+4].sMove.bfValue = pPlanes[2][uwSpriteLine]; // spr1data
-						pCmdList[uwCopOffs+5].sMove.bfValue = pPlanes[1][uwSpriteLine]; // spr0datb
-						pCmdList[uwCopOffs+6].sMove.bfValue = pPlanes[0][uwSpriteLine]; // spr0data
-						uwCopOffs += 7;
-					}
-				}
-				// uwCopOffs += uwCmdsPerRow*wRowsToCopy;
+				pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos;                 // WAIT Y
+				pCmdList[uwCopOffs+3].sMove.bfValue = pPlanes[3][uwSpriteLine]; // spr1datb
+				pCmdList[uwCopOffs+4].sMove.bfValue = pPlanes[2][uwSpriteLine]; // spr1data
+				pCmdList[uwCopOffs+5].sMove.bfValue = pPlanes[1][uwSpriteLine]; // spr0datb
+				pCmdList[uwCopOffs+6].sMove.bfValue = pPlanes[0][uwSpriteLine]; // spr0data
+				uwCopOffs += 7;
 			}
 		}
 	}
@@ -407,7 +396,7 @@ void turretUpdateSprites(void) {
 		copSetMove(&pCmdList[uwCopOffs+1].sMove, &pCopLc[1].uwLo, ulCleanupPos & 0xFFFF);
 		copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.copjmp2, 1);
 	}
-	
+
 	logAvgEnd(s_pAvg);
 	// Avg turretUpdateSprites():   5.357 ms, min:   2.640 ms, max:   7.499 ms
 }
