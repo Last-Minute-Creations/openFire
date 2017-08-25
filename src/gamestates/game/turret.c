@@ -329,8 +329,8 @@ void turretUpdateSprites(void) {
 			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
 
 			// Get proper turret sprite data
-			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			// 0 < wCopHPos < 0xE2 always 'cuz only 8px after 0xE2
+			wSpriteBeginOnScreenX = ((uwTileX-uwFirstTileX) << MAP_TILE_SIZE) + wSpriteOffsX;
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 
 			// Get turret gfx
