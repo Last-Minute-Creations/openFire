@@ -31,13 +31,32 @@ UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
 
-tAvg *s_pTurretDrawAvg, *s_pTurretUndrawAvg;
-
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
-	g_pWorldView = viewCreate(V_GLOBAL_CLUT);
-	s_pWorldMainVPort = vPortCreate(g_pWorldView, WORLD_VPORT_WIDTH, WORLD_VPORT_HEIGHT, WORLD_BPP, 0);
-	g_pWorldMainBfr = simpleBufferCreate(s_pWorldMainVPort, 20<<MAP_TILE_SIZE, 20<<MAP_TILE_SIZE, 0);
+	// Simple buffer for simplebuffer main: 6+4*2 = 14, hud: same
+	// Copperlist for turrets: 7*6*16 per turret row, lines: 6(7)
+	// 4704 for turrets, 3 for init, 3 for end, total 4710 cmds
+	// Grand copper total: 4710+14+14 = 4728
+	const UWORD uwCopperInsCount = 4728;
+	g_pWorldView = viewCreate(0,
+		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
+		TAG_VIEW_COPLIST_RAW_COUNT, uwCopperInsCount,
+		TAG_DONE
+	);
+	s_pWorldMainVPort = vPortCreate(0,
+		TAG_VPORT_VIEW, g_pWorldView,
+		TAG_VPORT_HEIGHT, WORLD_VPORT_HEIGHT,
+		TAG_VPORT_BPP, WORLD_BPP,
+		TAG_DONE
+	);
+	g_pWorldMainBfr = simpleBufferCreate(0,
+		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, 20<<MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 20<<MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
+		TAG_DONE
+	);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
 		gamePopState();
@@ -48,8 +67,8 @@ UBYTE worldCreate(void) {
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
-
-	turretListCreate(32);
+	
+	turretListCreate(128);
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
@@ -62,17 +81,10 @@ UBYTE worldCreate(void) {
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
-
-	s_pTurretDrawAvg = logAvgCreate("turretDrawAll", 50);
-	s_pTurretUndrawAvg = logAvgCreate("turretUndrawAll", 50);
-
 	return 1;
 }
 
 void worldDestroy(void) {
-	logAvgDestroy(s_pTurretDrawAvg);
-	logAvgDestroy(s_pTurretUndrawAvg);
-
 	turretListDestroy();
 
 	viewDestroy(g_pWorldView);
@@ -104,9 +116,7 @@ void worldDraw(void) {
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Turrets
-	logAvgBegin(s_pTurretDrawAvg);
-	turretDrawAll();
-	logAvgEnd(s_pTurretDrawAvg);
+	turretUpdateSprites();
 
 	// Projectiles
 	projectileDraw();
@@ -119,11 +129,6 @@ void worldUndraw(void) {
 
 	// Projectiles
 	projectileUndraw();
-
-	// Turrets
-	logAvgBegin(s_pTurretUndrawAvg);
-	turretUndrawAll();
-	logAvgEnd(s_pTurretUndrawAvg);
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
@@ -150,10 +155,13 @@ void worldProcess(void) {
 		UWORD uwLocalX, uwLocalY;
 		uwLocalX = g_pLocalPlayer->sVehicle.fX;
 		uwLocalY = g_pLocalPlayer->sVehicle.fY;
-		cameraCenterAt(g_pWorldCamera, uwLocalX, uwLocalY);
+		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
 	mapUpdateTiles();
 	worldDraw();
+
+	if(keyUse(KEY_L))
+		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 	
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();

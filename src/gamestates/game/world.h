@@ -16,7 +16,7 @@
 #define WORLD_VPORT_WIDTH     320
 #define WORLD_VPORT_HEIGHT    (256-64)
 #define WORLD_VPORT_BEGIN_X 126
-#define WORLD_VPORT_BEGIN_Y 44
+#define WORLD_VPORT_BEGIN_Y 0x2C
 
 extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;

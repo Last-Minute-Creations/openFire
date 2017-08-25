@@ -152,9 +152,19 @@ void bunkerCreate(void) {
 	UBYTE i;
 	
 	logBlockBegin("bunkerCreate()");
-	s_pBunkerView = viewCreate(V_GLOBAL_CLUT);
-	s_pBunkerVPort = vPortCreate(s_pBunkerView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, GAME_BPP, 0);
-	s_pBunkerBfr = simpleBufferCreate(s_pBunkerVPort, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
+	s_pBunkerView = viewCreate(0,
+		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_DONE
+	);
+	s_pBunkerVPort = vPortCreate(0, 
+		TAG_VPORT_VIEW, s_pBunkerView,
+		TAG_VPORT_BPP, GAME_BPP,
+		TAG_DONE
+	);
+	s_pBunkerBfr = simpleBufferCreate(0,
+		TAG_SIMPLEBUFFER_VPORT, s_pBunkerVPort,
+		TAG_DONE
+	);
 	if(!s_pBunkerBfr) {
 		logWrite("Buffer creation failed");
 		gameClose();
@@ -173,7 +183,7 @@ void bunkerCreate(void) {
 			blitCopyAligned(
 				pDirt, 0, (uwRand() & 3)*ubDirtSize,
 				s_pBunkerBfr->pBuffer, x, y,
-				ubDirtSize, 32
+				ubDirtSize, ubDirtSize
 			);
 	}
 	bitmapDestroy(pDirt);

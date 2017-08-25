@@ -10,8 +10,16 @@ tVPort *s_pHudVPort;
 tSimpleBufferManager *s_pHudBfr;
 
 void hudCreate(void) {
-	s_pHudVPort = vPortCreate(g_pWorldView, WINDOW_SCREEN_WIDTH, 64, HUD_BPP, 0);
-	s_pHudBfr = simpleBufferCreate(s_pHudVPort, WINDOW_SCREEN_WIDTH, 64, 0);
+	s_pHudVPort = vPortCreate(0,
+		TAG_VPORT_VIEW,	g_pWorldView,
+		TAG_VPORT_BPP, HUD_BPP,
+		TAG_DONE
+	);
+	s_pHudBfr = simpleBufferCreate(0,
+		TAG_SIMPLEBUFFER_VPORT, s_pHudVPort,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 4728-14,
+		TAG_DONE
+	);
 	
 	// Initial draw on buffer
 	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud_bg.bm", 0, 0);	
