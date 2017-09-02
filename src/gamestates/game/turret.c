@@ -248,6 +248,7 @@ void turretProcess(void) {
 // But also, because of scroll, there'll be 7 turret rows and 6 cols.
 void turretUpdateSprites(void) {
 	logAvgBegin(s_pAvg);
+	custom.dmacon = BITSET | DMAF_BLITHOG;
 	tTurret *pTurret;
 	UWORD uwSpriteLine;
 	const UWORD uwCopperInsCount = 8;
@@ -391,7 +392,9 @@ void turretUpdateSprites(void) {
 		copSetMove(&pCmdList[uwCopOffs+1].sMove, &pCopLc[1].uwLo, ulEndPos & 0xFFFF);
 		copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.copjmp2, 1);
 	}
-
+	custom.dmacon = BITCLR | DMAF_BLITHOG;
 	logAvgEnd(s_pAvg);
-	// Avg turretUpdateSprites():   5.357 ms, min:   2.640 ms, max:   7.499 ms
+	// DMA-exact HOG on turretsFull map
+	// Avg turretUpdateSprites():  30.311 ms, min:  30.677 ms, max:  41.228 ms
+
 }
