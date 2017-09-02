@@ -33,15 +33,10 @@ UWORD g_uwSiloHighlightTileX;
 
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
-	// Simple buffer for simplebuffer main: 6+4*2 = 14, hud: same
-	// Copperlist for turrets: 7*6*16 per turret row, lines: 6(7)
-	// 4704 for turrets, 3 for init, 3 for end, total 4710 cmds
-	// Grand copper total: 4710+14+14 = 4728
-	const UWORD uwCopperInsCount = 4728;
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
-		TAG_VIEW_COPLIST_RAW_COUNT, uwCopperInsCount,
+		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
 		TAG_DONE
 	);
 	s_pWorldMainVPort = vPortCreate(0,
@@ -54,7 +49,7 @@ UBYTE worldCreate(void) {
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, 20<<MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, 20<<MAP_TILE_SIZE,
-		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_DONE
 	);
 	if(!g_pWorldMainBfr) {
@@ -67,7 +62,7 @@ UBYTE worldCreate(void) {
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 
 	hudCreate();
-	
+
 	turretListCreate(128);
 
 	// Load gfx
@@ -142,10 +137,10 @@ void worldUndraw(void) {
 }
 
 void worldProcess(void) {
-	
+
 	// World-specific & steering-irrelevant player input
 	worldProcessInput();
-	
+
 	// TODO: Update HUD vport
 
 	// Update main vport
@@ -162,7 +157,7 @@ void worldProcess(void) {
 
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
-	
+
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
 }

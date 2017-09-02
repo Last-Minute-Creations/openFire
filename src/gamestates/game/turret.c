@@ -24,11 +24,6 @@ tBitMap *s_pTurretTest;
 
 static tAvg *s_pAvg;
 
-// Copperlist offsets
-#define TURRET_COP_INIT_POS    14
-#define TURRET_COP_CMDS_START  (TURRET_COP_INIT_POS+3)
-#define TURRET_COP_CLEANUP_POS (4728-14-3)
-
 void turretListCreate(UBYTE ubMaxTurrets) {
 	int i, t;
 	logBlockBegin("turretListCreate(ubMaxTurrets: %hu)", ubMaxTurrets);
@@ -48,26 +43,25 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	// TODO vehicle/turret jitter could be fixed by setting lsbit in ctl
 	// accordingly. Updating this block would be needed. Could be easily done in
 	// static copperlists.
-	tCopCmd *pCopInit = &g_pWorldView->pCopList->pBackBfr->pList[TURRET_COP_INIT_POS];
-	copSetWait(&pCopInit[0].sWait, 0x48-3*4 - 3*4, WORLD_VPORT_BEGIN_Y - 1);
-	copSetMove(&pCopInit[1].sMove, &custom.spr[1].ctl, (1<<7) | 1);
-	copSetMove(&pCopInit[2].sMove, &custom.spr[0].ctl, 1);
+	tCopCmd *pCopInit = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS];
+	copSetMove(&pCopInit[0].sMove, &custom.spr[1].ctl, (1<<7) | 1);
+	copSetMove(&pCopInit[1].sMove, &custom.spr[0].ctl, 1);
 	// Same in front bfr
-	pCopInit = &g_pWorldView->pCopList->pFrontBfr->pList[TURRET_COP_INIT_POS];
-	copSetWait(&pCopInit[0].sWait, 0x48-3*4 - 3*4, WORLD_VPORT_BEGIN_Y - 1);
-	copSetMove(&pCopInit[1].sMove, &custom.spr[1].ctl, (1<<7) | 1);
-	copSetMove(&pCopInit[2].sMove, &custom.spr[0].ctl, 1);
-
+	CopyMemQuick(
+		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS],
+		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_INIT_POS],
+		2*sizeof(tCopCmd)
+	);
 
 	// Cleanup block for sprites trimmed from bottom
-	tCopCmd *pCopCleanup = &g_pWorldView->pCopList->pBackBfr->pList[TURRET_COP_CLEANUP_POS];
-	copSetWait(&pCopCleanup[0].sWait, 0x48-2*4, WORLD_VPORT_BEGIN_Y + WORLD_VPORT_HEIGHT-1);
-	copSetMove(&pCopCleanup[1].sMove, &custom.spr[1].ctl, 1);
-	copSetMove(&pCopCleanup[2].sMove, &custom.spr[0].ctl, 0);
-	pCopCleanup = &g_pWorldView->pCopList->pFrontBfr->pList[TURRET_COP_CLEANUP_POS];
-	copSetWait(&pCopCleanup[0].sWait, 0x48-2*4, WORLD_VPORT_BEGIN_Y + WORLD_VPORT_HEIGHT-1);
-	copSetMove(&pCopCleanup[1].sMove, &custom.spr[1].ctl, 1);
-	copSetMove(&pCopCleanup[2].sMove, &custom.spr[0].ctl, 0);
+	tCopCmd *pCopCleanup = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS];
+	copSetMove(&pCopCleanup[0].sMove, &custom.spr[1].ctl, 1);
+	copSetMove(&pCopCleanup[1].sMove, &custom.spr[0].ctl, 0);
+	CopyMemQuick(
+		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS],
+		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CLEANUP_POS],
+		2*sizeof(tCopCmd)
+	);
 
 	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
 	s_pAvg = logAvgCreate("turretUpdateSprites()", 50*5);
@@ -80,6 +74,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 			16, 1, 0
 		);
 	}
+	// Don't forget first frame
 	blitRect(
 		s_pTurretTest, 0, TURRET_SPRITE_HEIGHT-1,
 		16, 1, 0
@@ -286,7 +281,7 @@ void turretUpdateSprites(void) {
 	uwFirstTileY = uwCameraY >> MAP_TILE_SIZE;
 	uwLastTileX  = (uwCameraX + WORLD_VPORT_WIDTH -1-8) >> MAP_TILE_SIZE;
 	uwLastTileY  = (uwCameraY + WORLD_VPORT_HEIGHT -1-8) >> MAP_TILE_SIZE;
-	UWORD uwCopOffs = TURRET_COP_CMDS_START;
+	UWORD uwCopOffs = WORLD_COP_TURRET_START_POS;
 	UWORD uwRowStartCopOffs = 0;
 	tCopList *pCopList = g_pWorldView->pCopList;
 	tCopCmd *pCmdList = pCopList->pBackBfr->pList;
@@ -390,10 +385,10 @@ void turretUpdateSprites(void) {
 	}
 
 	// Jump to cleanup if not completely filled
-	if(uwCopOffs < TURRET_COP_CLEANUP_POS) {
-		ULONG ulCleanupPos = (ULONG)((void*)&pCmdList[TURRET_COP_CLEANUP_POS]);
-		copSetMove(&pCmdList[uwCopOffs+0].sMove, &pCopLc[1].uwHi, ulCleanupPos>>16);
-		copSetMove(&pCmdList[uwCopOffs+1].sMove, &pCopLc[1].uwLo, ulCleanupPos & 0xFFFF);
+	if(uwCopOffs < WORLD_COP_VPHUD_POS) {
+		ULONG ulEndPos = (ULONG)((void*)&pCmdList[WORLD_COP_VPHUD_DMAOFF_POS]);
+		copSetMove(&pCmdList[uwCopOffs+0].sMove, &pCopLc[1].uwHi, ulEndPos>>16);
+		copSetMove(&pCmdList[uwCopOffs+1].sMove, &pCopLc[1].uwLo, ulEndPos & 0xFFFF);
 		copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.copjmp2, 1);
 	}
 
