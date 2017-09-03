@@ -76,13 +76,13 @@ void bunkerSetPalette(UBYTE ubLevel) {
 void bunkerMinimapCreate(void) {
 	UBYTE x,y;
 	UBYTE ubColor;
-	
+
 	s_pMinimap = bitmapCreate(
 		g_uwMapTileWidth << BUNKER_MAP_TILE_SIZE,
 		g_uwMapTileHeight << BUNKER_MAP_TILE_SIZE,
-		GAME_BPP, 0
+		BUNKER_BPP, 0
 	);
-	
+
 	for(y = 0; y != g_uwMapTileHeight; ++y) {
 		for(x = 0; x != g_uwMapTileWidth; ++x) {
 			switch(g_pMap[x][y].ubIdx) {
@@ -97,7 +97,7 @@ void bunkerMinimapCreate(void) {
 				default:
 					ubColor = 9;
 			}
-				
+
 			blitRect(
 				s_pMinimap,
 				x << BUNKER_MAP_TILE_SIZE, y << BUNKER_MAP_TILE_SIZE,
@@ -116,18 +116,18 @@ void bunkerVehiclesResetPos(void) {
 	s_pVehicles[0].uwX =  uwLeftX; s_pVehicles[0].uwY =    uwTopY;
 	s_pVehicles[1].uwX = uwRightX; s_pVehicles[1].uwY =    uwTopY;
 	s_pVehicles[2].uwX =  uwLeftX; s_pVehicles[2].uwY = uwBottomY;
-	s_pVehicles[3].uwX = uwRightX; s_pVehicles[3].uwY = uwBottomY;	
+	s_pVehicles[3].uwX = uwRightX; s_pVehicles[3].uwY = uwBottomY;
 }
 
 void bunkerVehiclesCreate(void) {
 	UBYTE i;
-	
+
 	logBlockBegin("bunkerVehiclesCreate()");
 	// Vehicle load & initial display
 	// TODO: brown player
 	s_pVehiclesBitmap = bitmapCreateFromFile("data/bunker/vehicles_green.bm");
 	s_pVehiclesMask = bitmapMaskCreateFromFile("data/bunker/vehicles.msk");
-	
+
 	// Bobs
 	for(i = 0; i != 4; ++i)
 		s_pVehicles[i].pBob = bobCreate(
@@ -138,7 +138,7 @@ void bunkerVehiclesCreate(void) {
 
 void bunkerVehiclesDestroy(void) {
 	UBYTE i;
-	
+
 	for(i = 0; i != 4; ++i)
 		bobDestroy(s_pVehicles[i].pBob);
 }
@@ -150,15 +150,15 @@ void bunkerCreate(void) {
 	UWORD x, y;
 	UBYTE ubDirtSize;
 	UBYTE i;
-	
+
 	logBlockBegin("bunkerCreate()");
 	s_pBunkerView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_DONE
 	);
-	s_pBunkerVPort = vPortCreate(0, 
+	s_pBunkerVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pBunkerView,
-		TAG_VPORT_BPP, GAME_BPP,
+		TAG_VPORT_BPP, BUNKER_BPP,
 		TAG_DONE
 	);
 	s_pBunkerBfr = simpleBufferCreate(0,
@@ -171,10 +171,10 @@ void bunkerCreate(void) {
 		return;
 	}
 	logWrite("Allocated buffer\n");
-	paletteLoad("data/amidb16.plt", s_pBasePalette, 1 << GAME_BPP);
-	
+	paletteLoad("data/amidb16.plt", s_pBasePalette, 1 << BUNKER_BPP);
+
 	s_ubChoice = 0;
-		
+
 	// Draw bunker bg - dirt
 	pDirt = bitmapCreateFromFile("data/bunker/dirt.bm");
 	ubDirtSize = pDirt->BytesPerRow << 3;
@@ -187,13 +187,13 @@ void bunkerCreate(void) {
 			);
 	}
 	bitmapDestroy(pDirt);
-	
+
 	// Draw sky rectangle
 	blitRect(
 		s_pBunkerBfr->pBuffer, 0, 0,
 		WINDOW_SCREEN_WIDTH, GFX_SURFACE_OFFS, GFX_COLOR_SKY
 	);
-		
+
 	// Draw shaft & hangars
 	pHangar = bobUniqueCreate("data/bunker/hangar.bm", "data/bunker/hangar.msk", 0, 0);
 	bobDraw(
@@ -202,7 +202,7 @@ void bunkerCreate(void) {
 		GFX_SHAFT_OFFS
 	);
 	bobUniqueDestroy(pHangar);
-	
+
 	// Draw surface line & silo
 	pSurface = bobUniqueCreate("data/bunker/surface.bm", "data/bunker/surface.msk", 32, 0);
 	for(x = 0; x != WINDOW_SCREEN_WIDTH; x += 64) {
@@ -212,11 +212,11 @@ void bunkerCreate(void) {
 	bobChangeFrame(pSurface, 0);
 	bobDraw(pSurface, s_pBunkerBfr->pBuffer, (WINDOW_SCREEN_WIDTH-64)/2, GFX_SURFACE_OFFS);
 	bobUniqueDestroy(pSurface);
-	
+
 	// Load lamp & platform bobs
 	s_pLamp = bobUniqueCreate("data/bunker/lamp.bm", "data/bunker/lamp.msk", 0, 0);
 	s_pPlatform = bobUniqueCreate("data/bunker/platform.bm", "data/bunker/platform.msk", 0, 0);
-	
+
 	bunkerVehiclesCreate();
 	logBlockEnd("bunkerCreate()");
 }
@@ -224,7 +224,7 @@ void bunkerCreate(void) {
 void bunkerProcessChoice() {
 	UBYTE ubSelectionChanged;
 	UBYTE ubPrevChoice;
-	
+
 	// Process player input - selection change
 	ubSelectionChanged = 1;
 	ubPrevChoice = s_ubChoice;
@@ -252,7 +252,7 @@ void bunkerProcessChoice() {
 	}
 	else
 		ubSelectionChanged = 0;
-	
+
 	// Process animation
 	if(ubSelectionChanged) {
 		// Undraw lamp, prev & new vehicle
@@ -265,7 +265,7 @@ void bunkerProcessChoice() {
 				s_pVehicles[s_ubChoice].pBob,  s_pBunkerBfr->pBuffer
 			);
 		bobUndraw(s_pLamp,  s_pBunkerBfr->pBuffer);
-		
+
 		// Redraw lamp, prev & new vehicle
 		bobDraw(
 			s_pLamp, s_pBunkerBfr->pBuffer,
@@ -357,7 +357,7 @@ void bunkerProcess(void) {
 			++s_uwFrameCount;
 			break;
 	}
-			
+
 	// Animate platform & vehicle carry
 	viewProcessManagers(s_pBunkerView);
 	copProcessBlocks();
@@ -370,7 +370,7 @@ void bunkerProcess(void) {
 
 void bunkerShow(void) {
 	UBYTE i;
-	
+
 	// Reset vehicle selection & platform state
 	s_ubChoice = 0;
 	while(!g_pLocalPlayer->pVehiclesLeft[s_ubChoice] && s_ubChoice < 4)
@@ -382,9 +382,9 @@ void bunkerShow(void) {
 	s_ubMode = BUNKER_MODE_CHOICE;
 	s_uwFrameCount = 0;
 	s_uwPlatformY = HANGAR_LO_Y;
-	
+
 	bunkerVehiclesResetPos(); // Needed here for lamp pos
-	
+
 	// Draw platform & lamp
 	logWrite("Drawing platform & lamp\n");
 	bobDraw(
@@ -396,7 +396,7 @@ void bunkerShow(void) {
 		s_pVehicles[s_ubChoice].uwX,
 		s_pVehicles[s_ubChoice].uwY - GFX_LAMP_DELTAY
 	);
-	
+
 	// Draw vehicles (count)
 	logWrite("Drawing vehicles\n");
 	for(i = 0; i != 4; ++i)
@@ -405,7 +405,7 @@ void bunkerShow(void) {
 				s_pVehicles[i].pBob, s_pBunkerBfr->pBuffer,
 				s_pVehicles[i].uwX, s_pVehicles[i].uwY
 			);
-			
+
 	viewLoad(s_pBunkerView);
 	bunkerSetPalette(15);
 	s_ubWasAction1 = 1;
@@ -413,7 +413,7 @@ void bunkerShow(void) {
 
 void bunkerHide(void) {
 	UBYTE i;
-	
+
 	bobUndraw(s_pPlatform, s_pBunkerBfr->pBuffer);
 	for(i = 0; i != 4; ++i)
 		if(g_pLocalPlayer->pVehiclesLeft[i])
@@ -425,9 +425,9 @@ void bunkerHide(void) {
 
 void bunkerDestroy(void) {
 	UBYTE i;
-	
+
 	logBlockBegin("bunkerDestroy()");
-	
+
 	viewLoad(0);
 	viewDestroy(s_pBunkerView);
 	bobUniqueDestroy(s_pLamp);
@@ -437,6 +437,6 @@ void bunkerDestroy(void) {
 	bunkerVehiclesDestroy();
 	bitmapMaskDestroy(s_pVehiclesMask);
 	bitmapDestroy(s_pVehiclesBitmap);
-	
+
 	logBlockEnd("bunkerDestroy()");
 }

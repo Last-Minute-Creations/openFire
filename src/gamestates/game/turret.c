@@ -33,10 +33,10 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 
 	// Tile-based turret list
 	// TODO proper dimensions from map
-	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * 20);
-	for(i = 0; i != 20; ++i) {
-		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD)*20);
-		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD)*20);
+	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_uwMapTileWidth);
+	for(i = 0; i != g_uwMapTileWidth; ++i) {
+		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_uwMapTileHeight);
+		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_uwMapTileHeight);
 	}
 
 	// Attach sprites
@@ -93,9 +93,9 @@ void turretListDestroy(void) {
 	memFree(s_pTurretList, s_ubMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	for(i = 0; i != 20; ++i)
-		memFree(s_pTurretTiles[i], sizeof(UWORD)*20);
-	memFree(s_pTurretTiles, sizeof(UWORD*) * 20);
+	for(i = 0; i != g_uwMapTileWidth; ++i)
+		memFree(s_pTurretTiles[i], sizeof(UWORD) * g_uwMapTileHeight);
+	memFree(s_pTurretTiles, sizeof(UWORD*) * g_uwMapTileWidth);
 
 	logAvgDestroy(s_pAvg);
 

@@ -4,6 +4,8 @@
 #include <ace/config.h>
 #include "gamestates/game/bob.h"
 
+#define BUNKER_BPP 5
+
 typedef struct {
 	tBob *pBob;
 	UWORD uwX;

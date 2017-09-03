@@ -19,9 +19,13 @@
 
 #include "gamestates/game/turret.h"
 
+// One 32x32@5bpp tile takes 640 bytes.
+// 20x20 map (400 tiles) takes 256000 bytes - 250 KB
+// One 32x32@4bpp tile takes 512 bytes
+// so 250KB consists of 500 tiles - 20x25
 void gsGameCreate(void) {
 	UBYTE i;
-	
+
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
 
@@ -29,18 +33,18 @@ void gsGameCreate(void) {
 	teamsInit();
 
 	// Load map
-	mapCreate("data/maps/turrets.txt");
+	mapCreate("data/maps/test2025.txt");
 
 	// Add players
 	playerListCreate(1);
 	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
-	
+
 	// Create everything needed to display world view
 	worldCreate();
-	
+
 	// Prepare bunker gfx
 	bunkerCreate();
-	
+
 	// Select first view
 	if(g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED)
 		bunkerShow();
@@ -65,7 +69,7 @@ void gsGameLoop(void) {
 		g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED ||
 		g_pLocalPlayer->ubState == PLAYER_STATE_SURFACING
 	) {
-		bunkerProcess(); // Process bunker view: decisions on steer request, 
+		bunkerProcess(); // Process bunker view: decisions on steer request,
 	}
 	else {
 		// Undraw projectiles
@@ -85,7 +89,7 @@ void gsGameDestroy(void) {
 	bunkerDestroy();
 	worldDestroy();
 	mapDestroy();
-	
+
 	playerListDestroy();
 
 	logBlockEnd("gsGameDestroy()");

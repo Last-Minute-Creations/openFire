@@ -6,7 +6,6 @@
 #include <ace/managers/key.h>
 #include "gamestates/game/bob.h"
 
-#define GAME_BPP 5
 
 #define OF_KEY_FORWARD      KEY_W
 #define OF_KEY_BACKWARD     KEY_S
