@@ -11,12 +11,12 @@
 #include "vehicletypes.h"
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
-	
+
 	logBlockBegin(
 		"vehicleInit(pVehicle: %p, ubVehicleType: %hhu)",
 		pVehicle, ubVehicleType
 	);
-	
+
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
 	pVehicle->fX = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
@@ -30,7 +30,7 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 	pVehicle->bRotDiv = 0;
 	logWrite("Created vehicle %hu @%f,%f\n", ubVehicleType, pVehicle->fX, pVehicle->fY);
 	logWrite("Spawn is at tile %hu, %hu\n", g_pTeams[TEAM_GREEN].pSilos[0].ubTileX, g_pTeams[TEAM_GREEN].pSilos[0].ubTileY);
-	
+
 	// Set main bob frames
 	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(ANGLE_90));
@@ -45,9 +45,9 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 	}
 	else
 		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
-	
+
 	pVehicle->ubCooldown = 0;
-	
+
 	logBlockEnd("vehicleInit()");
 }
 
@@ -81,7 +81,7 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	UBYTE ubNewAngle;
 	UBYTE ubNewTurretAngle;
 	float fNewPosX, fNewPosY;
-	
+
 	// Move forward/backward
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
@@ -93,7 +93,7 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosX -= ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
 		fNewPosY -= csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
 	}
-	
+
 	// Body rotation: left/right
 	ubNewAngle = pVehicle->ubBodyAngle;
 	ubNewTurretAngle = pVehicle->ubTurretAngle;
@@ -108,7 +108,7 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 				ubNewAngle -= pVehicle->pType->ubRotSpeed;
 			if(ubNewTurretAngle < pVehicle->pType->ubRotSpeed)
 				ubNewTurretAngle += ANGLE_360 - pVehicle->pType->ubRotSpeed;
-			else		
+			else
 				ubNewTurretAngle -= pVehicle->pType->ubRotSpeed;
 			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 			bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ubNewTurretAngle));
@@ -129,7 +129,7 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 			bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ubNewTurretAngle));
 		}
 	}
-	
+
 	// Check collision
 	if(!vehicleCollides(fNewPosX, fNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1])) {
 		pVehicle->fX = fNewPosX;
@@ -137,22 +137,14 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		pVehicle->ubBodyAngle = ubNewAngle;
 		pVehicle->ubTurretAngle = ubNewTurretAngle;
 	}
-	
-	// Turret rotation: left/right
-	if(pSteerRequest->ubTurretLeft) {
-		if(pVehicle->ubTurretAngle < pVehicle->pType->ubRotSpeed)
-			pVehicle->ubTurretAngle += ANGLE_360 - pVehicle->pType->ubRotSpeed;
-		else
-			pVehicle->ubTurretAngle -= pVehicle->pType->ubRotSpeed;
-		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
-	}
-	else if(pSteerRequest->ubTurretRight) {
-		pVehicle->ubTurretAngle += pVehicle->pType->ubRotSpeed;
-		if(pVehicle->ubTurretAngle >= ANGLE_360)
-			pVehicle->ubTurretAngle -= ANGLE_360;
-		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
-	}
-	
+
+	pVehicle->ubTurretAngle += ANGLE_360 + getDeltaAngleDirection(
+		pVehicle->ubTurretAngle, pSteerRequest->ubDestAngle, 1
+	);
+if(pVehicle->ubTurretAngle >= ANGLE_360)
+	pVehicle->ubTurretAngle -= ANGLE_360;
+	bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
+
 	// Fire straight
 	if(pVehicle->ubCooldown) {
 		--pVehicle->ubCooldown;
@@ -161,13 +153,13 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		projectileCreate(pVehicle, PROJECTILE_TYPE_CANNON);
 		pVehicle->ubCooldown = VEHICLE_TANK_COOLDOWN;
 	}
-	
+
 }
 
 void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	UBYTE ubNewAngle;
 	float fNewPosX, fNewPosY;
-	
+
 	ubNewAngle = pVehicle->ubBodyAngle;
 	if(pSteerRequest->ubLeft) {
 		if(!pSteerRequest->ubBackward)
@@ -196,7 +188,7 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 		}
 	}
-	
+
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
 	if(pSteerRequest->ubForward) {
@@ -207,7 +199,7 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosX -= ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed;
 		fNewPosY -= csin(ubNewAngle) * pVehicle->pType->ubBwSpeed;
 	}
-	
+
 	if(!vehicleCollides(fNewPosX, fNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1])) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;

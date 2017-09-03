@@ -12,7 +12,8 @@
 // Copperlist for turrets: 6*7*16 per turret row, max turret lines: 4
 // 4704 for turrets, 2 for init, 2 for cleanup, total 4708 cmds
 // Wait+MOVE for bitplane DMA off & on between vports, so +4 cmds
-#define WORLD_COP_VPMAIN_POS       0
+#define WORLD_COP_CROSS_POS        0
+#define WORLD_COP_VPMAIN_POS       (WORLD_COP_CROSS_POS + 3)
 #define WORLD_COP_INIT_POS         (WORLD_COP_VPMAIN_POS+14)
 #define WORLD_COP_TURRET_START_POS (WORLD_COP_INIT_POS+2)
 #define WORLD_COP_TURRET_CMDS      (16*6*7*4)

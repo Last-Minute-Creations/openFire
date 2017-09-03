@@ -19,6 +19,8 @@
 
 #include "gamestates/game/turret.h"
 
+UWORD g_uwMouseX, g_uwMouseY;
+
 // One 32x32@5bpp tile takes 640 bytes.
 // 20x20 map (400 tiles) takes 256000 bytes - 250 KB
 // One 32x32@4bpp tile takes 512 bytes

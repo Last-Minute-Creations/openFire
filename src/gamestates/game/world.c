@@ -7,6 +7,7 @@
 #include <ace/managers/copper.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/custom.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/bunker.h"
 #include "gamestates/game/vehicle.h"
@@ -30,6 +31,15 @@ UBYTE s_ubWasSiloHighlighted;
 UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
+
+// Crosshair
+tBitMap *s_pCrosshair;
+
+void updateCrosshair(void) {
+	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
+	pSpriteBfr[0] = ((0x2B-4 + g_uwMouseY   ) << 8) | 64-(4>>1) + (g_uwMouseX >> 1);
+	pSpriteBfr[1] = ((0x2B-4 + g_uwMouseY+11) << 8) |             (g_uwMouseX & 1);
+}
 
 UBYTE worldCreate(void) {
 	// Prepare view & viewport
@@ -66,12 +76,26 @@ UBYTE worldCreate(void) {
 	turretListCreate(128);
 
 	// Load gfx
+	s_pCrosshair = bitmapCreateFromFile("data/crosshair.bm");
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
 	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
 
 	// Draw map
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	mapRedraw();
+
+	// Crosshair stuff
+	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
+	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];
+	updateCrosshair();
+	copSetWait(&pCrossList[0].sWait, 0, 0);
+	copSetMove(&pCrossList[1].sMove, &pSprPtrs[3].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
+	copSetMove(&pCrossList[2].sMove, &pSprPtrs[3].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
+	CopyMemQuick(
+		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS],
+		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CROSS_POS],
+		3*sizeof(tCopCmd)
+	);
 
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
@@ -85,6 +109,7 @@ void worldDestroy(void) {
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
+	bitmapDestroy(s_pCrosshair);
 }
 
 void worldShow(void) {
@@ -157,6 +182,8 @@ void worldProcess(void) {
 
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
+
+	updateCrosshair();
 
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();

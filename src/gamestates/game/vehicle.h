@@ -16,11 +16,10 @@ typedef struct _tSteerRequest {
 	UBYTE ubBackward;
 	UBYTE ubLeft;
 	UBYTE ubRight;
-	UBYTE ubTurretLeft;
-	UBYTE ubTurretRight;
 	UBYTE ubAction1;
 	UBYTE ubAction2;
 	UBYTE ubAction3;
+	UBYTE ubDestAngle;
 } tSteerRequest;
 
 typedef struct {
