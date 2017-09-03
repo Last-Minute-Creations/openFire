@@ -1,5 +1,4 @@
 #include "gamestates/initloading/worker.h"
-#include <math.h>
 #include <exec/tasks.h>
 #include <clib/dos_protos.h>
 #include <clib/alib_protos.h>
@@ -10,6 +9,7 @@
 #include "gamestates/initloading/loadingscreen.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/gamemath.h"
 
 #define WORKER_REQUEST_WORK 0
 #define WORKER_REQUEST_KILL 8
@@ -47,9 +47,7 @@ void workerMain(void) {
 
 	// Generate math table
 	logWrite("Generating sine table...\n");
-	UBYTE i;
-	for(i = 0; i != 128; ++i)
-		g_pSin[i] = sin(i*2*M_PI/128);
+	generateSine();
 	g_ubWorkerStep = 50;
 
 	logWrite("Working on projectiles...\n");

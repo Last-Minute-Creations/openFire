@@ -4,7 +4,6 @@
 #include <ace/managers/key.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/custom.h>
-#include <ace/libfixmath/fix16.h>
 #include "gamestates/game/world.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
@@ -32,7 +31,6 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 	s_pTurretList = memAllocFastClear(ubMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	// TODO proper dimensions from map
 	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_uwMapTileWidth);
 	for(i = 0; i != g_uwMapTileWidth; ++i) {
 		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_uwMapTileHeight);
@@ -151,7 +149,6 @@ void turretProcess(void) {
 
 	for(ubTurretIdx = 0; ubTurretIdx != s_ubMaxTurrets; ++ubTurretIdx) {
 		pTurret = &s_pTurretList[ubTurretIdx];
-
 		if(!pTurret->ubHp)
 			continue;
 
@@ -161,7 +158,7 @@ void turretProcess(void) {
 		for(ubPlayerIdx = 0; ubPlayerIdx != g_ubPlayerCount; ++ubPlayerIdx) {
 			pPlayer = &g_pPlayers[ubPlayerIdx];
 
-			// Same team or not on map?
+			// Ignore players of same team or not on map
 			if(pPlayer->ubTeam == pTurret->ubTeam || pPlayer->ubState != PLAYER_STATE_DRIVING)
 				continue;
 
@@ -178,35 +175,19 @@ void turretProcess(void) {
 		// Anything in range?
 		if(!pClosestPlayer)
 			continue;
-		uwDx = pClosestPlayer->sVehicle.fX - pTurret->uwX;
-		uwDy = pClosestPlayer->sVehicle.fY - pTurret->uwY;
 
 		// Determine destination angle
-		// calc: ubDestAngle = ((pi + atan2(uwDx, uwDy)) * 64)/(2*pi) * 2
-		ubDestAngle = ANGLE_90 + 2 * fix16_to_int(
-			fix16_div(
-				fix16_mul(
-					fix16_add(fix16_pi, fix16_atan2(fix16_from_int(uwDx), fix16_from_int(-uwDy))),
-					fix16_from_int(64)
-				),
-				fix16_pi*2
-			)
+		ubDestAngle = getAngleBetweenPoints(
+			pTurret->uwX, pTurret->uwY,
+			pClosestPlayer->sVehicle.fX, pClosestPlayer->sVehicle.fY
 		);
-		if(ubDestAngle >= ANGLE_360)
-			ubDestAngle -= ANGLE_360;
+		// logWrite("Angle: %hu\n", ubDestAngle);
 
 		if(pTurret->ubAngle != ubDestAngle) {
-			WORD wDelta;
-			wDelta = ubDestAngle - pTurret->ubAngle;
-			if((wDelta > 0 && wDelta < ANGLE_180) || wDelta + ANGLE_360 < ANGLE_180) {
-				// Rotate clockwise
-				pTurret->ubAngle += 2;
-			}
-			else {
-				// Rotate anti-clockwise
-				pTurret->ubAngle += ANGLE_360 - 2;
-			}
-			while(pTurret->ubAngle >= ANGLE_360)
+			pTurret->ubAngle += ANGLE_360 + getDeltaAngleDirection(
+				pTurret->ubAngle, ubDestAngle, 2
+			);
+			if(pTurret->ubAngle >= ANGLE_360)
 				pTurret->ubAngle -= ANGLE_360;
 		}
 		else {
@@ -288,7 +269,7 @@ void turretUpdateSprites(void) {
 	tCopCmd *pCmdList = pCopList->pBackBfr->pList;
 
 	// Iterate thru visible tile rows
-	UWORD **pTurretPlanes[6];
+	UWORD *pRowSpriteBpls[6];
 	for(uwTileY = uwFirstTileY; uwTileY <= uwLastTileY; ++uwTileY) {
 		// Determine copperlist & sprite display lines
 		wSpriteBeginOnScreenY = wSpriteOffsY + ((uwTileY-uwFirstTileY) << MAP_TILE_SIZE);
@@ -316,12 +297,11 @@ void turretUpdateSprites(void) {
 		uwTurretsInRow = 0;
 		uwRowStartCopOffs = uwCopOffs;
 		wCopVPos = WORLD_VPORT_BEGIN_Y + wSpriteBeginOnScreenY;
-		uwSpriteLine = uwFirstVisibleSpriteLine*(s_pTurretTest->BytesPerRow >> 1);
-		// uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine)*(g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
+		const UWORD uwWordsPerRow = (g_sBrownTurretSource.pBitmap->BytesPerRow >> 1);
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
 			// Get turret from tile, skip if there is none
 			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
-				continue;
+			continue;
 			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
 
 			// Get proper turret sprite data
@@ -330,23 +310,23 @@ void turretUpdateSprites(void) {
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 
 			// Get turret gfx
-			const UWORD **pPlanes = (UWORD**)s_pTurretTest->Planes;
-			// const UWORD **pPlanes = (UWORD**)g_sBrownTurretSource.pBitmap->Planes;
-			pTurretPlanes[uwTurretsInRow] = pPlanes;
+			uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine)* uwWordsPerRow;
+			UWORD *pSpriteBpls = &((UWORD**)g_sBrownTurretSource.pBitmap->Planes)[0][uwSpriteLine];
+			pRowSpriteBpls[uwTurretsInRow] = pSpriteBpls;
 
 			// Do a WAIT
-			// TODO: VPOS could be ignored here and only set on 1st line later
+			// TODO: copWait VPOS could be ignored here and only set on 1st line later
 			copSetWait(&pCmdList[uwCopOffs+0].sWait, wCopHPos, wCopVPos);
 			// pCmdList[uwCopOffs+0].sWait.bfVE = 0;
 
-			// Add MOVEs - no need setting VPos 'cuz WAIT ensures same line
+			// Add MOVEs - no need setting sprite VPos 'cuz WAIT ensures same line
 			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1);
 			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.spr[0].pos, uwSpritePos);
 			copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.spr[1].pos, uwSpritePos);
-			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[1].datab, pPlanes[3][uwSpriteLine]);
-			copSetMove(&pCmdList[uwCopOffs+4].sMove, &custom.spr[1].dataa, pPlanes[2][uwSpriteLine]);
-			copSetMove(&pCmdList[uwCopOffs+5].sMove, &custom.spr[0].datab, pPlanes[1][uwSpriteLine]);
-			copSetMove(&pCmdList[uwCopOffs+6].sMove, &custom.spr[0].dataa, pPlanes[0][uwSpriteLine]);
+			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[1].datab, pSpriteBpls[3]);
+			copSetMove(&pCmdList[uwCopOffs+4].sMove, &custom.spr[1].dataa, pSpriteBpls[2]);
+			copSetMove(&pCmdList[uwCopOffs+5].sMove, &custom.spr[0].datab, pSpriteBpls[1]);
+			copSetMove(&pCmdList[uwCopOffs+6].sMove, &custom.spr[0].dataa, pSpriteBpls[0]);
 			++uwTurretsInRow;
 			// Force 1 empty tile
 			++uwTileX;
@@ -369,17 +349,17 @@ void turretUpdateSprites(void) {
 		// NOTE NOTE NOTE This should wait for blitter to finish or at least
 		// give it a bit of headstart
 		for(UWORD uwRow = 0; uwRow != wRowsToCopy; ++uwRow) {
-			uwSpriteLine += s_pTurretTest->BytesPerRow >> 1;
 			++wCopVPos;
 			for(UWORD i = 0; i != uwTurretsInRow; ++i) {
 				// Get turret gfx
-				const UWORD **pPlanes = pTurretPlanes[i];
+				pRowSpriteBpls[i] += uwWordsPerRow;
+				UWORD *pRow = pRowSpriteBpls[i];
 
-				pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos;                 // WAIT Y
-				pCmdList[uwCopOffs+3].sMove.bfValue = pPlanes[3][uwSpriteLine]; // spr1datb
-				pCmdList[uwCopOffs+4].sMove.bfValue = pPlanes[2][uwSpriteLine]; // spr1data
-				pCmdList[uwCopOffs+5].sMove.bfValue = pPlanes[1][uwSpriteLine]; // spr0datb
-				pCmdList[uwCopOffs+6].sMove.bfValue = pPlanes[0][uwSpriteLine]; // spr0data
+				pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos;           // WAIT Y
+				pCmdList[uwCopOffs+3].sMove.bfValue = pRow[3]; // spr1datb
+				pCmdList[uwCopOffs+4].sMove.bfValue = pRow[2]; // spr1data
+				pCmdList[uwCopOffs+5].sMove.bfValue = pRow[1]; // spr0datb
+				pCmdList[uwCopOffs+6].sMove.bfValue = pRow[0]; // spr0data
 				uwCopOffs += 7;
 			}
 		}

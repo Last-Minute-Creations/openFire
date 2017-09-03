@@ -6,19 +6,10 @@
 #include <ace/utils/bitmapmask.h>
 #include "vehicletypes.h"
 #include "gamestates/game/map.h"
+#include "gamestates/game/gamemath.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN 25
-
-#define ANGLE_0    0
-#define ANGLE_45   16
-#define ANGLE_90   32
-#define ANGLE_180  64
-#define ANGLE_360  128
-#define ANGLE_LAST 127
-#define csin(x) (g_pSin[x])
-#define ccos(x) ((x < 96?csin(ANGLE_90+x):csin(x-3*ANGLE_90)))
-#define angleToFrame(angle) (angle>>1)
 
 typedef struct _tSteerRequest {
 	UBYTE ubForward;

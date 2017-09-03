@@ -4,9 +4,9 @@
 #include <ace/utils/chunky.h>
 #include <ace/libfixmath/fix16.h>
 #include "gamestates/game/bob.h"
+#include "gamestates/game/gamemath.h"
 #include "gamestates/initloading/worker.h"
 
-float g_pSin[128];
 tUwCoordYX g_pTurretCoords[VEHICLE_BODY_ANGLE_COUNT];
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
@@ -15,7 +15,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
  *  @param szName     Name of vehicle to be loaded.
  *  @param pBobSource Pointer to bob source to be filled.
  *  @return Non-zero on success, otherwise zero.
- *  
+ *
  *  @todo Make it accept bitmaps wider than 32px?
  */
 UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProgress) {
@@ -42,10 +42,10 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	tBitMap *pFirstFrame = bitmapCreateFromFile(szFullFileName);
 	logWrite("Read first frame\n");
 	uwFrameWidth = bitmapGetByteWidth(pFirstFrame)*8;
-	
+
 	pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
 	pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
-	
+
 	// Create huge-ass bitmap for all frames
 	UBYTE ubFlags = 0;
 	if(bitmapIsInterleaved(pFirstFrame))
@@ -62,7 +62,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	// Copy first frame to main bitmap
 	blitCopyAligned(pFirstFrame, 0, 0, pBitmap, 0, 0, uwFrameWidth, uwFrameWidth);
 	bitmapDestroy(pFirstFrame);
-	
+
 	// Create huge-ass mask
 	pMask = bitmapMaskCreate(
 		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
@@ -98,7 +98,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*uwFrameWidth]);
 		if(VEHICLE_BODY_WIDTH > 16)
 			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*uwFrameWidth+16]);
-		
+
 		// Add mask bit to chunky pixels
 		uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
 		for(x = 0; x != 16; ++x) {
@@ -128,7 +128,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 			0,
 			uwFrameWidth, uwFrameWidth
 		);
-		
+
 		// Convert rotated chunky frame to planar on huge-ass bitmap
 		for(y = 0; y != uwFrameWidth; ++y) {
 			for(x = 0; x != (uwFrameWidth>>4); ++x)
@@ -158,7 +158,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		if(pProgress)
 			*pProgress = ubFrame;
 	}
-	
+
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	logBlockEnd("vehicleBobSourceLoad()");
@@ -209,7 +209,7 @@ void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
 void vehicleTypesCreate(BYTE *pProgress) {
 	tVehicleType *pType;
 	UBYTE i;
-	
+
 	logBlockBegin("vehicleTypesCreate");
 
 	// Tank turret coords
@@ -240,7 +240,7 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	g_ubWorkerStep += 10;
 	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource, &pProgress[1]);
 	g_ubWorkerStep += 10;
-	
+
 	// Tank collision coords
 	logWrite("Generating tank coords...\n");
 	pType->pCollisionPts[0][0].bX = 2;  pType->pCollisionPts[0][0].bY = 6;
@@ -253,7 +253,7 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->pCollisionPts[0][7].bX = 29; pType->pCollisionPts[0][7].bY = 25;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 	g_ubWorkerStep += 5;
-	
+
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
 	pType->ubFwdSpeed = 2;
@@ -268,7 +268,7 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->sAuxSource.pBitmap = 0;
 	pType->sAuxSource.pMask = 0;
 	g_ubWorkerStep += 10;
-	
+
 	// Jeep collision coords
 	logWrite("Generating jeep coords...\n");
 	pType->pCollisionPts[0][0].bX = 8;  pType->pCollisionPts[0][0].bY = 11;
@@ -281,7 +281,7 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->pCollisionPts[0][7].bX = 25; pType->pCollisionPts[0][7].bY = 20;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 	g_ubWorkerStep += 5;
-		
+
 	logBlockEnd("vehicleTypesCreate");
 }
 
@@ -292,9 +292,9 @@ void vehicleTypesCreate(BYTE *pProgress) {
  */
 void vehicleTypesDestroy(void) {
 	tVehicleType *pType;
-	
+
 	logBlockBegin("vehicleTypesDestroy()");
-	
+
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_TANK];
 	bitmapDestroy(pType->sMainSource.pBitmap);
 	bitmapMaskDestroy(pType->sMainSource.pMask);
@@ -302,7 +302,7 @@ void vehicleTypesDestroy(void) {
 		bitmapDestroy(pType->sAuxSource.pBitmap);
 		bitmapMaskDestroy(pType->sAuxSource.pMask);
 	}
-	
+
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
 	bitmapDestroy(pType->sMainSource.pBitmap);
 	bitmapMaskDestroy(pType->sMainSource.pMask);
@@ -310,6 +310,6 @@ void vehicleTypesDestroy(void) {
 		bitmapDestroy(pType->sAuxSource.pBitmap);
 		bitmapMaskDestroy(pType->sAuxSource.pMask);
 	}
-	
+
 	logBlockEnd("vehicleTypesDestroy()");
 }

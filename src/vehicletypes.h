@@ -44,6 +44,5 @@ UWORD vehicleTypeBobSourceLoad(
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 extern tUwCoordYX g_pTurretCoords[64];
-extern float g_pSin[128];
 
 #endif // GUARD_OF_VEHICLETYPES_H
