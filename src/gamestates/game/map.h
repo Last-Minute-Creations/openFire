@@ -48,8 +48,7 @@ typedef struct _tTileCoord {
 	UBYTE ubX;
 	UBYTE ubY;
 } tTileCoord;
-	
-extern UWORD g_uwMapWidth, g_uwMapHeight;
+
 extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 extern char g_szMapName[256];
 extern tTile **g_pMap;

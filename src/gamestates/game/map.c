@@ -8,7 +8,6 @@
 #include "gamestates/game/turret.h"
 
 tTile **g_pMap;
-UWORD g_uwMapWidth, g_uwMapHeight;
 UWORD g_uwMapTileWidth, g_uwMapTileHeight;
 char g_szMapName[256];
 
@@ -56,7 +55,7 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	const UBYTE ubW = 4;
 	const UBYTE ubS = 2;
 	const UBYTE ubN = 1;
-	
+
 	ubOut = 0;
 	ubTileType = g_pMap[ubX][ubY].ubIdx;
 	if(ubX && checkFn(g_pMap[ubX+1][ubY].ubIdx))
@@ -65,7 +64,7 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 		ubOut |= ubW;
 	if(ubY && checkFn(g_pMap[ubX][ubY-1].ubIdx))
 		ubOut |= ubN;
-	if(ubY-1 < g_uwMapHeight && checkFn(g_pMap[ubX][ubY+1].ubIdx))
+	if(ubY-1 < g_uwMapTileHeight && checkFn(g_pMap[ubX][ubY+1].ubIdx))
 		ubOut |= ubS;
 	return ubOut;
 }
@@ -75,10 +74,10 @@ void mapCreate(char *szPath) {
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
 	char szHeaderBfr[256];
-	
+
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
 	g_ubPendingTileCount = 0;
-	
+
 	// Header & mem alloc
 	pMapFile = fopen(szPath, "rb");
 	if(!pMapFile)
@@ -86,13 +85,11 @@ void mapCreate(char *szPath) {
 	fgets(g_szMapName, 256, pMapFile);
 	fscanf(pMapFile, "%hux%hu\n", &g_uwMapTileWidth, &g_uwMapTileHeight);
 	logWrite("Dimensions: %u, %u\n", g_uwMapTileWidth, g_uwMapTileHeight);
-	g_uwMapWidth = g_uwMapTileWidth << MAP_TILE_SIZE;
-	g_uwMapHeight = g_uwMapTileHeight << MAP_TILE_SIZE;
 	g_pMap = memAllocFast(sizeof(tTile*) * g_uwMapTileWidth);
 	for(x = 0; x != g_uwMapTileWidth; ++x)
 		g_pMap[x] = memAllocFast(sizeof(tTile) * g_uwMapTileHeight);
 	buildingManagerReset();
-	
+
 	// Read map data
 	for(y = 0; y != g_uwMapTileHeight; ++y) {
 		for(x = 0; x != g_uwMapTileWidth; ++x) {
@@ -104,7 +101,7 @@ void mapCreate(char *szPath) {
 		}
 	}
 	fclose(pMapFile);
-	
+
 	// 2nd data pass - generate additional logic
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
@@ -198,15 +195,15 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 		s_pTileset, 0, ubTileIdx << MAP_TILE_SIZE,
 		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
 		1 << MAP_TILE_SIZE, 1 << MAP_TILE_SIZE
-	);	
+	);
 }
 
 void mapDestroy(void) {
 	UBYTE x;
-	
+
 	logBlockBegin("mapDestroy()");
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
-		memFree(g_pMap[x], sizeof(tTile) * g_uwMapTileHeight);	
+		memFree(g_pMap[x], sizeof(tTile) * g_uwMapTileHeight);
 	}
 	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
 	logBlockEnd("mapDestroy()");

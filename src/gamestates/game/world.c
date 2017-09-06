@@ -57,8 +57,8 @@ UBYTE worldCreate(void) {
 	);
 	g_pWorldMainBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
-		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_uwMapWidth,
-		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_uwMapHeight,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_uwMapTileWidth << MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_uwMapTileHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_DONE
 	);
@@ -121,7 +121,7 @@ void worldHide(void) {
 }
 
 void worldDraw(void) {
-	UBYTE ubPlayer, ubTurret;
+	UBYTE ubPlayer;
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight)
