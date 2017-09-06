@@ -150,7 +150,9 @@ if(pVehicle->ubTurretAngle >= ANGLE_360)
 		--pVehicle->ubCooldown;
 	}
 	else if(pSteerRequest->ubAction1) {
-		projectileCreate(pVehicle, PROJECTILE_TYPE_CANNON);
+		tProjectileOwner uOwner;
+		uOwner.pVehicle = pVehicle;
+		projectileCreate(PROJECTILE_OWNER_TYPE_VEHICLE, uOwner, PROJECTILE_TYPE_CANNON);
 		pVehicle->ubCooldown = VEHICLE_TANK_COOLDOWN;
 	}
 

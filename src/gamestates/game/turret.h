@@ -6,16 +6,21 @@
 #include <gamestates/game/projectile.h>
 
 #define TURRET_INVALID 0xFFFF
-#define TURRET_MAX_HP 100
-#define TURRET_BOB_SIZE 16
+#define TURRET_SPRITE_SIZE 16
 #define TURRET_MIN_DISTANCE 96
+#define TURRET_COOLDOWN 25
 
+/**
+ *  Turret struct.
+ *  Turrets can't have X = 0, because that's the way for checking
+ *  if they are valid.
+ */
 typedef struct _tTurret {
-	UBYTE ubHp;
-	UBYTE ubTeam;
 	UWORD uwY;
 	UWORD uwX;
+	UBYTE ubTeam;
 	UBYTE ubAngle;
+	UBYTE ubCooldown;
 } tTurret;
 
 extern tBobSource g_sBrownTurretSource;
@@ -27,11 +32,6 @@ UWORD turretCreate(
 	IN UWORD uwX,
 	IN UWORD uwY,
 	IN UBYTE ubTeam
-);
-
-void turretCheckHit(
-	IN tTurret *pTurret,
-	IN tProjectile *pProjectile
 );
 
 void turretDestroy(

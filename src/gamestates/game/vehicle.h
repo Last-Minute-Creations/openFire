@@ -22,7 +22,7 @@ typedef struct _tSteerRequest {
 	UBYTE ubDestAngle;
 } tSteerRequest;
 
-typedef struct {
+typedef struct _tVehicle {
 	tVehicleType *pType; ///< Ptr to vehicle type definition
 	tBob *pBob;          ///< Main body bob
 	tBob *pAuxBob;       ///< Tank - turret, chopper - takeoff anim

@@ -3,14 +3,14 @@
 #include <ace/managers/memory.h>
 #include <ace/managers/key.h>
 #include <ace/managers/blit.h>
+#include <ace/managers/rand.h>
 #include <ace/utils/custom.h>
 #include "gamestates/game/world.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
 
-#define TURRET_SPRITE_HEIGHT  16
-#define TURRET_SPRITE_OFFS    ((1 << MAP_TILE_SIZE) - TURRET_SPRITE_HEIGHT)
+#define TURRET_SPRITE_OFFS    ((1 << MAP_TILE_SIZE) - TURRET_SPRITE_SIZE)
 
 #define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
@@ -67,13 +67,13 @@ void turretListCreate(void) {
 	for(UWORD uwFrame = 0; uwFrame != VEHICLE_BODY_ANGLE_COUNT; ++uwFrame) {
 		blitRect(
 			g_sBrownTurretSource.pBitmap,
-			0, TURRET_SPRITE_HEIGHT*uwFrame + TURRET_SPRITE_HEIGHT-1,
+			0, TURRET_SPRITE_SIZE*uwFrame + TURRET_SPRITE_SIZE-1,
 			16, 1, 0
 		);
 	}
 	// Don't forget first frame
 	blitRect(
-		s_pTurretTest, 0, TURRET_SPRITE_HEIGHT-1,
+		s_pTurretTest, 0, TURRET_SPRITE_SIZE-1,
 		16, 1, 0
 	);
 
@@ -110,7 +110,7 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 
 	// Find next free turret
 	for(i = 0; i != s_uwMaxTurrets; ++i)
-		if(!s_pTurretList[i].ubHp)
+		if(!s_pTurretList[i].uwX)
 			break;
 	if(i == s_uwMaxTurrets) {
 		logWrite("ERR: No more room for another turret!\n");
@@ -122,9 +122,9 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	// Initial values
 	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
 	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
-	pTurret->ubHp = TURRET_MAX_HP;
 	pTurret->ubTeam = ubTeam;
 	pTurret->ubAngle = ANGLE_90;
+	pTurret->ubCooldown = 0;
 
 	// Add to tile-based list
 	s_pTurretTiles[uwTileX][uwTileY] = i;
@@ -159,8 +159,12 @@ void turretProcess(void) {
 
 	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
 		pTurret = &s_pTurretList[uwTurretIdx];
-		if(!pTurret->ubHp)
+		if(!pTurret->uwX)
 			continue;
+
+		// Process cooldown
+		if(pTurret->ubCooldown)
+			--pTurret->ubCooldown;
 
 		// Scan nearby enemies
 		uwClosestDist = TURRET_MIN_DISTANCE;
@@ -201,8 +205,12 @@ void turretProcess(void) {
 				pTurret->ubAngle -= ANGLE_360;
 		}
 		else {
-			// TODO: Fire
-			// projectileCreate();
+			if(!pTurret->ubCooldown) {
+				tProjectileOwner uOwner;
+				uOwner.pTurret = pTurret;
+				projectileCreate(PROJECTILE_OWNER_TYPE_TURRET, uOwner, PROJECTILE_TYPE_CANNON);
+				pTurret->ubCooldown = TURRET_COOLDOWN;
+			}
 		}
 	}
 }
@@ -285,17 +293,17 @@ void turretUpdateSprites(void) {
 		if(wSpriteBeginOnScreenY < 0) {
 			// Sprite is trimmed from top
 			uwFirstVisibleSpriteLine = -wSpriteOffsY;
-			if(uwFirstVisibleSpriteLine >= TURRET_SPRITE_HEIGHT) {
+			if(uwFirstVisibleSpriteLine >= TURRET_SPRITE_SIZE) {
 				// Row has only visible lines below screen
 				continue;
 			}
 			wSpriteBeginOnScreenY = 0;
-			wSpriteEndOnScreenY = wSpriteOffsY + TURRET_SPRITE_HEIGHT-1;
+			wSpriteEndOnScreenY = wSpriteOffsY + TURRET_SPRITE_SIZE-1;
 		}
 		else {
 			// Sprite is not trimmed on top - may be on bottom
 			uwFirstVisibleSpriteLine = 0;
-			wSpriteEndOnScreenY = wSpriteBeginOnScreenY + TURRET_SPRITE_HEIGHT-1;
+			wSpriteEndOnScreenY = wSpriteBeginOnScreenY + TURRET_SPRITE_SIZE-1;
 			if(wSpriteEndOnScreenY >= WORLD_VPORT_HEIGHT) {
 				// Sprite is trimmed on bottom
 				wSpriteEndOnScreenY = WORLD_VPORT_HEIGHT-1;
@@ -319,7 +327,7 @@ void turretUpdateSprites(void) {
 			wCopHPos = (0x48 + wSpriteBeginOnScreenX/2 - uwCopperInsCount*4);
 
 			// Get turret gfx
-			uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_HEIGHT + uwFirstVisibleSpriteLine)* uwWordsPerRow;
+			uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_SIZE + uwFirstVisibleSpriteLine)* uwWordsPerRow;
 			UWORD *pSpriteBpls = &((UWORD**)g_sBrownTurretSource.pBitmap->Planes)[0][uwSpriteLine];
 			pRowSpriteBpls[uwTurretsInRow] = pSpriteBpls;
 

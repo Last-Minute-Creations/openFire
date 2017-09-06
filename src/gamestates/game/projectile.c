@@ -18,13 +18,13 @@ tBitmapMask *s_pCannonMask;
 
 void projectileListCreate(UBYTE ubProjectileCount) {
 	UBYTE i;
-	
+
 	logBlockBegin("projectileListCreate(ubProjectileCount: %hhu)", ubProjectileCount);
-	
+
 	// Load gfx
 	s_pCannonBitmap = bitmapCreateFromFile("data/projectiles/cannon.bm");
 	s_pCannonMask = bitmapMaskCreateFromFile("data/projectiles/cannon.msk");
-	
+
 	// Create projectiles
 	s_ubProjectileCount = ubProjectileCount;
 	s_pProjectiles = memAllocFast(ubProjectileCount * sizeof(tProjectile));
@@ -36,21 +36,21 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 		);
 		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 	}
-	
+
 	logBlockEnd("projectileListCreate()");
 }
 
 void projectileListDestroy() {
 	UBYTE i;
-	
+
 	logBlockBegin("projectileListDestroy()");
-	
+
 	// Dealloc bobs
 	for(i = 0; i != s_ubProjectileCount; ++i) {
 		bobDestroy(s_pProjectiles[i].pBob);
-	}	
+	}
 	memFree(s_pProjectiles, s_ubProjectileCount * sizeof(tProjectile));
-	
+
 	// Dealloc bob bitmaps
 	bitmapDestroy(s_pCannonBitmap);
 	bitmapMaskDestroy(s_pCannonMask);
@@ -58,11 +58,13 @@ void projectileListDestroy() {
 	logBlockEnd("projectileListDestroy()");
 }
 
-tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
+tProjectile *projectileCreate(
+	UBYTE ubOwnerType, tProjectileOwner uOwner, UBYTE ubType
+) {
 	tProjectile *pProjectile;
 	float fSin, fCos;
 	UBYTE i, ubAngle;
-	
+
 	// Find free projectile
 	pProjectile = 0;
 	for(i = 0; i != s_ubProjectileCount; ++i) {
@@ -73,29 +75,35 @@ tProjectile *projectileCreate(tVehicle *pOwner, UBYTE ubType) {
 	}
 	if(!pProjectile)
 		return 0;
-	
-	pProjectile->pOwner = pOwner;
+
+	pProjectile->uOwner = uOwner;
 	pProjectile->ubType = ubType;
-	
-	// Angle
-	if(pOwner->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
-		ubAngle = pOwner->ubTurretAngle;
-	else
-		ubAngle = pOwner->ubBodyAngle;
+	pProjectile->ubOwnerType = ubOwnerType;
+
+	// Initial projectile position & angle
+	if(ubOwnerType == PROJECTILE_OWNER_TYPE_VEHICLE) {
+		if(uOwner.pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
+			ubAngle = uOwner.pVehicle->ubTurretAngle;
+		else
+			ubAngle = uOwner.pVehicle->ubBodyAngle;
+		pProjectile->fX = uOwner.pVehicle->fX + (VEHICLE_BODY_WIDTH/2) * fCos;
+		pProjectile->fY = uOwner.pVehicle->fY + (VEHICLE_BODY_HEIGHT/2) * fSin;
+	}
+	else {
+		ubAngle = uOwner.pTurret->ubAngle;
+		pProjectile->fX = uOwner.pTurret->uwX;
+		pProjectile->fY = uOwner.pTurret->uwY;
+	}
 	fSin = csin(ubAngle);
-	fCos = ccos(ubAngle);		
-	
+	fCos = ccos(ubAngle);
+
 	// Movement deltas
 	pProjectile->fDx = fCos * PROJECTILE_SPEED;
 	pProjectile->fDy = fSin * PROJECTILE_SPEED;
 
-	// Initial projectile position
-	pProjectile->fX = pOwner->fX + (VEHICLE_BODY_WIDTH/2) * fCos;
-	pProjectile->fY = pOwner->fY + (VEHICLE_BODY_HEIGHT/2) * fSin;
-	
 	// Frame life
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
-	
+
 	// Bob
 	bobChangeFrame(pProjectile->pBob, angleToFrame(ubAngle));
 	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
@@ -110,7 +118,7 @@ void projectileDestroy(tProjectile *pProjectile) {
 void projectileUndraw(void) {
 	tProjectile *pProjectile;
 	UBYTE i;
-	
+
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
 		bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
@@ -121,12 +129,15 @@ void projectileUndraw(void) {
 void projectileDraw(void) {
 	tProjectile *pProjectile;
 	UBYTE i;
-	
+
 	pProjectile = &s_pProjectiles[0];
 	for(i = s_ubProjectileCount; i--;) {
+		WORD wProjectileX, wProjectileY;
+		wProjectileX = pProjectile->fX-8;
+		wProjectileY = pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2;
 		bobDraw(
 			pProjectile->pBob, g_pWorldMainBfr->pBuffer,
-			pProjectile->fX-8, pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2
+			wProjectileX, wProjectileY
 		);
 		++pProjectile;
 	}
@@ -137,23 +148,23 @@ void projectileProcess(void) {
 	tVehicle *pVehicle;
 	UBYTE i;
 	UBYTE ubMapX, ubMapY, ubBuildingIdx;
-	
+
 	for(i = 0; i != s_ubProjectileCount; ++i) {
 		pProjectile = &s_pProjectiles[i];
 		if(pProjectile->ubType == PROJECTILE_TYPE_OFF)
 			continue;
-		
+
 		// Verify projectile lifespan
 		if(!pProjectile->uwFrameLife) {
 			projectileDestroy(pProjectile);
 			continue;
 		}
 		--pProjectile->uwFrameLife;
-		
+
 		// Increment position
 		pProjectile->fX += pProjectile->fDx;
 		pProjectile->fY += pProjectile->fDy;
-		
+
 		// Check collision with vehicles
 		/*
 		for() { // TODO: Iterate through players
@@ -169,8 +180,9 @@ void projectileProcess(void) {
 			}
 		}
 		*/
-		
+
 		// Check collistion with buildings
+		/*
 		ubMapX = (UWORD)(pProjectile->fX) >> MAP_TILE_SIZE;
 		ubMapY = (UWORD)(pProjectile->fY) >> MAP_TILE_SIZE;
 		ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
@@ -183,5 +195,6 @@ void projectileProcess(void) {
 			projectileDestroy(pProjectile);
 			continue;
 		}
+		*/
 	}
 }
