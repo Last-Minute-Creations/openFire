@@ -118,20 +118,23 @@ void mapCreate(char *szPath) {
 				case MAP_LOGIC_ROAD:
 					break;
 				case MAP_LOGIC_WALL:
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
+					g_pMap[x][y].ubData = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
 					break;
 				case MAP_LOGIC_FLAG1:
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
-					// TODO: register flag
-					break;
 				case MAP_LOGIC_FLAG2:
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_FLAG);
-					// TODO: register flag
+					g_pMap[x][y].ubData = buildingAdd(
+						x, y,
+						BUILDING_TYPE_FLAG,
+						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_GREEN : TEAM_BROWN
+					);
 					break;
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
-					g_pMap[x][y].ubData = buildingAdd(BUILDING_TYPE_WALL);
-					// TODO: register turret
+					g_pMap[x][y].ubData = buildingAdd(
+						x, y,
+						BUILDING_TYPE_TURRET,
+						ubTileIdx == MAP_LOGIC_SENTRY1 ? TEAM_GREEN : TEAM_BROWN
+					);
 					break;
 				case MAP_LOGIC_DIRT:
 				default:

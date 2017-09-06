@@ -4,47 +4,55 @@
 #include "gamestates/game/map.h"
 
 #define BUILDING_IDX_FIRST 1
-#define BUILDING_IDX_LAST 255
-#define BUILDING_HP_WALL 100
-#define BUILDING_HP_AMMO 30
-#define BUILDING_HP_FUEL 30
-#define BUILDING_HP_FLAG 50
+#define BUILDING_IDX_LAST  255
+
+// Building HPs
+#define BUILDING_HP_WALL       100
+#define BUILDING_HP_AMMO       30
+#define BUILDING_HP_FUEL       30
+#define BUILDING_HP_FLAG       50
+#define BUILDING_HP_TURRET     100
+#define BUILDING_HP_TURRET_MIN 50
 
 tBuildingManager s_sBuildingManager;
 
-const UBYTE s_pBuildingHps[4] = {
+const UBYTE s_pBuildingHps[5] = {
 	BUILDING_HP_WALL,
 	BUILDING_HP_AMMO,
 	BUILDING_HP_FUEL,
-	BUILDING_HP_FLAG
+	BUILDING_HP_FLAG,
+	BUILDING_HP_TURRET
 };
 
 void buildingManagerReset(void) {
 	UBYTE ubIdx;
 	s_sBuildingManager.ubLastIdx = BUILDING_IDX_LAST;
-	
+
 	for(ubIdx = BUILDING_IDX_FIRST; ubIdx != BUILDING_IDX_LAST; ++ubIdx) {
 		s_sBuildingManager.pBuildings[ubIdx].ubHp = 0;
 	}
 }
 
-UBYTE buildingAdd(UBYTE ubType) {
+UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 	UBYTE ubIdx;
-	
-	logBlockBegin("buildingAdd(ubType: %hhu)", ubType);
+
+	logBlockBegin(
+		"buildingAdd(ubX: %hhu, ubY: %hhu, ubType: %hhu, ubTeam: %hhu)",
+		ubX, ubY, ubType, ubTeam
+	);
 	if(s_sBuildingManager.ubLastIdx == BUILDING_IDX_LAST)
 		ubIdx = BUILDING_IDX_FIRST;
 	else
 		ubIdx = s_sBuildingManager.ubLastIdx+1;
 	while(ubIdx != s_sBuildingManager.ubLastIdx) {
 		if(!s_sBuildingManager.pBuildings[ubIdx].ubHp) {
+			// Setup building
 			s_sBuildingManager.pBuildings[ubIdx].ubHp = s_pBuildingHps[ubType];
 			s_sBuildingManager.ubLastIdx = ubIdx;
-			logWrite("Allocated building @idx %hhu!\n", ubIdx);
 			logBlockEnd("buildingAdd()");
 			return ubIdx;
 		}
-		
+
 		if(ubIdx == BUILDING_IDX_LAST)
 			ubIdx = BUILDING_IDX_FIRST; // Will be incremented by loop
 		else
@@ -52,15 +60,17 @@ UBYTE buildingAdd(UBYTE ubType) {
 	}
 	logWrite("No free space for buildings!\n");
 	logBlockEnd("buildingAdd()");
-		
+
 	return BUILDING_IDX_INVALID;
 }
 
 UBYTE buildingDamage(UBYTE ubIdx, UBYTE ubDamage) {
-	if(s_sBuildingManager.pBuildings[ubIdx].ubHp <= ubDamage) {
-		s_sBuildingManager.pBuildings[ubIdx].ubHp = 0;
+	tBuilding *pBuilding = &s_sBuildingManager.pBuildings[ubIdx];
+	if(pBuilding->ubHp <= ubDamage) {
+		pBuilding->ubHp = 0;
+		// TODO spawn flag
 		return BUILDING_DESTROYED;
 	}
-	s_sBuildingManager.pBuildings[ubIdx].ubHp -= ubDamage;
+	pBuilding->ubHp -= ubDamage;
 	return BUILDING_DAMAGED;
 }

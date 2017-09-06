@@ -6,6 +6,7 @@
 #define TEAM_COUNT 2
 #define TEAM_GREEN 0
 #define TEAM_BROWN 1
+#define TEAM_NONE  2
 
 #define TEAM_MAX_SILOS 3
 
