@@ -20,10 +20,7 @@ typedef struct _tTurret {
 
 extern tBobSource g_sBrownTurretSource;
 
-void turretListCreate(
-	IN UBYTE ubMaxTurrets
-);
-
+void turretListCreate(void);
 void turretListDestroy(void);
 
 UWORD turretCreate(

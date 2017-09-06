@@ -14,21 +14,21 @@
 
 #define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
-static UBYTE s_ubMaxTurrets;
-static tTurret *s_pTurretList;
+static UWORD s_uwMaxTurrets;
+static tTurret *s_pTurretList; // 20x25: 1100*7 ~ 8KiB
+static UWORD **s_pTurretTiles; // 20x25: +2KiB
 tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
-static UWORD **s_pTurretTiles;                           // Approx. 2KiB
 
 tBitMap *s_pTurretTest;
 
 static tAvg *s_pAvg;
 
-void turretListCreate(UBYTE ubMaxTurrets) {
+void turretListCreate(void) {
 	int i, t;
-	logBlockBegin("turretListCreate(ubMaxTurrets: %hu)", ubMaxTurrets);
+	logBlockBegin("turretListCreate()");
 
-	s_ubMaxTurrets = ubMaxTurrets;
-	s_pTurretList = memAllocFastClear(ubMaxTurrets * sizeof(tTurret));
+	s_uwMaxTurrets = (g_uwMapTileWidth/2 + 1) * g_uwMapTileHeight;
+	s_pTurretList = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
 	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_uwMapTileWidth);
@@ -39,8 +39,7 @@ void turretListCreate(UBYTE ubMaxTurrets) {
 
 	// Attach sprites
 	// TODO vehicle/turret jitter could be fixed by setting lsbit in ctl
-	// accordingly. Updating this block would be needed. Could be easily done in
-	// static copperlists.
+	// accordingly. Could be easily done in static copperlists.
 	tCopCmd *pCopInit = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS];
 	copSetMove(&pCopInit[0].sMove, &custom.spr[1].ctl, (1<<7) | 1);
 	copSetMove(&pCopInit[1].sMove, &custom.spr[0].ctl, 1);
@@ -88,7 +87,7 @@ void turretListDestroy(void) {
 
 	bitmapDestroy(s_pTurretTest);
 
-	memFree(s_pTurretList, s_ubMaxTurrets * sizeof(tTurret));
+	memFree(s_pTurretList, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
 	for(i = 0; i != g_uwMapTileWidth; ++i)
@@ -102,14 +101,22 @@ void turretListDestroy(void) {
 
 UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	tTurret *pTurret;
-	UBYTE i;
+	UWORD i;
+
+	logBlockBegin(
+		"turretCreate(uwTileX: %hu, uwTileY: %hu, ubTeam: %hhu)",
+		uwTileX, uwTileY, ubTeam
+	);
 
 	// Find next free turret
-	for(i = 0; i != s_ubMaxTurrets; ++i)
+	for(i = 0; i != s_uwMaxTurrets; ++i)
 		if(!s_pTurretList[i].ubHp)
 			break;
-	if(i == s_ubMaxTurrets)
+	if(i == s_uwMaxTurrets) {
+		logWrite("ERR: No more room for another turret!\n");
+		logBlockEnd("turretCreate()");
 		return TURRET_INVALID;
+	}
 	pTurret = &s_pTurretList[i];
 
 	// Initial values
@@ -121,6 +128,8 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 
 	// Add to tile-based list
 	s_pTurretTiles[uwTileX][uwTileY] = i;
+
+	logBlockEnd("turretCreate()");
 	return i;
 }
 
@@ -128,7 +137,7 @@ void turretDestroy(UWORD uwIdx) {
 	UWORD uwTileX, uwTileY;
 	tTurret *pTurret;
 
-	if(uwIdx >= s_ubMaxTurrets) {
+	if(uwIdx >= s_uwMaxTurrets) {
 		logWrite("ERR: turretDestroy() - Index out of range %u\n", uwIdx);
 		return;
 	}
@@ -141,14 +150,15 @@ void turretDestroy(UWORD uwIdx) {
 }
 
 void turretProcess(void) {
-	UBYTE ubPlayerIdx, ubTurretIdx;
+	UBYTE ubPlayerIdx;
+	UWORD uwTurretIdx;
 	tPlayer *pPlayer, *pClosestPlayer;
 	UWORD uwClosestDist, uwDist, uwDx, uwDy;
 	UBYTE ubDestAngle;
 	tTurret *pTurret;
 
-	for(ubTurretIdx = 0; ubTurretIdx != s_ubMaxTurrets; ++ubTurretIdx) {
-		pTurret = &s_pTurretList[ubTurretIdx];
+	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
+		pTurret = &s_pTurretList[uwTurretIdx];
 		if(!pTurret->ubHp)
 			continue;
 

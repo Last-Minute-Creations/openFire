@@ -107,7 +107,7 @@ void mapCreate(char *szPath) {
 void mapGenerateLogic(void) {
 	UBYTE x, y, ubTileIdx;
 	logBlockBegin("mapGenerateLogic()");
-	turretListCreate(128);
+	turretListCreate();
 	// 2nd data pass - generate additional logic
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
