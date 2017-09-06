@@ -73,16 +73,13 @@ UBYTE worldCreate(void) {
 
 	hudCreate();
 
-	turretListCreate(128);
-
 	// Load gfx
 	s_pCrosshair = bitmapCreateFromFile("data/crosshair.bm");
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
 	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
 
-	// Draw map
+	// Associate map with world's buffer & tileset
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
-	mapRedraw();
 
 	// Crosshair stuff
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
@@ -104,8 +101,6 @@ UBYTE worldCreate(void) {
 }
 
 void worldDestroy(void) {
-	turretListDestroy();
-
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);

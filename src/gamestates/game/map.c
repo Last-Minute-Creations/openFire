@@ -101,7 +101,13 @@ void mapCreate(char *szPath) {
 		}
 	}
 	fclose(pMapFile);
+	logBlockEnd("mapCreate()");
+}
 
+void mapGenerateLogic(void) {
+	UBYTE x, y, ubTileIdx;
+	logBlockBegin("mapGenerateLogic()");
+	turretListCreate(128);
 	// 2nd data pass - generate additional logic
 	for(x = 0; x != g_uwMapTileWidth; ++x) {
 		for(y = 0; y != g_uwMapTileHeight; ++y) {
@@ -142,11 +148,10 @@ void mapCreate(char *szPath) {
 			}
 		}
 	}
-
-	logBlockEnd("mapCreate()");
+	logBlockEnd("mapGenerateLogic()");
 }
 
-void mapRedraw() {
+void mapRedraw(void) {
 	UWORD x, y;
 	UBYTE ubTileIdx, ubOutTile;
 
@@ -178,10 +183,6 @@ void mapRedraw() {
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
 					ubOutTile = MAP_TILE_WALL;
-					turretCreate(
-						x, y,
-						ubTileIdx == MAP_LOGIC_SENTRY1 ? TEAM_GREEN : TEAM_BROWN
-					);
 					break;
 				case MAP_LOGIC_DIRT:
 				default:
@@ -209,6 +210,7 @@ void mapDestroy(void) {
 		memFree(g_pMap[x], sizeof(tTile) * g_uwMapTileHeight);
 	}
 	memFree(g_pMap, sizeof(tTile*) * g_uwMapTileWidth);
+	turretListDestroy();
 	logBlockEnd("mapDestroy()");
 
 }

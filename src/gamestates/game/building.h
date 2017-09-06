@@ -19,6 +19,7 @@
 
 typedef struct {
 	UBYTE ubHp;
+	UBYTE ubTurretIdx;
 } tBuilding;
 
 typedef struct {

@@ -59,7 +59,8 @@ void mapCreate(
 
 void mapDestroy(void);
 
-void mapRedraw();
+void mapRedraw(void);
+void mapGenerateLogic(void);
 
 void mapDrawTile(
 	IN UBYTE ubX,

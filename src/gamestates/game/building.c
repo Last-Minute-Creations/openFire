@@ -48,6 +48,12 @@ UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 		if(!s_sBuildingManager.pBuildings[ubIdx].ubHp) {
 			// Setup building
 			s_sBuildingManager.pBuildings[ubIdx].ubHp = s_pBuildingHps[ubType];
+			if(ubType == BUILDING_TYPE_TURRET)
+				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = turretCreate(
+					ubX, ubY,	ubTeam
+				);
+			else
+				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = TURRET_INVALID;
 			s_sBuildingManager.ubLastIdx = ubIdx;
 			logBlockEnd("buildingAdd()");
 			return ubIdx;
@@ -68,9 +74,17 @@ UBYTE buildingDamage(UBYTE ubIdx, UBYTE ubDamage) {
 	tBuilding *pBuilding = &s_sBuildingManager.pBuildings[ubIdx];
 	if(pBuilding->ubHp <= ubDamage) {
 		pBuilding->ubHp = 0;
+		if(pBuilding->ubTurretIdx != TURRET_INVALID) {
+			turretDestroy(pBuilding->ubTurretIdx);
+			pBuilding->ubTurretIdx = TURRET_INVALID; // TODO: not needed?
+		}
 		// TODO spawn flag
 		return BUILDING_DESTROYED;
 	}
 	pBuilding->ubHp -= ubDamage;
+	if(pBuilding->ubTurretIdx != TURRET_INVALID && pBuilding->ubHp <= BUILDING_HP_TURRET_MIN) {
+		turretDestroy(pBuilding->ubTurretIdx);
+		pBuilding->ubTurretIdx = TURRET_INVALID;
+	}
 	return BUILDING_DAMAGED;
 }

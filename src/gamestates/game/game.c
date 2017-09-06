@@ -47,6 +47,10 @@ void gsGameCreate(void) {
 	// Prepare bunker gfx
 	bunkerCreate();
 
+	// Now that world copperlist is created, prepare map logic & do the first draw
+	mapGenerateLogic();
+	mapRedraw();
+
 	// Select first view
 	if(g_pLocalPlayer->ubState == PLAYER_STATE_BUNKERED)
 		bunkerShow();

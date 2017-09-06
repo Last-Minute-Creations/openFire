@@ -265,8 +265,7 @@ void turretUpdateSprites(void) {
 	uwLastTileY  = (uwCameraY + WORLD_VPORT_HEIGHT -1-8) >> MAP_TILE_SIZE;
 	UWORD uwCopOffs = WORLD_COP_TURRET_START_POS;
 	UWORD uwRowStartCopOffs = 0;
-	tCopList *pCopList = g_pWorldView->pCopList;
-	tCopCmd *pCmdList = pCopList->pBackBfr->pList;
+	tCopCmd *pCmdList = g_pWorldView->pCopList->pBackBfr->pList;
 
 	// Iterate thru visible tile rows
 	UWORD *pRowSpriteBpls[6];
