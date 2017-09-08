@@ -30,7 +30,7 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 
 void playerListDestroy() {
 	UBYTE i;
-	
+
 	for(i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].ubState != PLAYER_STATE_OFF)
 			playerRemoveByPtr(&g_pPlayers[i]);
@@ -47,7 +47,7 @@ void playerListDestroy() {
 tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 	UBYTE i;
 	tPlayer *pPlayer;
-	
+
 	for(i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].szName[0])
 			continue;
@@ -65,7 +65,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 	return 0;
 }
 
-void playerRemoveByIdx(UBYTE ubPlayerIdx) {	
+void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 	if(ubPlayerIdx > g_ubPlayerLimit) {
 		logWrite(
 			"ERR: Tried to remove player %hhu, player limit %hhu\n",
@@ -98,6 +98,15 @@ void playerHideInBunker(tPlayer *pPlayer) {
 	pPlayer->ubState = PLAYER_STATE_BUNKERED;
 	if(pPlayer == g_pLocalPlayer)
 		worldHide();
+}
+
+void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
+	if(pPlayer->sVehicle.ubLife <= ubDamage) {
+		// TODO explosion
+		playerLoseVehicle(pPlayer);
+	}
+	else
+		pPlayer->sVehicle.ubLife -= ubDamage;
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {

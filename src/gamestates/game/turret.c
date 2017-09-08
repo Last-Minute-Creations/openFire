@@ -147,6 +147,9 @@ void turretDestroy(UWORD uwIdx) {
 	uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
 	uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
 	s_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
+
+	// Mark turret as destroyed
+	pTurret->uwX = 0;
 }
 
 void turretProcess(void) {
@@ -195,7 +198,6 @@ void turretProcess(void) {
 			pTurret->uwX, pTurret->uwY,
 			pClosestPlayer->sVehicle.fX, pClosestPlayer->sVehicle.fY
 		);
-		// logWrite("Angle: %hu\n", ubDestAngle);
 
 		if(pTurret->ubAngle != ubDestAngle) {
 			pTurret->ubAngle += ANGLE_360 + getDeltaAngleDirection(

@@ -5,6 +5,7 @@
 #include "gamestates/game/map.h"
 #include "gamestates/game/building.h"
 #include "gamestates/game/world.h"
+#include "gamestates/game/player.h"
 
 #define PROJECTILE_SPEED      (2.0)
 #define PROJECTILE_FRAME_LIFE (((320-32)/4)/PROJECTILE_SPEED)
@@ -86,16 +87,18 @@ tProjectile *projectileCreate(
 			ubAngle = uOwner.pVehicle->ubTurretAngle;
 		else
 			ubAngle = uOwner.pVehicle->ubBodyAngle;
+		fSin = csin(ubAngle);
+		fCos = ccos(ubAngle);
 		pProjectile->fX = uOwner.pVehicle->fX + (VEHICLE_BODY_WIDTH/2) * fCos;
 		pProjectile->fY = uOwner.pVehicle->fY + (VEHICLE_BODY_HEIGHT/2) * fSin;
 	}
 	else {
 		ubAngle = uOwner.pTurret->ubAngle;
+		fSin = csin(ubAngle);
+		fCos = ccos(ubAngle);
 		pProjectile->fX = uOwner.pTurret->uwX;
 		pProjectile->fY = uOwner.pTurret->uwY;
 	}
-	fSin = csin(ubAngle);
-	fCos = ccos(ubAngle);
 
 	// Movement deltas
 	pProjectile->fDx = fCos * PROJECTILE_SPEED;
@@ -149,6 +152,8 @@ void projectileProcess(void) {
 	UBYTE i;
 	UBYTE ubMapX, ubMapY, ubBuildingIdx;
 
+	const UBYTE ubDamage = 10;
+
 	for(i = 0; i != s_ubProjectileCount; ++i) {
 		pProjectile = &s_pProjectiles[i];
 		if(pProjectile->ubType == PROJECTILE_TYPE_OFF)
@@ -166,28 +171,21 @@ void projectileProcess(void) {
 		pProjectile->fY += pProjectile->fDy;
 
 		// Check collision with vehicles
-		/*
-		for() { // TODO: Iterate through players
-			pVehicle = ; // TODO: Player's active vehicle
-			if(
-				pProjectile->fX > pVehicle->fX-(VEHICLE_SIZE/2) &&
-				pProjectile->fX < pVehicle->fX+(VEHICLE_SIZE/2) &&
-				pProjectile->fY > pVehicle->fY-(VEHICLE_SIZE/2) &&
-				pProjectile->fY < pVehicle->fY+(VEHICLE_SIZE/2)
-			) {
-				// TODO: Apply damage to vehicle
-				projectileDestroy(pProjectile);
-			}
+		if(projectileHasCollidedWithAnyPlayer(pProjectile)) {
+			projectileDestroy(pProjectile);
+			continue;
 		}
-		*/
 
 		// Check collistion with buildings
-		/*
 		ubMapX = (UWORD)(pProjectile->fX) >> MAP_TILE_SIZE;
 		ubMapY = (UWORD)(pProjectile->fY) >> MAP_TILE_SIZE;
 		ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
-			if(buildingDamage(ubBuildingIdx, 10) == BUILDING_DESTROYED) {
+			if(pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
+				&& g_pMap[ubMapX][ubMapY].ubIdx == MAP_LOGIC_WALL
+			)
+				continue;
+			if(buildingDamage(ubBuildingIdx, ubDamage) == BUILDING_DESTROYED) {
 				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
 				g_pMap[ubMapX][ubMapY].ubData = 0;
 				mapRequestUpdateTile(ubMapX, ubMapY);
@@ -195,6 +193,26 @@ void projectileProcess(void) {
 			projectileDestroy(pProjectile);
 			continue;
 		}
-		*/
 	}
+}
+
+UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile) {
+	const UBYTE ubDamage = 10;
+
+	for(UBYTE i = 0; i != g_ubPlayerLimit; ++i) {
+		if(!g_pPlayers[i].szName[0])
+			continue;
+		tVehicle *pVehicle = &g_pPlayers[i].sVehicle;
+		if(
+			pProjectile->fX > pVehicle->fX-(VEHICLE_BODY_WIDTH/4) &&
+			pProjectile->fX < pVehicle->fX+(VEHICLE_BODY_WIDTH/4) &&
+			pProjectile->fY > pVehicle->fY-(VEHICLE_BODY_WIDTH/4) &&
+			pProjectile->fY < pVehicle->fY+(VEHICLE_BODY_WIDTH/4)
+		) {
+			playerDamageVehicle(&g_pPlayers[i], ubDamage);
+			projectileDestroy(pProjectile);
+			return 1;
+		}
+	}
+	return 0;
 }

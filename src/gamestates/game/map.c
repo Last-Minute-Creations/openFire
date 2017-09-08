@@ -136,6 +136,9 @@ void mapGenerateLogic(void) {
 					break;
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
+					// Change logic type so that projectiles will threat turret walls
+					// in same way as any other
+					g_pMap[x][y].ubIdx = MAP_LOGIC_WALL;
 					g_pMap[x][y].ubData = buildingAdd(
 						x, y,
 						BUILDING_TYPE_TURRET,

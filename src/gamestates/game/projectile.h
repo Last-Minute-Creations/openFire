@@ -55,5 +55,9 @@ void projectileUndraw(void);
 void projectileDraw(void);
 void projectileProcess(void);
 
+UBYTE projectileHasCollidedWithAnyPlayer(
+	IN tProjectile *pProjectile
+);
+
 
 #endif // GUARD_OF_GAMESTATES_GAME_PROJECTILE_H

@@ -21,10 +21,10 @@ typedef struct _tPlayer {
 	UWORD uwCooldown;
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
-	
+
 	// Vehicles available
 	UBYTE pVehiclesLeft[4];
-	
+
 	// Stats for score table displaying
 	UBYTE ubHasFlag;
 	UBYTE pVehiclesKilled[4];
@@ -56,6 +56,11 @@ void playerSelectVehicle(
 
 void playerHideInBunker(
 	IN tPlayer *pPlayer
+);
+
+void playerDamageVehicle(
+	IN tPlayer *pPlayer,
+	IN UBYTE ubDamage
 );
 
 void playerLoseVehicle(
