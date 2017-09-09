@@ -56,6 +56,9 @@ void gsGameCreate(void) {
 		bunkerShow();
 	else
 		worldShow();
+
+	// Get some speed out of unnecessary DMA
+	custom.dmacon = BITCLR | DMAF_DISK;
 	logBlockEnd("gsGameCreate()");
 }
 
@@ -90,6 +93,8 @@ void gsGameLoop(void) {
 }
 
 void gsGameDestroy(void) {
+	// Return DMA to correct state
+	custom.dmacon = BITSET | DMAF_DISK;
 	logBlockBegin("gsGameDestroy()");
 
 	bunkerDestroy();
