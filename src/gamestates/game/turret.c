@@ -54,10 +54,11 @@ void turretListCreate(void) {
 	tCopCmd *pCopCleanup = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS];
 	copSetMove(&pCopCleanup[0].sMove, &custom.spr[1].ctl, 1);
 	copSetMove(&pCopCleanup[1].sMove, &custom.spr[0].ctl, 0);
+	copSetMove(&pCopCleanup[2].sMove, &custom.spr[2].ctl, 0);
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS],
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CLEANUP_POS],
-		2*sizeof(tCopCmd)
+		3*sizeof(tCopCmd)
 	);
 
 	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");

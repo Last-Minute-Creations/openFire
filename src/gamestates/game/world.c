@@ -81,13 +81,22 @@ UBYTE worldCreate(void) {
 	// Associate map with world's buffer & tileset
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 
+	// Enabling sprite DMA
+	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
+	copSetMove(&pSpriteEnList[0].sMove, &custom.dmacon, BITSET | DMAF_SPRITE);
+	CopyMemQuick(
+		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS],
+		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS],
+		sizeof(tCopCmd)
+	);
+
 	// Crosshair stuff
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
 	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];
 	updateCrosshair();
 	copSetWait(&pCrossList[0].sWait, 0, 0);
-	copSetMove(&pCrossList[1].sMove, &pSprPtrs[3].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
-	copSetMove(&pCrossList[2].sMove, &pSprPtrs[3].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
+	copSetMove(&pCrossList[1].sMove, &pSprPtrs[2].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
+	copSetMove(&pCrossList[2].sMove, &pSprPtrs[2].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS],
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CROSS_POS],

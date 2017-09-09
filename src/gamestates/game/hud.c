@@ -30,7 +30,7 @@ void hudCreate(void) {
 	);
 	copSetMove(
 		&pCopList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove,
-		&custom.dmacon, BITCLR|DMAF_RASTER
+		&custom.dmacon, BITCLR | DMAF_RASTER | DMAF_SPRITE
 	);
 	copSetMove(
 		&pCopList[WORLD_COP_VPHUD_DMAON_POS].sMove,
