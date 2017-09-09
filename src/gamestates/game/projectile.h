@@ -8,7 +8,7 @@
 
 // Projectile types.
 #define PROJECTILE_TYPE_OFF    0
-#define PROJECTILE_TYPE_CANNON 1
+#define PROJECTILE_TYPE_BULLET 1
 #define PROJECTILE_TYPE_NADE   2
 #define PROJECTILE_TYPE_ROCKET 3
 

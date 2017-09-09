@@ -10,12 +10,12 @@
 #define PROJECTILE_SPEED      (2.0)
 #define PROJECTILE_FRAME_LIFE (((320-32)/4)/PROJECTILE_SPEED)
 
-#define PROJECTILE_CANNON_HEIGHT 8
+#define PROJECTILE_BULLET_HEIGHT 2
 
 tProjectile *s_pProjectiles;
 UBYTE s_ubProjectileCount;
-tBitMap *s_pCannonBitmap;
-tBitmapMask *s_pCannonMask;
+tBitMap *s_pBulletBitmap;
+tBitmapMask *s_pBulletMask;
 
 void projectileListCreate(UBYTE ubProjectileCount) {
 	UBYTE i;
@@ -23,8 +23,8 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	logBlockBegin("projectileListCreate(ubProjectileCount: %hhu)", ubProjectileCount);
 
 	// Load gfx
-	s_pCannonBitmap = bitmapCreateFromFile("data/projectiles/cannon.bm");
-	s_pCannonMask = bitmapMaskCreateFromFile("data/projectiles/cannon.msk");
+	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
+	s_pBulletMask = bitmapMaskCreateFromFile("data/projectiles/bullet.msk");
 
 	// Create projectiles
 	s_ubProjectileCount = ubProjectileCount;
@@ -32,8 +32,8 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	for(i = 0; i != ubProjectileCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
 		s_pProjectiles[i].pBob = bobCreate(
-			s_pCannonBitmap, s_pCannonMask,
-			PROJECTILE_CANNON_HEIGHT, 0
+			s_pBulletBitmap, s_pBulletMask,
+			PROJECTILE_BULLET_HEIGHT, 0
 		);
 		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 	}
@@ -53,8 +53,8 @@ void projectileListDestroy() {
 	memFree(s_pProjectiles, s_ubProjectileCount * sizeof(tProjectile));
 
 	// Dealloc bob bitmaps
-	bitmapDestroy(s_pCannonBitmap);
-	bitmapMaskDestroy(s_pCannonMask);
+	bitmapDestroy(s_pBulletBitmap);
+	bitmapMaskDestroy(s_pBulletMask);
 
 	logBlockEnd("projectileListDestroy()");
 }
@@ -108,7 +108,6 @@ tProjectile *projectileCreate(
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
 
 	// Bob
-	bobChangeFrame(pProjectile->pBob, angleToFrame(ubAngle));
 	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
 	return pProjectile;
 }
@@ -136,8 +135,8 @@ void projectileDraw(void) {
 	pProjectile = &s_pProjectiles[0];
 	for(i = s_ubProjectileCount; i--;) {
 		WORD wProjectileX, wProjectileY;
-		wProjectileX = pProjectile->fX-8;
-		wProjectileY = pProjectile->fY-PROJECTILE_CANNON_HEIGHT/2;
+		wProjectileX = (pProjectile->fX+0.5f)-PROJECTILE_BULLET_HEIGHT/2;
+		wProjectileY = (pProjectile->fY+0.5f)-PROJECTILE_BULLET_HEIGHT/2;
 		bobDraw(
 			pProjectile->pBob, g_pWorldMainBfr->pBuffer,
 			wProjectileX, wProjectileY

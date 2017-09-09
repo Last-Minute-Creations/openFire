@@ -206,13 +206,11 @@ void turretProcess(void) {
 			if(pTurret->ubAngle >= ANGLE_360)
 				pTurret->ubAngle -= ANGLE_360;
 		}
-		else {
-			if(!pTurret->ubCooldown) {
-				tProjectileOwner uOwner;
-				uOwner.pTurret = pTurret;
-				projectileCreate(PROJECTILE_OWNER_TYPE_TURRET, uOwner, PROJECTILE_TYPE_CANNON);
-				pTurret->ubCooldown = TURRET_COOLDOWN;
-			}
+		else if(!pTurret->ubCooldown) {
+			tProjectileOwner uOwner;
+			uOwner.pTurret = pTurret;
+			projectileCreate(PROJECTILE_OWNER_TYPE_TURRET, uOwner, PROJECTILE_TYPE_BULLET);
+			pTurret->ubCooldown = TURRET_COOLDOWN;
 		}
 	}
 }
