@@ -94,13 +94,12 @@ UBYTE worldCreate(void) {
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
 	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];
 	updateCrosshair();
-	copSetWait(&pCrossList[0].sWait, 0, 0);
-	copSetMove(&pCrossList[1].sMove, &pSprPtrs[2].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
-	copSetMove(&pCrossList[2].sMove, &pSprPtrs[2].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
+	copSetMove(&pCrossList[0].sMove, &pSprPtrs[2].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
+	copSetMove(&pCrossList[1].sMove, &pSprPtrs[2].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS],
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CROSS_POS],
-		3*sizeof(tCopCmd)
+		2*sizeof(tCopCmd)
 	);
 
 	// Initial values

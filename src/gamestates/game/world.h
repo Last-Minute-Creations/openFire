@@ -14,7 +14,7 @@
 // Wait+MOVE for bitplane DMA off & on between vports, so +4 cmds
 #define WORLD_COP_SPRITEEN_POS     0
 #define WORLD_COP_CROSS_POS        (WORLD_COP_SPRITEEN_POS+1)
-#define WORLD_COP_VPMAIN_POS       (WORLD_COP_CROSS_POS + 3)
+#define WORLD_COP_VPMAIN_POS       (WORLD_COP_CROSS_POS + 2)
 #define WORLD_COP_INIT_POS         (WORLD_COP_VPMAIN_POS+14)
 #define WORLD_COP_TURRET_START_POS (WORLD_COP_INIT_POS+2)
 #define WORLD_COP_TURRET_CMDS      (16*6*7*4)
