@@ -6,6 +6,7 @@
 #include "gamestates/game/building.h"
 #include "gamestates/game/world.h"
 #include "gamestates/game/player.h"
+#include "gamestates/game/explosions.h"
 
 #define PROJECTILE_SPEED      (2.0)
 #define PROJECTILE_FRAME_LIFE (((320-32)/4)/PROJECTILE_SPEED)
@@ -188,6 +189,7 @@ void projectileProcess(void) {
 				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
 				g_pMap[ubMapX][ubMapY].ubData = 0;
 				mapRequestUpdateTile(ubMapX, ubMapY);
+				explosionsAdd(ubMapX << MAP_TILE_SIZE, ubMapY << MAP_TILE_SIZE);
 			}
 			projectileDestroy(pProjectile);
 			continue;

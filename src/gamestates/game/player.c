@@ -5,6 +5,7 @@
 #include <ace/managers/log.h>
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/world.h"
+#include "gamestates/game/explosions.h"
 
 void playerListCreate(UBYTE ubPlayerLimit) {
 	UBYTE i;
@@ -111,6 +112,10 @@ void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 
 void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
+	explosionsAdd(
+		pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
+		pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
+	);
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];

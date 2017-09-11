@@ -9,6 +9,7 @@
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
+#include "gamestates/game/explosions.h"
 
 #define TURRET_SPRITE_OFFS    ((1 << MAP_TILE_SIZE) - TURRET_SPRITE_SIZE)
 
@@ -135,19 +136,22 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 }
 
 void turretDestroy(UWORD uwIdx) {
-	UWORD uwTileX, uwTileY;
-	tTurret *pTurret;
-
+	// Find turret
 	if(uwIdx >= s_uwMaxTurrets) {
 		logWrite("ERR: turretDestroy() - Index out of range %u\n", uwIdx);
 		return;
 	}
-	pTurret = &s_pTurretList[uwIdx];
+	tTurret *pTurret = &s_pTurretList[uwIdx];
 
 	// Remove from tile-based list
-	uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
-	uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
+	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
+	UWORD uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
 	s_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
+
+	// Add explosion
+	explosionsAdd(
+		uwTileX << MAP_TILE_SIZE, uwTileY << MAP_TILE_SIZE
+	);
 
 	// Mark turret as destroyed
 	pTurret->uwX = 0;

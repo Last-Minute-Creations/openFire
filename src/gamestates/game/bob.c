@@ -3,12 +3,12 @@
 
 tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD uwFrameIdx) {
 	tBob *pBob;
-	
+
 	logBlockBegin(
 		"bobCreate(pBitmap: %p, pMask: %p, uwFrameHeight: %u, uwFrameIdx: %u)",
 		pBitmap, pMask, uwFrameHeight, uwFrameIdx
 	);
-	
+
 	pBob = memAllocFastClear(sizeof(tBob));
 	if(!pBob) {
 		logWrite("ERR: Couldn't alloc bob struct!\n");
@@ -20,7 +20,7 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 	pBob->uwOffsY = uwFrameIdx*uwFrameHeight;
 	pBob->uwHeight = uwFrameHeight;
 	pBob->ubFlags = BOB_FLAG_START_DRAWING;
-	
+
 	// BG buffer
 	pBob->pBg = bitmapCreate(
 		bitmapGetByteWidth(pBitmap) << 3,
@@ -28,7 +28,7 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 		pBitmap->Depth,
 		0
 	);
-	
+
 	// TODO init bg buf, so first draw won't corrupt dest
 
 	logBlockEnd("bobCreate()");
@@ -51,7 +51,7 @@ tBob *bobUniqueCreate(char *szBitmapPath, char *szMaskPath, UWORD uwFrameHeight,
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;
 	tBob *pBob;
-	
+
 	logBlockBegin(
 		"bobUniqueCreate(szBitmapPath: %s, szMaskPath: %s, uwFrameHeight: %hu, uwFrameIdx: %hu)",
 		szBitmapPath, szMaskPath, uwFrameHeight, uwFrameIdx
@@ -92,9 +92,9 @@ void bobChangeFrame(tBob *pBob, UWORD uwFrameIdx) {
 /**
  *  @todo Change to blitCopy when it gets stable
  */
-void bobUndraw(tBob *pBob, tBitMap *pDest) {
+UWORD bobUndraw(tBob *pBob, tBitMap *pDest) {
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING)
-		return;
+		return 0;
 	BltBitMap(
 		pBob->pBg, 0, 0,
 		pDest, pBob->sPrevCoord.sUwCoord.uwX, pBob->sPrevCoord.sUwCoord.uwY,
@@ -103,22 +103,23 @@ void bobUndraw(tBob *pBob, tBitMap *pDest) {
 	);
 	if(pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
 		pBob->ubFlags = BOB_FLAG_NODRAW;
+	return 1;
 }
 
 /**
  *  @todo Change to blitCopy when it gets stable
  */
-void bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) { 
+UWORD bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	// Save BG
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
-		return;
+		return 0;
 	BltBitMap(
 		pDest, uwX, uwY,
 		pBob->pBg, 0, 0,
 		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
 		0xC0, 0xFF, 0
 	);
-	
+
 	// Redraw bob
 	blitCopyMask(
 		pBob->sSource.pBitmap, 0, pBob->uwOffsY,
@@ -126,11 +127,12 @@ void bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
 		pBob->sSource.pMask->pData
 	);
-	
+
 	// Update bob position
 	pBob->sPrevCoord.sUwCoord.uwX = uwX;
 	pBob->sPrevCoord.sUwCoord.uwY = uwY;
 
 	if(pBob->ubFlags == BOB_FLAG_START_DRAWING)
 		pBob->ubFlags = BOB_FLAG_DRAW;
+	return 1;
 }

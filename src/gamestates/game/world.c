@@ -16,6 +16,7 @@
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/hud.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/explosions.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -102,6 +103,9 @@ UBYTE worldCreate(void) {
 		2*sizeof(tCopCmd)
 	);
 
+	// Explosions
+	explosionsCreate();
+
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
@@ -109,6 +113,7 @@ UBYTE worldCreate(void) {
 }
 
 void worldDestroy(void) {
+	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
@@ -138,13 +143,9 @@ void worldDraw(void) {
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 
-	// Turrets
-	turretUpdateSprites();
-
-	// Projectiles
 	projectileDraw();
-
-	// Update HUD
+	explosionsDraw(g_pWorldMainBfr->pBuffer);
+	turretUpdateSprites();
 	hudUpdate();
 
 	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
@@ -153,7 +154,7 @@ void worldDraw(void) {
 void worldUndraw(void) {
 	UBYTE ubPlayer;
 
-	// Projectiles
+	explosionsUndraw(g_pWorldMainBfr->pBuffer);
 	projectileUndraw();
 
 	// Vehicles

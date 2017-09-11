@@ -16,7 +16,7 @@
 
 typedef struct _tBobSource {
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;	
+	tBitmapMask *pMask;
 } tBobSource;
 
 typedef struct _tBob {
@@ -60,12 +60,12 @@ void bobChangeFrame(
 	IN UWORD uwFrameIdx
 );
 
-void bobUndraw(
+UWORD bobUndraw(
 	IN tBob *pBob,
 	IN tBitMap *pDest
 );
 
-void bobDraw(
+UWORD bobDraw(
 	IN tBob *pBob,
 	IN tBitMap *pDest,
 	IN UWORD uwX,

@@ -8,6 +8,7 @@
 #include "gamestates/game/map.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/world.h"
+#include "gamestates/game/explosions.h"
 #include "vehicletypes.h"
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
