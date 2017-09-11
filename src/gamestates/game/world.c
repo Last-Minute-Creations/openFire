@@ -144,6 +144,9 @@ void worldDraw(void) {
 	// Projectiles
 	projectileDraw();
 
+	// Update HUD
+	hudUpdate();
+
 	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
 }
 

@@ -110,6 +110,7 @@ void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {
+	pPlayer->sVehicle.ubLife = 0;
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
