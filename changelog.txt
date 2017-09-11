@@ -1,9 +1,0 @@
-OpenFire changelog
-
-2016-09-27
-- I've made github repo, so right now this changelog is prob'ly obsolete.
-
-2016-09-12
-- I've finally came up with idea of writing changelogs. ;)
-- Added fmode := 0 so now running under AGA shouldn't cause any trouble.
-- Added HUD viewport
