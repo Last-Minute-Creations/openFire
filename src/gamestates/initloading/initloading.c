@@ -24,7 +24,6 @@ void gsInitLoadingCreate(void) {
 
 void gsInitLoadingLoop(void) {
 	static UBYTE ubState = INITLOADING_STATE_OFF;
-	static UBYTE ubPrevState = 0;
 
 	switch(ubState) {
 		case INITLOADING_STATE_OFF:
@@ -35,11 +34,6 @@ void gsInitLoadingLoop(void) {
 		case INITLOADING_STATE_BUSY:
 			// Query worker status
 			menuLoop();
-			if(ubPrevState != g_ubWorkerStep) {
-				// Update status bar
-				// loadingScreenSetProgress(g_ubWorkerStep);
-				ubPrevState = g_ubWorkerStep;
-			}
 			if(g_ubWorkerStep >= WORKER_MAX_STEP)
 				ubState = INITLOADING_STATE_DONE;
 			break;

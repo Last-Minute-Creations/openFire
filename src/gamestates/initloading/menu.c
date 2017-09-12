@@ -84,20 +84,20 @@ void menuDrawProgress(UWORD uwProgress) {
 	// BG + outline
 	blitRect(
 		s_pBuffer->pBuffer,
-		(WINDOW_SCREEN_WIDTH - LOADINGSCREEN_PROGRESS_WIDTH)/2 - 1,
-		(WINDOW_SCREEN_HEIGHT - LOADINGSCREEN_PROGRESS_HEIGHT)/2 - 1,
-		LOADINGSCREEN_PROGRESS_WIDTH+2,
-		LOADINGSCREEN_PROGRESS_HEIGHT+2,
+		60 - 1,
+		208 - 1,
+		200 + 2,
+		16 + 2,
 		LOADINGSCREEN_COLOR_PROGRESS_OUTLINE
 	);
 
 	// Progress
 	blitRect(
 		s_pBuffer->pBuffer,
-		(WINDOW_SCREEN_WIDTH - LOADINGSCREEN_PROGRESS_WIDTH)/2,
-		(WINDOW_SCREEN_HEIGHT - LOADINGSCREEN_PROGRESS_HEIGHT)/2,
-		(uwProgress*LOADINGSCREEN_PROGRESS_WIDTH)/100,
-		LOADINGSCREEN_PROGRESS_HEIGHT,
+		60,
+		208,
+		(uwProgress*200)/100,
+		16,
 		LOADINGSCREEN_COLOR_PROGRESS_FILL
 	);
 
@@ -109,6 +109,11 @@ void menuDestroy(void) {
 	viewDestroy(s_pView);
 }
 
-void menuLoop(void) {
+UBYTE s_ubPrevWorkerStep = -1;
 
+void menuLoop() {
+	if(s_ubPrevWorkerStep != g_ubWorkerStep) {
+		menuDrawProgress(g_ubWorkerStep);
+		s_ubPrevWorkerStep = g_ubWorkerStep;
+	}
 }
