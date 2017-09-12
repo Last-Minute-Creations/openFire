@@ -21,7 +21,7 @@ static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
 BYTE g_pLoadProgress[LOADINGSCREEN_BOBSOURCE_COUNT] = {-1};
 
-void loadingScreenCreate(void) {
+void menuCreate(void) {
 	// Create View & VPort
 	s_pView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
@@ -37,9 +37,51 @@ void loadingScreenCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
 		TAG_DONE
 	);
-	paletteLoad("data/amidb32.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
-	viewLoad(s_pView);
+	paletteLoad("data/amidb16.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
+	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 
+	menuDrawButton(64, 96, 320-128, 32, "PLAY GAME", 0);
+	menuDrawButton(64, 96+32+16, 320-128, 32, "EXIT", 0);
+
+	viewLoad(s_pView);
+}
+
+void menuDrawButton(UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight, char *szText, UBYTE isSelected) {
+	// Draw border
+	const UBYTE ubColorLight = 1;
+	const UBYTE ubColorDark = 14;
+	const UBYTE ubColorFill = 11;
+
+	blitRect(
+		s_pBuffer->pBuffer, uwX, uwY,
+		uwWidth, uwHeight, ubColorFill
+	);
+
+	// Ridge
+	blitRect(
+		s_pBuffer->pBuffer, uwX, uwY,
+		uwWidth, 2, ubColorLight
+	);
+	blitRect(
+		s_pBuffer->pBuffer, uwX, uwY,
+		2, uwHeight, ubColorLight
+	);
+
+	// Grove
+	blitRect(
+		s_pBuffer->pBuffer, uwX + 2, uwY + uwHeight - 1,
+		uwWidth - 2, 1, ubColorDark
+	);
+	blitRect(
+		s_pBuffer->pBuffer, uwX + uwWidth - 1, uwY + 2,
+		1, uwHeight - 2, ubColorDark
+	);
+
+	// TODO text
+}
+
+void menuDrawProgress(UWORD uwProgress) {
+	// BG + outline
 	blitRect(
 		s_pBuffer->pBuffer,
 		(WINDOW_SCREEN_WIDTH - LOADINGSCREEN_PROGRESS_WIDTH)/2 - 1,
@@ -48,70 +90,25 @@ void loadingScreenCreate(void) {
 		LOADINGSCREEN_PROGRESS_HEIGHT+2,
 		LOADINGSCREEN_COLOR_PROGRESS_OUTLINE
 	);
-}
 
-void loadingScreenDestroy() {
-	viewLoad(0);
-	viewDestroy(s_pView);
-}
-
-void loadingScreenSetProgress(UBYTE ubProgress) {
-	logBlockBegin("loadingScreenSetProgress(ubProgress: %hu)", ubProgress);
+	// Progress
 	blitRect(
 		s_pBuffer->pBuffer,
 		(WINDOW_SCREEN_WIDTH - LOADINGSCREEN_PROGRESS_WIDTH)/2,
 		(WINDOW_SCREEN_HEIGHT - LOADINGSCREEN_PROGRESS_HEIGHT)/2,
-		(ubProgress*LOADINGSCREEN_PROGRESS_WIDTH)/100,
+		(uwProgress*LOADINGSCREEN_PROGRESS_WIDTH)/100,
 		LOADINGSCREEN_PROGRESS_HEIGHT,
 		LOADINGSCREEN_COLOR_PROGRESS_FILL
 	);
-	logBlockEnd("loadingScreenSetProgress()");
+
+	// TODO text
 }
 
-void loadingScreenUpdate(void) {
-	static BYTE pPrevFrameProgress[LOADINGSCREEN_BOBSOURCE_COUNT] = {-1};
-	static tBobSource *pSources[LOADINGSCREEN_BOBSOURCE_COUNT] = {
-		&g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource,
-		&g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource,
-		&g_pVehicleTypes[VEHICLE_TYPE_JEEP].sMainSource,
-		&g_sBrownTurretSource
-	};
-	UBYTE i;
-	BYTE bProgress;
-	UWORD uwFrameX, uwFrameY;
-	UWORD uwBobSize;
+void menuDestroy(void) {
+	viewLoad(0);
+	viewDestroy(s_pView);
+}
 
-	for(i = 0; i != LOADINGSCREEN_BOBSOURCE_COUNT+0; ++i) {
-		bProgress = g_pLoadProgress[i];
-		if(i < LOADINGSCREEN_BOBSOURCE_COUNT) {
-			if(pPrevFrameProgress[i] != bProgress) {
-				// Draw recently loaded bob source frames
-				uwFrameX = (WINDOW_SCREEN_WIDTH-VEHICLE_BODY_WIDTH*LOADINGSCREEN_BOBSOURCE_COUNT)/2 + VEHICLE_BODY_WIDTH*i;
-				uwFrameY = (WINDOW_SCREEN_HEIGHT-LOADINGSCREEN_PROGRESS_HEIGHT)/2 - VEHICLE_BODY_HEIGHT - 8;
-				// Erase background
-				blitRect(
-					s_pBuffer->pBuffer,
-					uwFrameX, uwFrameY,
-					VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-					LOADINGSCREEN_COLOR_BG
-				);
-				// Draw next frame
-				uwBobSize = (bitmapGetByteWidth(pSources[i]->pBitmap) << 3);
-				blitCopyMask(
-					pSources[i]->pBitmap,
-					0, uwBobSize*g_pLoadProgress[i],
-					s_pBuffer->pBuffer,
-					uwFrameX + (VEHICLE_BODY_WIDTH - uwBobSize)/2,
-					uwFrameY + (VEHICLE_BODY_WIDTH - uwBobSize)/2,
-					uwBobSize, uwBobSize,
-					pSources[i]->pMask->pData
-				);
-				pPrevFrameProgress[i] = bProgress;
-			}
-		}
-		else {
-			// Indicate other progress
-			logWrite("ERR: Unknown progress type\n");
-		}
-	}
+void menuLoop(void) {
+
 }

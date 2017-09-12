@@ -20,8 +20,6 @@ static tTurret *s_pTurretList; // 20x25: 1100*7 ~ 8KiB
 static UWORD **s_pTurretTiles; // 20x25: +2KiB
 tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
 
-tBitMap *s_pTurretTest;
-
 static tAvg *s_pAvg;
 
 void turretListCreate(void) {
@@ -62,7 +60,6 @@ void turretListCreate(void) {
 		3*sizeof(tCopCmd)
 	);
 
-	s_pTurretTest = bitmapCreateFromFile("data/turrettest.bm");
 	s_pAvg = logAvgCreate("turretUpdateSprites()", 50*5);
 
 	// Force blank last line of turret gfx
@@ -73,26 +70,17 @@ void turretListCreate(void) {
 			16, 1, 0
 		);
 	}
-	// Don't forget first frame
-	blitRect(
-		s_pTurretTest, 0, TURRET_SPRITE_SIZE-1,
-		16, 1, 0
-	);
 
 	logBlockEnd("turretListCreate()");
 }
 
 void turretListDestroy(void) {
-	int i, t;
-
 	logBlockBegin("turretListDestroy()");
-
-	bitmapDestroy(s_pTurretTest);
 
 	memFree(s_pTurretList, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	for(i = 0; i != g_uwMapTileWidth; ++i)
+	for(int i = 0; i != g_uwMapTileWidth; ++i)
 		memFree(s_pTurretTiles[i], sizeof(UWORD) * g_uwMapTileHeight);
 	memFree(s_pTurretTiles, sizeof(UWORD*) * g_uwMapTileWidth);
 
@@ -102,15 +90,13 @@ void turretListDestroy(void) {
 }
 
 UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
-	tTurret *pTurret;
-	UWORD i;
-
 	logBlockBegin(
 		"turretCreate(uwTileX: %hu, uwTileY: %hu, ubTeam: %hhu)",
 		uwTileX, uwTileY, ubTeam
 	);
 
 	// Find next free turret
+	UWORD i;
 	for(i = 0; i != s_uwMaxTurrets; ++i)
 		if(!s_pTurretList[i].uwX)
 			break;
@@ -119,9 +105,9 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 		logBlockEnd("turretCreate()");
 		return TURRET_INVALID;
 	}
-	pTurret = &s_pTurretList[i];
 
 	// Initial values
+	tTurret *pTurret = &s_pTurretList[i];
 	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
 	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
 	pTurret->ubTeam = ubTeam;

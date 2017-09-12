@@ -16,7 +16,8 @@
 
 void gsInitLoadingCreate(void) {
 	logBlockBegin("gsInitLoadingCreate()");
-	loadingScreenCreate();
+
+	menuCreate();
 
 	logBlockEnd("gsInitLoadingCreate()");
 }
@@ -33,10 +34,10 @@ void gsInitLoadingLoop(void) {
 			break;
 		case INITLOADING_STATE_BUSY:
 			// Query worker status
-			loadingScreenUpdate();
+			menuLoop();
 			if(ubPrevState != g_ubWorkerStep) {
 				// Update status bar
-				loadingScreenSetProgress(g_ubWorkerStep);
+				// loadingScreenSetProgress(g_ubWorkerStep);
 				ubPrevState = g_ubWorkerStep;
 			}
 			if(g_ubWorkerStep >= WORKER_MAX_STEP)
@@ -47,7 +48,7 @@ void gsInitLoadingLoop(void) {
 			workerDestroy();
 			// Fadeout
 			// TODO
-			loadingScreenDestroy();
+			menuDestroy();
 			// Move to proper gamestate
 			gamePushState(gsGameCreate, gsGameLoop, gsGameDestroy);
 			ubState = INITLOADING_STATE_EXIT;

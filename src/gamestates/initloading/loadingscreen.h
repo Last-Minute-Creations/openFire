@@ -1,5 +1,5 @@
-#ifndef GUARD_OF_GAMESTATES_INITLOADING_LOADINGSCREEN_H
-#define GUARD_OF_GAMESTATES_INITLOADING_LOADINGSCREEN_H
+#ifndef GUARD_OF_GAMESTATES_INITLOADING_MENU_H
+#define GUARD_OF_GAMESTATES_INITLOADING_MENU_H
 
 #include <ace/config.h>
 
@@ -12,16 +12,25 @@
  */
 #define LOADINGSCREEN_BOBSOURCE_COUNT 4
 
-void loadingScreenCreate(void);
+void menuCreate(void);
 
-void loadingScreenDestroy(void);
+void menuLoop(void);
 
-void loadingScreenSetProgress(
-	IN UBYTE ubProgress
+void menuDestroy(void);
+
+void menuDrawButton(
+	IN UWORD uwX,
+	IN UWORD uwY,
+	IN UWORD uwWidth,
+	IN UWORD uwHeight,
+	IN char *szText,
+	IN UBYTE isSelected
 );
 
-void loadingScreenUpdate(void);
+void menuDrawProgress(
+	IN UWORD uwProgress
+);
 
 extern BYTE g_pLoadProgress[LOADINGSCREEN_BOBSOURCE_COUNT];
 
-#endif // GUARD_OF_GAMESTATES_INITLOADING_LOADINGSCREEN_H
+#endif // GUARD_OF_GAMESTATES_INITLOADING_MENU_H
