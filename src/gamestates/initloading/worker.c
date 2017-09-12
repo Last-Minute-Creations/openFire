@@ -6,7 +6,7 @@
 #include <ace/managers/log.h>
 
 #include "vehicletypes.h"
-#include "gamestates/initloading/loadingscreen.h"
+#include "gamestates/initloading/menu.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/gamemath.h"

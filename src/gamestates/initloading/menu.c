@@ -1,4 +1,4 @@
-#include "gamestates/initloading/loadingscreen.h"
+#include "gamestates/initloading/menu.h"
 #include <clib/dos_protos.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>

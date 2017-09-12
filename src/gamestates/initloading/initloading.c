@@ -6,7 +6,7 @@
 #include <ace/utils/font.h>
 #include <ace/utils/palette.h>
 #include "gamestates/initloading/worker.h"
-#include "gamestates/initloading/loadingscreen.h"
+#include "gamestates/initloading/menu.h"
 #include "gamestates/game/game.h"
 
 #define INITLOADING_STATE_OFF  0
