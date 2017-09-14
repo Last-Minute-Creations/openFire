@@ -1,7 +1,6 @@
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/bob.h"
 
-#define EXPLOSIONS_MAX 8
 #define EXPLOSION_FRAME_COUNT 6
 #define EXPLOSION_FRAME_LENGTH 4
 #define EXPLOSION_DURATION (EXPLOSION_FRAME_COUNT * EXPLOSION_FRAME_LENGTH)

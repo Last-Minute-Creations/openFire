@@ -4,6 +4,8 @@
 #include <ace/types.h>
 #include <ace/utils/bitmap.h>
 
+#define EXPLOSIONS_MAX 8
+
 void explosionsAdd(
 	const IN UWORD uwX,
 	const IN UWORD uwY

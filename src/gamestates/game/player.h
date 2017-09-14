@@ -4,6 +4,8 @@
 #include <ace/config.h>
 #include "gamestates/game/vehicle.h"
 
+#define PLAYER_NAME_MAX        20
+
 #define PLAYER_DEATH_COOLDOWN 150
 
 #define PLAYER_STATE_OFF       0
@@ -14,7 +16,7 @@
 
 typedef struct _tPlayer {
 	// General
-	char szName[20];
+	char szName[PLAYER_NAME_MAX];
 	UBYTE ubTeam;
 	UBYTE ubCurrentVehicleType;
 	UBYTE ubState;
