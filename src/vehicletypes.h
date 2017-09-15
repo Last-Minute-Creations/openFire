@@ -39,6 +39,7 @@ void vehicleTypesDestroy(void);
 UWORD vehicleTypeBobSourceLoad(
 	IN char *szName,
 	IN tBobSource *pBobSource,
+	IN UBYTE isWithMask,
 	OUT BYTE *pProgress
 );
 

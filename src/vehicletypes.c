@@ -18,7 +18,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
  *
  *  @todo Make it accept bitmaps wider than 32px?
  */
-UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProgress) {
+UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask, BYTE *pProgress) {
 	UBYTE *pChunkySrc;
 	UBYTE *pChunkyRotated;
 	char szFullFileName[50];
@@ -62,34 +62,38 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 	// Copy first frame to main bitmap
 	blitCopyAligned(pFirstFrame, 0, 0, pBitmap, 0, 0, uwFrameWidth, uwFrameWidth);
 	bitmapDestroy(pFirstFrame);
-
-	// Create huge-ass mask
-	pMask = bitmapMaskCreate(
-		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
-	);
-	if(!pMask) {
-		logWrite("ERR: Couldn't allocate vehicle mask\n");
-		goto fail;
-	}
 	pBobSource->pBitmap = pBitmap;
-	pBobSource->pMask = pMask;
 
-	// Load first frame's mask
-	sprintf(szFullFileName, "data/vehicles/%s.msk", szName);
-	pMaskFile = fopen(szFullFileName, "rb");
-	if(!pMaskFile) {
-		logWrite("ERR: Couldn't open mask file %s\n", szFullFileName);
-		goto fail;
+	if(isWithMask) {
+		// Create huge-ass mask
+		pMask = bitmapMaskCreate(
+			uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
+		);
+		if(!pMask) {
+			logWrite("ERR: Couldn't allocate vehicle mask\n");
+			goto fail;
+		}
+		pBobSource->pMask = pMask;
+
+		// Load first frame's mask
+		sprintf(szFullFileName, "data/vehicles/%s.msk", szName);
+		pMaskFile = fopen(szFullFileName, "rb");
+		if(!pMaskFile) {
+			logWrite("ERR: Couldn't open mask file %s\n", szFullFileName);
+			goto fail;
+		}
+		fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
+		fread(
+			pMask->pData, sizeof(UWORD),
+			(uwFrameWidth>>4) * (uwFrameWidth),
+			pMaskFile
+		);
+		fclose(pMaskFile);
+		pMaskFile = 0;
+		logWrite("Read first frame mask\n");
 	}
-	fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
-	fread(
-		pMask->pData, sizeof(UWORD),
-		(uwFrameWidth>>4) * (uwFrameWidth),
-		pMaskFile
-	);
-	fclose(pMaskFile);
-	pMaskFile = 0;
-	logWrite("Read first frame mask\n");
+	else
+		pBobSource->pMask = 0;
 
 	// Convert first frame & its mask to bpl+mask chunky
 	UWORD uwMaskChunk;
@@ -99,19 +103,21 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 		if(VEHICLE_BODY_WIDTH > 16)
 			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*uwFrameWidth+16]);
 
-		// Add mask bit to chunky pixels
-		uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
-		for(x = 0; x != 16; ++x) {
-			if(uwMaskChunk & (1 << 15))
-				pChunkySrc[y*uwFrameWidth + x] |= 1 << pBitmap->Depth;
-			uwMaskChunk <<= 1;
-		}
-		if(uwFrameWidth > 16) {
-			uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4) + 1];
+		if(isWithMask) {
+			// Add mask bit to chunky pixels
+			uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
 			for(x = 0; x != 16; ++x) {
 				if(uwMaskChunk & (1 << 15))
-					pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << pBitmap->Depth;
+					pChunkySrc[y*uwFrameWidth + x] |= 1 << pBitmap->Depth;
 				uwMaskChunk <<= 1;
+			}
+			if(uwFrameWidth > 16) {
+				uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4) + 1];
+				for(x = 0; x != 16; ++x) {
+					if(uwMaskChunk & (1 << 15))
+						pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << pBitmap->Depth;
+					uwMaskChunk <<= 1;
+				}
 			}
 		}
 	}
@@ -139,17 +145,19 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, BYTE *pProg
 				);
 		}
 
-		// Extract mask from rotated chunky & write it to planar mask
-		uwMaskChunk = 0;
-		uwFrameOffs = ubFrame * uwFrameWidth * (uwFrameWidth>>4);
-		for(y = 0; y != uwFrameWidth; ++y) {
-			for(x = 0; x != uwFrameWidth; ++x) {
-				uwMaskChunk <<= 1;
-				if(pChunkyRotated[x + y*uwFrameWidth] & (1 << pBitmap->Depth))
-					uwMaskChunk = (uwMaskChunk | 1);
-				if((x & 15) == 15) {
-					pMask->pData[uwFrameOffs + y*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
-					uwMaskChunk = 0;
+		if(isWithMask) {
+			// Extract mask from rotated chunky & write it to planar mask
+			uwMaskChunk = 0;
+			uwFrameOffs = ubFrame * uwFrameWidth * (uwFrameWidth>>4);
+			for(y = 0; y != uwFrameWidth; ++y) {
+				for(x = 0; x != uwFrameWidth; ++x) {
+					uwMaskChunk <<= 1;
+					if(pChunkyRotated[x + y*uwFrameWidth] & (1 << pBitmap->Depth))
+						uwMaskChunk = (uwMaskChunk | 1);
+					if((x & 15) == 15) {
+						pMask->pData[uwFrameOffs + y*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
+						uwMaskChunk = 0;
+					}
 				}
 			}
 		}
@@ -236,9 +244,9 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
-	vehicleTypeBobSourceLoad("tank", &pType->sMainSource, &pProgress[0]);
+	vehicleTypeBobSourceLoad("tank", &pType->sMainSource, 1, &pProgress[0]);
 	g_ubWorkerStep += 10;
-	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource, &pProgress[1]);
+	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource, 1, &pProgress[1]);
 	g_ubWorkerStep += 10;
 
 	// Tank collision coords
@@ -264,7 +272,7 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
-	vehicleTypeBobSourceLoad("jeep", &pType->sMainSource, &pProgress[2]);
+	vehicleTypeBobSourceLoad("jeep", &pType->sMainSource, 1, &pProgress[2]);
 	pType->sAuxSource.pBitmap = 0;
 	pType->sAuxSource.pMask = 0;
 	g_ubWorkerStep += 10;
@@ -300,7 +308,8 @@ void vehicleTypesDestroy(void) {
 	bitmapMaskDestroy(pType->sMainSource.pMask);
 	if(pType->sAuxSource.pBitmap) {
 		bitmapDestroy(pType->sAuxSource.pBitmap);
-		bitmapMaskDestroy(pType->sAuxSource.pMask);
+		if(pType->sAuxSource.pMask)
+			bitmapMaskDestroy(pType->sAuxSource.pMask);
 	}
 
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -308,6 +317,8 @@ void vehicleTypesDestroy(void) {
 	bitmapMaskDestroy(pType->sMainSource.pMask);
 	if(pType->sAuxSource.pBitmap) {
 		bitmapDestroy(pType->sAuxSource.pBitmap);
+		if(pType->sAuxSource.pMask)
+			bitmapMaskDestroy(pType->sAuxSource.pMask);
 		bitmapMaskDestroy(pType->sAuxSource.pMask);
 	}
 

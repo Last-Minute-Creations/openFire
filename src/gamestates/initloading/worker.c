@@ -25,14 +25,6 @@ typedef struct _tSeg {
 UWORD s_uwWorkerRequest; ///< Worker reads this and does stuff.
 UBYTE g_ubWorkerStep;
 
-inline void workerDoStuff(void (*fn)(void)) {
-	if(fn)
-		fn();
-	if(s_uwWorkerRequest == WORKER_REQUEST_KILL) {
-		// TODO
-	}
-}
-
 /**
  * Allocates & calculates stuff for rest of game.
  */
@@ -43,7 +35,7 @@ void workerMain(void) {
 
 	// Turret stuff
 	logWrite("Loading brown turret frames...\n");
-	vehicleTypeBobSourceLoad("turret_brown_16", &g_sBrownTurretSource, &g_pLoadProgress[3]);
+	vehicleTypeBobSourceLoad("turret_brown_16", &g_sBrownTurretSource, 0, &g_pLoadProgress[3]);
 
 	// Generate math table
 	logWrite("Generating sine table...\n");
