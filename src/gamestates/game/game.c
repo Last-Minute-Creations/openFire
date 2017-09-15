@@ -38,8 +38,13 @@ void gsGameCreate(void) {
 	mapCreate("data/maps/test2025.txt");
 
 	// Add players
-	playerListCreate(1);
+	playerListCreate(8);
 	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
+	for(UBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player%hhu", i);
+		playerSelectVehicle(playerAdd(szName, TEAM_GREEN), VEHICLE_TYPE_TANK);
+	}
 
 	// Create everything needed to display world view
 	worldCreate();
