@@ -14,6 +14,8 @@ typedef struct _tExplosion {
 } tExplosion;
 
 tExplosion s_pExplosions[EXPLOSIONS_MAX];
+static tBitMap *s_pBitmap;
+static tBitmapMask *s_pMask;
 
 void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 	// Find free explosion slot
@@ -31,11 +33,11 @@ void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 
 void explosionsCreate(void) {
 	logBlockBegin("explosionsCreate()");
-	tBitMap *pBitmap = bitmapCreateFromFile("data/explosion.bm");
-	tBitmapMask *pMask = bitmapMaskCreateFromFile("data/explosion.msk");
+	s_pBitmap = bitmapCreateFromFile("data/explosion.bm");
+	s_pMask = bitmapMaskCreateFromFile("data/explosion.msk");
 
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
-		s_pExplosions[i].pBob = bobCreate(pBitmap, pMask, EXPLOSION_SIZE, 0);
+		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, EXPLOSION_SIZE, 0);
 		s_pExplosions[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 		s_pExplosions[i].uwDuration = 0;
 	}
@@ -46,6 +48,9 @@ void explosionsDestroy(void) {
 	logBlockBegin("explosionsDestroy()");
 	for(UWORD i = EXPLOSIONS_MAX; i--;)
 		bobDestroy(s_pExplosions[i].pBob);
+
+	bitmapDestroy(s_pBitmap);
+	bitmapMaskDestroy(s_pMask);
 	logBlockBegin("explosionsDestroy()");
 }
 
