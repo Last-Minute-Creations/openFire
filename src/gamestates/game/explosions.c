@@ -51,7 +51,7 @@ void explosionsDestroy(void) {
 
 	bitmapDestroy(s_pBitmap);
 	bitmapMaskDestroy(s_pMask);
-	logBlockBegin("explosionsDestroy()");
+	logBlockEnd("explosionsDestroy()");
 }
 
 void explosionsUndraw(tBitMap *pBfr) {
