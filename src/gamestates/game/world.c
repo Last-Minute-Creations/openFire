@@ -36,6 +36,15 @@ UWORD g_uwSiloHighlightTileX;
 // Crosshair
 tBitMap *s_pCrosshair;
 
+// Speed logging
+#define SPEED_LOG
+tAvg *s_pDrawAvgExplosions;
+tAvg *s_pDrawAvgProjectiles;
+tAvg *s_pDrawAvgVehicles;
+tAvg *s_pUndrawAvgExplosions;
+tAvg *s_pUndrawAvgProjectiles;
+tAvg *s_pUndrawAvgVehicles;
+
 void updateCrosshair(void) {
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
 	pSpriteBfr[0] = ((0x2B-4 + g_uwMouseY   ) << 8) | 64-(4>>1) + (g_uwMouseX >> 1);
@@ -107,6 +116,16 @@ UBYTE worldCreate(void) {
 	// Explosions
 	explosionsCreate();
 
+	#ifdef SPEED_LOG
+	s_pDrawAvgExplosions = logAvgCreate("draw explosions", 50);
+	s_pDrawAvgProjectiles = logAvgCreate("draw projectiles", 50);
+	s_pDrawAvgVehicles = logAvgCreate("draw vehicles", 50);
+
+	s_pUndrawAvgExplosions = logAvgCreate("undraw explosions", 50);
+	s_pUndrawAvgProjectiles = logAvgCreate("undraw projectiles", 50);
+	s_pUndrawAvgVehicles = logAvgCreate("undraw vehicles", 50);
+	#endif
+
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
@@ -119,6 +138,16 @@ void worldDestroy(void) {
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
 	bitmapDestroy(s_pCrosshair);
+
+	#ifdef SPEED_LOG
+	logAvgDestroy(s_pDrawAvgExplosions);
+	logAvgDestroy(s_pDrawAvgProjectiles);
+	logAvgDestroy(s_pDrawAvgVehicles);
+
+	logAvgDestroy(s_pUndrawAvgExplosions);
+	logAvgDestroy(s_pUndrawAvgProjectiles);
+	logAvgDestroy(s_pUndrawAvgVehicles);
+	#endif
 }
 
 void worldShow(void) {
@@ -141,11 +170,19 @@ void worldDraw(void) {
 		);
 
 	// Vehicles
+	logAvgBegin(s_pDrawAvgVehicles);
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
 		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
+	logAvgEnd(s_pDrawAvgVehicles);
 
+	logAvgBegin(s_pDrawAvgProjectiles);
 	projectileDraw();
+	logAvgEnd(s_pDrawAvgProjectiles);
+
+	logAvgBegin(s_pDrawAvgExplosions);
 	explosionsDraw(g_pWorldMainBfr->pBuffer);
+	logAvgEnd(s_pDrawAvgExplosions);
+
 	turretUpdateSprites();
 	hudUpdate();
 
