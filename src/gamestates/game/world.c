@@ -140,13 +140,12 @@ void worldDestroy(void) {
 	bitmapDestroy(s_pCrosshair);
 
 	#ifdef SPEED_LOG
-	logAvgDestroy(s_pDrawAvgExplosions);
-	logAvgDestroy(s_pDrawAvgProjectiles);
-	logAvgDestroy(s_pDrawAvgVehicles);
-
 	logAvgDestroy(s_pUndrawAvgExplosions);
 	logAvgDestroy(s_pUndrawAvgProjectiles);
 	logAvgDestroy(s_pUndrawAvgVehicles);
+	logAvgDestroy(s_pDrawAvgVehicles);
+	logAvgDestroy(s_pDrawAvgProjectiles);
+	logAvgDestroy(s_pDrawAvgExplosions);
 	#endif
 }
 
