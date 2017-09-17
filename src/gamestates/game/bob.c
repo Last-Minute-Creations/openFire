@@ -23,10 +23,8 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 
 	// BG buffer
 	pBob->pBg = bitmapCreate(
-		bitmapGetByteWidth(pBitmap) << 3,
-		uwFrameHeight,
-		pBitmap->Depth,
-		0
+		(bitmapGetByteWidth(pBitmap) << 3) + 16, uwFrameHeight,
+		pBitmap->Depth,	bitmapIsInterleaved(pBitmap) ? BMF_INTERLEAVED : 0
 	);
 
 	// TODO init bg buf, so first draw won't corrupt dest
@@ -89,42 +87,34 @@ void bobChangeFrame(tBob *pBob, UWORD uwFrameIdx) {
 	pBob->uwOffsY = uwFrameIdx * pBob->uwHeight;
 }
 
-/**
- *  @todo Change to blitCopy when it gets stable
- */
 UWORD bobUndraw(tBob *pBob, tBitMap *pDest) {
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING)
 		return 0;
-	BltBitMap(
+	blitCopyAligned(
 		pBob->pBg, 0, 0,
-		pDest, pBob->sPrevCoord.sUwCoord.uwX, pBob->sPrevCoord.sUwCoord.uwY,
-		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
-		0xC0, 0xFF, 0
+		pDest, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0, pBob->sPrevCoord.sUwCoord.uwY,
+		bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
 	);
 	if(pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
 		pBob->ubFlags = BOB_FLAG_NODRAW;
 	return 1;
 }
 
-/**
- *  @todo Change to blitCopy when it gets stable
- */
 UWORD bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	// Save BG
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
 		return 0;
-	BltBitMap(
-		pDest, uwX, uwY,
+	blitCopyAligned(
+		pDest, uwX & 0xFFF0, uwY,
 		pBob->pBg, 0, 0,
-		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
-		0xC0, 0xFF, 0
+		bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
 	);
 
 	// Redraw bob
 	blitCopyMask(
 		pBob->sSource.pBitmap, 0, pBob->uwOffsY,
 		pDest, uwX, uwY,
-		pBob->pBg->BytesPerRow<<3, pBob->pBg->Rows,
+		bitmapGetByteWidth(pBob->sSource.pBitmap)<<3, pBob->pBg->Rows,
 		pBob->sSource.pMask->pData
 	);
 
