@@ -7,7 +7,6 @@
 #include "gamestates/game/gamemath.h"
 #include "gamestates/initloading/worker.h"
 
-tUwCoordYX g_pTurretCoords[VEHICLE_BODY_ANGLE_COUNT];
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
 /**
@@ -223,19 +222,6 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	UBYTE i;
 
 	logBlockBegin("vehicleTypesCreate");
-
-	// Tank turret coords
-	logWrite("Generating tank turret coords...\n");
-	UBYTE ubStartX = 9;
-	UBYTE ubStartY = 16;
-	for(i = 0; i != 64; ++i) {
-		float fAng, fCos, fSin;
-		fAng = i*2*M_PI/64;
-		fCos = cos(fAng);
-		fSin = sin(fAng);
-		g_pTurretCoords[i].sUwCoord.uwX = (ubStartX-16)*fCos - (ubStartY-16)*fSin + 16;
-		g_pTurretCoords[i].sUwCoord.uwY = (ubStartX-16)*fSin + (ubStartY-16)*fCos + 16;
-	}
 	g_ubWorkerStep += 5;
 
 	// Tank

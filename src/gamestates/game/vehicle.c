@@ -212,31 +212,18 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 }
 
 void vehicleDraw(tVehicle *pVehicle) {
-	UWORD uwX = pVehicle->fX;
-	UWORD uwY = pVehicle->fY;
-	bobDraw(
-		pVehicle->pBob,
-		g_pWorldMainBfr->pBuffer,
-		uwX - VEHICLE_BODY_WIDTH/2,
-		uwY - VEHICLE_BODY_HEIGHT/2
-	);
+	UWORD uwX = pVehicle->fX - VEHICLE_BODY_WIDTH/2;
+	UWORD uwY = pVehicle->fY - VEHICLE_BODY_HEIGHT/2;
+	bobDraw(pVehicle->pBob, g_pWorldMainBfr->pBuffer, uwX, uwY);
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
-		bobDraw(
-			pVehicle->pAuxBob,
-			g_pWorldMainBfr->pBuffer,
-			uwX - g_pTurretCoords[angleToFrame(pVehicle->ubTurretAngle)].sUwCoord.uwX,
-			uwY - g_pTurretCoords[angleToFrame(pVehicle->ubTurretAngle)].sUwCoord.uwY
+		blitCopyMask(
+			pVehicle->pAuxBob->sSource.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
+			g_pWorldMainBfr->pBuffer, uwX, uwY,
+			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
+			pVehicle->pAuxBob->sSource.pMask->pData
 		);
 }
 
 void vehicleUndraw(tVehicle *pVehicle) {
-	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
-		bobUndraw(
-			pVehicle->pAuxBob,
-			g_pWorldMainBfr->pBuffer
-		);
-	bobUndraw(
-		pVehicle->pBob,
-		g_pWorldMainBfr->pBuffer
-	);
+	bobUndraw(pVehicle->pBob,	g_pWorldMainBfr->pBuffer);
 }
