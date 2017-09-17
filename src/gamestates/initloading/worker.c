@@ -80,6 +80,9 @@ void workerDestroy(void) {
 void workerCleanup(void) {
 	projectileListDestroy();
 	vehicleTypesDestroy();
+
+	// Cleanup after turrets
 	bitmapDestroy(g_sBrownTurretSource.pBitmap);
-	bitmapMaskDestroy(g_sBrownTurretSource.pMask);
+	if(g_sBrownTurretSource.pMask)
+		bitmapMaskDestroy(g_sBrownTurretSource.pMask);
 }

@@ -67,7 +67,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 	if(isWithMask) {
 		// Create huge-ass mask
 		pMask = bitmapMaskCreate(
-			uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT
+			uwFrameWidth, pBitmap->BytesPerRow * 8 * VEHICLE_BODY_ANGLE_COUNT
 		);
 		if(!pMask) {
 			logWrite("ERR: Couldn't allocate vehicle mask\n");
@@ -84,9 +84,8 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		}
 		fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
 		fread(
-			pMask->pData, sizeof(UWORD),
-			(uwFrameWidth>>4) * (uwFrameWidth),
-			pMaskFile
+			pMask->pData, sizeof(UWORD) * (pBitmap->BytesPerRow >> 1),
+			uwFrameWidth, pMaskFile
 		);
 		fclose(pMaskFile);
 		pMaskFile = 0;
@@ -105,14 +104,15 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 
 		if(isWithMask) {
 			// Add mask bit to chunky pixels
-			uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4)];
+			// TODO x loop
+			uwMaskChunk = pMask->pData[y * (pBitmap->BytesPerRow>>1)];
 			for(x = 0; x != 16; ++x) {
 				if(uwMaskChunk & (1 << 15))
 					pChunkySrc[y*uwFrameWidth + x] |= 1 << pBitmap->Depth;
 				uwMaskChunk <<= 1;
 			}
 			if(uwFrameWidth > 16) {
-				uwMaskChunk = pMask->pData[y*(uwFrameWidth>>4) + 1];
+				uwMaskChunk = pMask->pData[y * (pBitmap->BytesPerRow>>1) + 1];
 				for(x = 0; x != 16; ++x) {
 					if(uwMaskChunk & (1 << 15))
 						pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << pBitmap->Depth;
@@ -148,14 +148,18 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		if(isWithMask) {
 			// Extract mask from rotated chunky & write it to planar mask
 			uwMaskChunk = 0;
-			uwFrameOffs = ubFrame * uwFrameWidth * (uwFrameWidth>>4);
+			uwFrameOffs = ubFrame * uwFrameWidth * (pBitmap->BytesPerRow>>1);
 			for(y = 0; y != uwFrameWidth; ++y) {
 				for(x = 0; x != uwFrameWidth; ++x) {
 					uwMaskChunk <<= 1;
 					if(pChunkyRotated[x + y*uwFrameWidth] & (1 << pBitmap->Depth))
 						uwMaskChunk = (uwMaskChunk | 1);
 					if((x & 15) == 15) {
-						pMask->pData[uwFrameOffs + y*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
+						if(bitmapIsInterleaved(pBitmap))
+							for(UWORD d = 0; d != pBitmap->Depth; ++d)
+								pMask->pData[uwFrameOffs + y*(pBitmap->BytesPerRow>>1) + d*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
+						else
+							pMask->pData[uwFrameOffs + y*(pBitmap->BytesPerRow>>1) + (x>>4)] = uwMaskChunk;
 						uwMaskChunk = 0;
 					}
 				}
