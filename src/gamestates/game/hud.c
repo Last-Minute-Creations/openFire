@@ -8,8 +8,9 @@
 #include "gamestates/game/player.h"
 #include "vehicletypes.h"
 
-tVPort *s_pHudVPort;
-tSimpleBufferManager *s_pHudBfr;
+static tVPort *s_pHudVPort;
+static tSimpleBufferManager *s_pHudBfr;
+static tBitMap *s_pHudDriving, *s_pHudSelecting;
 
 void hudCreate(void) {
 	s_pHudVPort = vPortCreate(0,
@@ -21,6 +22,7 @@ void hudCreate(void) {
 	s_pHudBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pHudVPort,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPHUD_POS,
+		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
 		TAG_DONE
 	);
 
@@ -51,7 +53,14 @@ void hudCreate(void) {
 	);
 
 	// Initial draw on buffer
-	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud_bg.bm", 0, 0);
+	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
+	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
+	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
+	blitCopy(
+		s_pHudDriving, 0, 0, s_pHudBfr->pBuffer, 2, 2,
+		bitmapGetByteWidth(s_pHudDriving) << 3,
+		s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
+	);
 }
 
 void drawHudBar(
@@ -59,8 +68,8 @@ void drawHudBar(
 ) {
 	// TODO draw rects on only one bitplane
 	const UWORD uwBarHeight = 4;
-	const UWORD uwBarX = 48;
-	const UWORD uwMaxBarWidth = 48;
+	const UWORD uwBarX = 71;
+	const UWORD uwMaxBarWidth = 32;
 
 	// Calculate color length
 	UWORD uwCurrBarWidth = (uwMaxBarWidth*uwValue)/ uwMaxValue;
@@ -86,14 +95,16 @@ void hudUpdate(void) {
 	tVehicleType *pType = &g_pVehicleTypes[g_pLocalPlayer->ubCurrentVehicleType];
 
 	// Draw bars
-	const UWORD uwBarLifeY = 14;
-	const UWORD uwBarAmmoY = 30;
-	const UWORD uwBarFuelY = 46;
+	const UWORD uwBarLifeY = 5;
+	const UWORD uwBarAmmoY = 13;
+	const UWORD uwBarFuelY = 21;
 	drawHudBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
 	drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
 	drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
 }
 
 void hudDestroy(void) {
+	bitmapDestroy(s_pHudDriving);
+	bitmapDestroy(s_pHudSelecting);
 	// VPort & simpleBuffer are destroyed by g_pGameView
 }

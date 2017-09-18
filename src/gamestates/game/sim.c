@@ -1,13 +1,12 @@
 #include "gamestates/game/sim.h"
 #include <ace/types.h>
+#include <ace/managers/key.h>
 #include "gamestates/game/player.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/world.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/turret.h"
-
-#include <ace/managers/key.h>
 
 void simPlayerVehicle(tPlayer *pPlayer) {
 	tVehicle *pVehicle;
