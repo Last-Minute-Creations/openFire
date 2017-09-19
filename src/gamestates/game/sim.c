@@ -3,10 +3,10 @@
 #include <ace/managers/key.h>
 #include "gamestates/game/player.h"
 #include "gamestates/game/vehicle.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/game.h"
 
 void simPlayerVehicle(tPlayer *pPlayer) {
 	tVehicle *pVehicle;
@@ -88,7 +88,7 @@ void simPlayers(void) {
 				}
 				else {
 					pPlayer->ubState = PLAYER_STATE_BUNKERED;
-					worldHide();
+					// TODO: something
 				}
 				continue;
 			case PLAYER_STATE_SURFACING:

@@ -5,11 +5,11 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/rand.h>
 #include <ace/utils/custom.h>
-#include "gamestates/game/world.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
+#include "gamestates/game/game.h"
 
 #define TURRET_SPRITE_OFFS    ((1 << MAP_TILE_SIZE) - TURRET_SPRITE_SIZE)
 

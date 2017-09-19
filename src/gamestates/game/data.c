@@ -3,7 +3,6 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/player.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/gamemath.h"
 
 static UBYTE s_pDataBfr[DATA_MAX_PACKET_SIZE];

@@ -4,7 +4,6 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/player.h"
 #include "vehicletypes.h"
 

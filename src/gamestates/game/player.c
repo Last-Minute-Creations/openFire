@@ -4,7 +4,6 @@
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
 #include "gamestates/game/vehicle.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/explosions.h"
 
 void playerListCreate(UBYTE ubPlayerLimit) {
@@ -97,8 +96,9 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleUnset(&pPlayer->sVehicle);
 	pPlayer->ubState = PLAYER_STATE_BUNKERED;
-	if(pPlayer == g_pLocalPlayer)
-		worldHide();
+	if(pPlayer == g_pLocalPlayer) {
+		// TODO something
+	}
 }
 
 void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
