@@ -17,10 +17,8 @@
 #include "gamestates/game/data.h"
 #include "gamestates/game/sim.h"
 #include "gamestates/game/hud.h"
-
+#include "gamestates/game/cursor.h"
 #include "gamestates/game/turret.h"
-
-UWORD g_uwMouseX, g_uwMouseY;
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -37,9 +35,6 @@ UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
 
-// Crosshair
-tBitMap *s_pCrosshair;
-
 // Speed logging
 #define SPEED_LOG
 tAvg *s_pDrawAvgExplosions;
@@ -48,12 +43,6 @@ tAvg *s_pDrawAvgVehicles;
 tAvg *s_pUndrawAvgExplosions;
 tAvg *s_pUndrawAvgProjectiles;
 tAvg *s_pUndrawAvgVehicles;
-
-void updateCrosshair(void) {
-	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	pSpriteBfr[0] = ((0x2B-4 + g_uwMouseY   ) << 8) | 64-(4>>1) + (g_uwMouseX >> 1);
-	pSpriteBfr[1] = ((0x2B-4 + g_uwMouseY+11) << 8) |             (g_uwMouseX & 1);
-}
 
 void worldDraw(void) {
 	UBYTE ubPlayer;
@@ -162,7 +151,6 @@ void gsGameCreate(void) {
 	hudCreate();
 
 	// Load gfx
-	s_pCrosshair = bitmapCreateFromFile("data/crosshair.bm");
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
 	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
 
@@ -179,16 +167,8 @@ void gsGameCreate(void) {
 	);
 
 	// Crosshair stuff
-	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];
-	updateCrosshair();
-	copSetMove(&pCrossList[0].sMove, &pSprPtrs[2].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
-	copSetMove(&pCrossList[1].sMove, &pSprPtrs[2].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CROSS_POS],
-		2*sizeof(tCopCmd)
-	);
+	cursorCreate();
+	cursorSetConstraints(0, 0, 320, 192);
 
 	// Explosions
 	explosionsCreate();
@@ -229,6 +209,7 @@ void gsGameLoop(void) {
 		return;
 	}
 
+	cursorUpdate();
 	dataRecv();       // Receives steer requests & positions of other players
 	simPlayers();     // Simulates players: vehicle positions, death states, etc.
 	simTurrets();     // Simulates turrets: targeting, rotation & projectile spawn
@@ -255,7 +236,7 @@ void gsGameLoop(void) {
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 
-	updateCrosshair();
+	cursorUpdate();
 
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
@@ -266,11 +247,12 @@ void gsGameDestroy(void) {
 	custom.dmacon = BITSET | DMAF_DISK;
 	logBlockBegin("gsGameDestroy()");
 
+	cursorDestroy();
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
-	bitmapDestroy(s_pCrosshair);
+
 
 	#ifdef SPEED_LOG
 	logAvgDestroy(s_pUndrawAvgExplosions);

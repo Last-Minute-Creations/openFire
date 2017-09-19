@@ -68,14 +68,6 @@ void dataRecv(void) {
 	pReq->ubAction2     = mouseCheck(MOUSE_RMB);
 	pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
 
-	// Destination angle from mouse
-	g_uwMouseX = mouseGetX();
-	g_uwMouseY = mouseGetY();
-	if(g_uwMouseY >= WORLD_VPORT_HEIGHT) {
-		mouseMove(0, WORLD_VPORT_HEIGHT - g_uwMouseY - 1);
-		g_uwMouseY = WORLD_VPORT_HEIGHT-1;
-	}
-
 	pReq->ubDestAngle = getAngleBetweenPoints(
 		g_pLocalPlayer->sVehicle.fX, g_pLocalPlayer->sVehicle.fY,
 		g_pWorldCamera->uPos.sUwCoord.uwX + g_uwMouseX,

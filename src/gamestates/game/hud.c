@@ -10,6 +10,7 @@
 static tVPort *s_pHudVPort;
 static tSimpleBufferManager *s_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
+static UBYTE s_ubHudState;
 
 void hudCreate(void) {
 	s_pHudVPort = vPortCreate(0,
@@ -55,8 +56,17 @@ void hudCreate(void) {
 	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
 	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
 	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
+	hudChangeState(HUD_STATE_SELECTING);
+}
+
+void hudChangeState(UBYTE ubState) {
+	s_ubHudState = ubState;
+	tBitMap *pHudPanels[2];
+	pHudPanels[HUD_STATE_DRIVING] = s_pHudDriving;
+	pHudPanels[HUD_STATE_SELECTING] = s_pHudSelecting;
+
 	blitCopy(
-		s_pHudDriving, 0, 0, s_pHudBfr->pBuffer, 2, 2,
+		pHudPanels[ubState], 0, 0, s_pHudBfr->pBuffer, 2, 2,
 		bitmapGetByteWidth(s_pHudDriving) << 3,
 		s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
 	);
