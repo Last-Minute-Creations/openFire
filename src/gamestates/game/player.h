@@ -8,11 +8,12 @@
 
 #define PLAYER_DEATH_COOLDOWN 150
 
-#define PLAYER_STATE_OFF       0
-#define PLAYER_STATE_DEAD      1
-#define PLAYER_STATE_BUNKERED  2
-#define PLAYER_STATE_SURFACING 3
-#define PLAYER_STATE_DRIVING   4
+#define PLAYER_STATE_OFF       0 /* Offline */
+#define PLAYER_STATE_LIMBO     1 /* Dead / in bunker */
+#define PLAYER_STATE_SURFACING 2 /* Animation out of bunker */
+#define PLAYER_STATE_DRIVING   3 /* On map */
+#define PLAYER_STATE_PARKING   4 /* Changing angle to facing south */
+#define PLAYER_STATE_HIDING    5 /* Animating to bunker */
 
 typedef struct _tPlayer {
 	// General

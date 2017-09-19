@@ -54,7 +54,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		pPlayer = &g_pPlayers[i];
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
-		pPlayer->ubState = PLAYER_STATE_BUNKERED;
+		pPlayer->ubState = PLAYER_STATE_LIMBO;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
@@ -95,7 +95,7 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleUnset(&pPlayer->sVehicle);
-	pPlayer->ubState = PLAYER_STATE_BUNKERED;
+	pPlayer->ubState = PLAYER_STATE_HIDING;
 	if(pPlayer == g_pLocalPlayer) {
 		// TODO something
 	}
@@ -119,7 +119,7 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
-	pPlayer->ubState = PLAYER_STATE_DEAD;
+	pPlayer->ubState = PLAYER_STATE_LIMBO;
 	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
 }
 

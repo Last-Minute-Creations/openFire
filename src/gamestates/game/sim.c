@@ -82,15 +82,6 @@ void simPlayers(void) {
 		switch(pPlayer->ubState) {
 			case PLAYER_STATE_OFF:
 				continue;
-			case PLAYER_STATE_DEAD:
-				if(pPlayer->uwCooldown) {
-					--pPlayer->uwCooldown;
-				}
-				else {
-					pPlayer->ubState = PLAYER_STATE_BUNKERED;
-					// TODO: something
-				}
-				continue;
 			case PLAYER_STATE_SURFACING:
 				if(!pPlayer->uwCooldown)
 					pPlayer->ubState = PLAYER_STATE_DRIVING;
