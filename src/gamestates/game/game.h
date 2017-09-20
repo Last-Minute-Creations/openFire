@@ -44,14 +44,6 @@ extern UWORD g_uwSiloHighlightTileY;
 extern UWORD g_uwSiloHighlightTileX;
 extern tCameraManager *g_pWorldCamera;
 
-#define OF_KEY_FORWARD      KEY_W
-#define OF_KEY_BACKWARD     KEY_S
-#define OF_KEY_LEFT         KEY_A
-#define OF_KEY_RIGHT        KEY_D
-#define OF_KEY_ACTION1      KEY_F
-#define OF_KEY_ACTION2      KEY_R
-#define OF_KEY_ACTION3      KEY_V
-
 extern UBYTE g_ubActiveState;
 extern UWORD g_uwMouseX, g_uwMouseY;
 

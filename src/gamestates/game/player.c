@@ -3,8 +3,20 @@
 #include <ace/config.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
+#include <ace/managers/mouse.h>
+#include <ace/managers/key.h>
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/explosions.h"
+#include "gamestates/game/game.h"
+
+// Steer requests
+#define OF_KEY_FORWARD      KEY_W
+#define OF_KEY_BACKWARD     KEY_S
+#define OF_KEY_LEFT         KEY_A
+#define OF_KEY_RIGHT        KEY_D
+#define OF_KEY_ACTION1      KEY_F
+#define OF_KEY_ACTION2      KEY_R
+#define OF_KEY_ACTION3      KEY_V
 
 void playerListCreate(UBYTE ubPlayerLimit) {
 	UBYTE i;
@@ -121,6 +133,31 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
 	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+}
+
+void playerLocalProcessInput(void) {
+	switch(g_pLocalPlayer->ubState) {
+		case PLAYER_STATE_DRIVING: {
+			// Receive player's steer request
+			tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
+			pReq->ubForward     = keyCheck(OF_KEY_FORWARD);
+			pReq->ubBackward    = keyCheck(OF_KEY_BACKWARD);
+			pReq->ubLeft        = keyCheck(OF_KEY_LEFT);
+			pReq->ubRight       = keyCheck(OF_KEY_RIGHT);
+			pReq->ubAction1     = mouseCheck(MOUSE_LMB);
+			pReq->ubAction2     = mouseCheck(MOUSE_RMB);
+			pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
+
+			pReq->ubDestAngle = getAngleBetweenPoints(
+				g_pLocalPlayer->sVehicle.fX, g_pLocalPlayer->sVehicle.fY,
+				g_pWorldCamera->uPos.sUwCoord.uwX + g_uwMouseX,
+				g_pWorldCamera->uPos.sUwCoord.uwY + g_uwMouseY
+			);
+		} break;
+		case PLAYER_STATE_LIMBO: {
+			// TODO
+		} break;
+	}
 }
 
 tPlayer *g_pPlayers;

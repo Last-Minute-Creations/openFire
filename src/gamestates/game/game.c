@@ -70,7 +70,6 @@ void worldDraw(void) {
 	logAvgEnd(s_pDrawAvgExplosions);
 
 	turretUpdateSprites();
-	hudUpdate();
 
 	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
 }
@@ -101,11 +100,7 @@ void gsGameCreate(void) {
 
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
-
-	// Setup teams
 	teamsInit();
-
-	// Load map
 	mapCreate("data/maps/test2025.txt");
 
 	// Add players
@@ -198,11 +193,6 @@ void gsGameCreate(void) {
 	logBlockEnd("gsGameCreate()");
 }
 
-void worldProcessInput(void) {
-	if(keyUse(KEY_C))
-		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "bufDump.bmp");
-}
-
 void gsGameLoop(void) {
 	if(keyCheck(KEY_ESCAPE)) {
 		gamePopState(); // Pop to threaded loader so it can free stuff
@@ -210,16 +200,20 @@ void gsGameLoop(void) {
 	}
 
 	cursorUpdate();
-	dataRecv();       // Receives steer requests & positions of other players
-	simPlayers();     // Simulates players: vehicle positions, death states, etc.
-	simTurrets();     // Simulates turrets: targeting, rotation & projectile spawn
-	simProjectiles(); // Simulates projectiles: new positions, damage
-	dataSend();       // Sends data to other players
+	dataRecv();                // Receives positions of other players from server
+	playerLocalProcessInput(); // Steer requests & limbo
+	simPlayers();              // Players: vehicle positions, death states, etc.
+	simTurrets();              // Turrets: targeting, rotation & projectile spawn
+	simProjectiles();          // Projectiles: new positions, damage
+	dataSend();                // Sends data to server
 
-	// World-specific & steering-irrelevant player input
-	worldProcessInput();
+	// Steering-irrelevant player input
+	if(keyUse(KEY_C))
+		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "bufDump.bmp");
+	if(keyUse(KEY_L))
+		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 
-	// TODO: Update HUD vport
+	hudUpdate();
 
 	// Update main vport
 	vPortWaitForEnd(s_pWorldMainVPort);
@@ -232,11 +226,6 @@ void gsGameLoop(void) {
 	}
 	mapUpdateTiles();
 	worldDraw();
-
-	if(keyUse(KEY_L))
-		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
-
-	cursorUpdate();
 
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
@@ -253,7 +242,6 @@ void gsGameDestroy(void) {
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
 
-
 	#ifdef SPEED_LOG
 	logAvgDestroy(s_pUndrawAvgExplosions);
 	logAvgDestroy(s_pUndrawAvgProjectiles);
@@ -264,7 +252,6 @@ void gsGameDestroy(void) {
 	#endif
 
 	mapDestroy();
-
 	playerListDestroy();
 
 	logBlockEnd("gsGameDestroy()");

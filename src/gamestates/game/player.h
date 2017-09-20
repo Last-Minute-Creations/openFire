@@ -74,6 +74,8 @@ void playerSteerVehicle(
 	IN tPlayer *pPlayer
 );
 
+void playerLocalProcessInput(void);
+
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
