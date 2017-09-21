@@ -83,10 +83,10 @@ void simPlayers(void) {
 			case PLAYER_STATE_OFF:
 				continue;
 			case PLAYER_STATE_SURFACING:
-				if(!pPlayer->uwCooldown)
-					pPlayer->ubState = PLAYER_STATE_DRIVING;
-				else
+				if(pPlayer->uwCooldown)
 					--pPlayer->uwCooldown;
+				else
+					pPlayer->ubState = PLAYER_STATE_DRIVING;
 				continue;
 			case PLAYER_STATE_DRIVING:
 				simPlayerVehicle(pPlayer);

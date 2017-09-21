@@ -115,7 +115,10 @@ void playerHideInBunker(tPlayer *pPlayer) {
 
 void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
-		// TODO explosion
+		explosionsAdd(
+			pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
+			pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
+		);
 		playerLoseVehicle(pPlayer);
 	}
 	else
@@ -124,10 +127,6 @@ void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 
 void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
-	explosionsAdd(
-		pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
-		pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
-	);
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
@@ -160,13 +159,15 @@ void playerLocalProcessInput(void) {
 		case PLAYER_STATE_LIMBO: {
 			if(mouseUse(MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
-				const UWORD uwRectWidth = 28;
-				const UWORD uwRectHeight = 20;
-				const UWORD uwTankX = 2 + 5;
-				const UWORD uwTankY = uwHudOffs + 5;
+				tUwRect sTankRect = {
+					.uwX = 2 + 5, .uwY = uwHudOffs + 5, .uwWidth = 28, .uwHeight = 20
+				};
 				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
-				#define inRect(x, y, x1, y1, x2, y2) (x >= x1 && x <= x2 && y >= y1 && y <= y2)
-				if(inRect(uwMouseX, uwMouseY, uwTankX, uwTankY, uwTankX + uwRectWidth, uwTankY + uwRectHeight)) {
+				#define inRect(x, y, r) (                \
+					x >= r.uwX && x <= r.uwX + r.uwWidth   \
+					&& y >= r.uwY && y <= r.uwY+r.uwHeight \
+				)
+				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
 					gameEnterDriving();
 				}

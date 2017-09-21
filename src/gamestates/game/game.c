@@ -77,7 +77,8 @@ void worldDraw(void) {
 	// Vehicles
 	logAvgBegin(s_pDrawAvgVehicles);
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
-		vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
+		if(g_pPlayers[ubPlayer].ubState == PLAYER_STATE_DRIVING)
+			vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
 	logAvgEnd(s_pDrawAvgVehicles);
 
 	logAvgBegin(s_pDrawAvgProjectiles);
@@ -101,7 +102,8 @@ void worldUndraw(void) {
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
-		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
+		if(g_pPlayers[ubPlayer].ubState == PLAYER_STATE_DRIVING)
+			vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Silo highlight
 	if(s_ubWasSiloHighlighted)
