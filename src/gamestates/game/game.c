@@ -20,6 +20,7 @@
 #include "gamestates/game/hud.h"
 #include "gamestates/game/cursor.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/spawn.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -52,8 +53,10 @@ void gameEnterLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
-	uwLimboX = max(0, (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_WIDTH/2));
-	uwLimboY = max(0, (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_HEIGHT/2));
+	g_ubLocalPlayerSpawnIdx = spawnFindNearest(0, 0, g_pLocalPlayer->ubTeam);
+
+	uwLimboX = MAX(0, (g_pSpawns[g_ubLocalPlayerSpawnIdx].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_WIDTH/2));
+	uwLimboY = MAX(0, (g_pSpawns[g_ubLocalPlayerSpawnIdx].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_HEIGHT/2));
 }
 
 void gameEnterDriving(void) {
@@ -249,8 +252,8 @@ void gsGameLoop(void) {
 	else {
 		cameraMoveBy(
 			g_pWorldCamera,
-			2 * sgn(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX),
-			2 * sgn(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY)
+			2 * SGN(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX),
+			2 * SGN(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY)
 		);
 	}
 	mapUpdateTiles();

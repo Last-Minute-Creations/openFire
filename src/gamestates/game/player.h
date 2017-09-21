@@ -14,7 +14,7 @@
 #define PLAYER_STATE_SURFACING 2 /* Animation out of bunker */
 #define PLAYER_STATE_DRIVING   3 /* On map */
 #define PLAYER_STATE_PARKING   4 /* Changing angle to facing south */
-#define PLAYER_STATE_HIDING    5 /* Animating to bunker */
+#define PLAYER_STATE_BUNKERING 5 /* Animating to bunker */
 
 typedef struct _tPlayer {
 	// General
@@ -26,12 +26,12 @@ typedef struct _tPlayer {
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
 
-	// Vehicles available
-	UBYTE pVehiclesLeft[4];
-
-	// Stats for score table displaying
+	// Stats for score table displaying - for CTF
 	UBYTE ubHasFlag;
-	UBYTE pVehiclesKilled[4];
+	// Vehicles available - for last man standing
+	UBYTE pVehiclesLeft[4];
+	// Score - kills?
+	UWORD uwScore;
 } tPlayer;
 
 void playerListCreate(
@@ -79,6 +79,7 @@ void playerLocalProcessInput(void);
 
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
+extern UBYTE g_ubLocalPlayerSpawnIdx;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
 extern UBYTE g_ubPlayerCount;
 

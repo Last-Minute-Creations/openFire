@@ -41,7 +41,7 @@
 
 typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx
-	UBYTE ubData; ///< Data field. For buildings/gates used as idx in obj array.
+	UBYTE ubData; ///< Data field. For buildings/gates/spawns used as array idx.
 } tTile;
 
 typedef struct _tTileCoord {

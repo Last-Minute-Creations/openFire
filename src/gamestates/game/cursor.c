@@ -18,8 +18,8 @@ void cursorSetConstraints(UWORD uwXLo, UWORD uwYLo, UWORD uwXHi, UWORD uwYHi) {
 
 void cursorUpdate(void) {
 	// Destination angle from mouse
-	g_uwMouseX = clamp(mouseGetX(), s_uwXLo, s_uwXHi);
-	g_uwMouseY = clamp(mouseGetY(), s_uwYLo, s_uwYHi);
+	g_uwMouseX = CLAMP(mouseGetX(), s_uwXLo, s_uwXHi);
+	g_uwMouseY = CLAMP(mouseGetY(), s_uwYLo, s_uwYHi);
 	mouseSetPosition(g_uwMouseX, g_uwMouseY);
 	const UWORD uwCrossHeight = 11;
 	UWORD uwVStart =0x2B-4 + g_uwMouseY;
