@@ -175,7 +175,7 @@ void turretProcess(void) {
 			wDy = pPlayer->sVehicle.fY - pTurret->uwY;
 			if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
 				continue; // If too far, don't do costly sqrt calculations
-			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(wDx*uwDx + wDy*uwDy)));
+			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(wDx*wDx + wDy*wDy)));
 			if(uwDist < TURRET_MIN_DISTANCE && uwDist <= uwClosestDist) {
 				pClosestPlayer = pPlayer;
 				uwClosestDist = uwDist;
