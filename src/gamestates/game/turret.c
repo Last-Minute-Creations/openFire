@@ -146,7 +146,8 @@ void turretProcess(void) {
 	UBYTE ubPlayerIdx;
 	UWORD uwTurretIdx;
 	tPlayer *pPlayer, *pClosestPlayer;
-	UWORD uwClosestDist, uwDist, uwDx, uwDy;
+	UWORD uwClosestDist, uwDist;
+	WORD wDx, wDy;
 	UBYTE ubDestAngle;
 	tTurret *pTurret;
 
@@ -170,9 +171,11 @@ void turretProcess(void) {
 				continue;
 
 			// Calculate distance between turret & player
-			uwDx = pPlayer->sVehicle.fX - pTurret->uwX;
-			uwDy = pPlayer->sVehicle.fY - pTurret->uwY;
-			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(uwDx*uwDx + uwDy*uwDy)));
+			wDx = pPlayer->sVehicle.fX - pTurret->uwX;
+			wDy = pPlayer->sVehicle.fY - pTurret->uwY;
+			if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
+				continue; // If too far, don't do costly sqrt calculations
+			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(wDx*uwDx + wDy*uwDy)));
 			if(uwDist < TURRET_MIN_DISTANCE && uwDist <= uwClosestDist) {
 				pClosestPlayer = pPlayer;
 				uwClosestDist = uwDist;
