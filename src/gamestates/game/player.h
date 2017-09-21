@@ -7,6 +7,7 @@
 #define PLAYER_NAME_MAX        20
 
 #define PLAYER_DEATH_COOLDOWN 150
+#define PLAYER_SURFACING_COOLDOWN 200
 
 #define PLAYER_STATE_OFF       0 /* Offline */
 #define PLAYER_STATE_LIMBO     1 /* Dead / in bunker */

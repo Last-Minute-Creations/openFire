@@ -1,6 +1,7 @@
 #include "gamestates/game/game.h"
 #include <math.h>
 #include <hardware/intbits.h> // INTB_COPER
+#include <ace/macros.h>
 #include <ace/managers/copper.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -51,14 +52,15 @@ void gameEnterLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
-	uwLimboX = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
-	uwLimboY = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	uwLimboX = max(0, (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_WIDTH/2));
+	uwLimboY = max(0, (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_HEIGHT/2));
 }
 
 void gameEnterDriving(void) {
 	cursorSetConstraints(0, 0, 320, 191);
 	hudChangeState(HUD_STATE_DRIVING);
 	g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
+	g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 }
 
 void worldDraw(void) {
@@ -242,8 +244,13 @@ void gsGameLoop(void) {
 		uwLocalY = g_pLocalPlayer->sVehicle.fY;
 		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
-	else
-		cameraCenterAt(g_pWorldCamera, uwLimboX, uwLimboY);
+	else {
+		cameraMoveBy(
+			g_pWorldCamera,
+			2 * sgn(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX),
+			2 * sgn(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY)
+		);
+	}
 	mapUpdateTiles();
 	worldDraw();
 

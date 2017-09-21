@@ -132,7 +132,10 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
-	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+	if(pPlayer == g_pLocalPlayer) {
+		pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+		gameEnterLimbo();
+	}
 }
 
 void playerLocalProcessInput(void) {
