@@ -20,15 +20,21 @@ void cursorUpdate(void) {
 	// Destination angle from mouse
 	g_uwMouseX = clamp(mouseGetX(), s_uwXLo, s_uwXHi);
 	g_uwMouseY = clamp(mouseGetY(), s_uwYLo, s_uwYHi);
-	mouseMove(g_uwMouseX, g_uwMouseY);
+	mouseSetPosition(g_uwMouseX, g_uwMouseY);
+	const UWORD uwCrossHeight = 11;
+	UWORD uwVStart =0x2B-4 + g_uwMouseY;
+	UWORD uwVStop = uwVStart + uwCrossHeight;
 
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	pSpriteBfr[0] = ((0x2B-4 + g_uwMouseY   ) << 8) | 64-(4>>1) + (g_uwMouseX >> 1);
-	pSpriteBfr[1] = ((0x2B-4 + g_uwMouseY+11) << 8) |             (g_uwMouseX & 1);
+	pSpriteBfr[0] = (uwVStart << 8) | (64-(4>>1) + (g_uwMouseX >> 1));
+	pSpriteBfr[1] = (uwVStop << 8)
+		| (((uwVStart & (1 << 8)) >> 8) << 2)
+		| (((uwVStop  & (1 << 8)) >> 8) << 1)
+		| (g_uwMouseX & 1);
 }
 
 void cursorCreate(void) {
-	cursorSetConstraints(0, 0, 320, 256);
+	cursorSetConstraints(0, 0, 320, 255);
 	s_pCrosshair = bitmapCreateFromFile("data/crosshair.bm");
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
 	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];

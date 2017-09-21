@@ -155,7 +155,19 @@ void playerLocalProcessInput(void) {
 			);
 		} break;
 		case PLAYER_STATE_LIMBO: {
-			// TODO
+			if(mouseUse(MOUSE_LMB)) {
+				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
+				const UWORD uwRectWidth = 28;
+				const UWORD uwRectHeight = 20;
+				const UWORD uwTankX = 2 + 5;
+				const UWORD uwTankY = uwHudOffs + 5;
+				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
+				#define inRect(x, y, x1, y1, x2, y2) (x >= x1 && x <= x2 && y >= y1 && y <= y2)
+				if(inRect(uwMouseX, uwMouseY, uwTankX, uwTankY, uwTankX + uwRectWidth, uwTankY + uwRectHeight)) {
+					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
+					gameEnterDriving();
+				}
+			}
 		} break;
 	}
 }

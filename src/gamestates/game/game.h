@@ -51,4 +51,7 @@ void gsGameCreate(void);
 void gsGameLoop(void);
 void gsGameDestroy(void);
 
+void gameEnterLimbo(void);
+void gameEnterDriving(void);
+
 #endif

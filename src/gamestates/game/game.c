@@ -44,6 +44,23 @@ tAvg *s_pUndrawAvgExplosions;
 tAvg *s_pUndrawAvgProjectiles;
 tAvg *s_pUndrawAvgVehicles;
 
+UWORD uwLimboX;
+UWORD uwLimboY;
+
+void gameEnterLimbo(void) {
+	cursorSetConstraints(0,0, 320, 255);
+	hudChangeState(HUD_STATE_SELECTING);
+
+	uwLimboX = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	uwLimboY = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+}
+
+void gameEnterDriving(void) {
+	cursorSetConstraints(0, 0, 320, 191);
+	hudChangeState(HUD_STATE_DRIVING);
+	g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
+}
+
 void worldDraw(void) {
 	UBYTE ubPlayer;
 
@@ -185,6 +202,7 @@ void gsGameCreate(void) {
 	// Now that world copperlist is created, prepare map logic & do the first draw
 	mapGenerateLogic();
 	mapRedraw();
+	gameEnterLimbo();
 
 	// Get some speed out of unnecessary DMA
 	custom.dmacon = BITCLR | DMAF_DISK;
@@ -224,6 +242,8 @@ void gsGameLoop(void) {
 		uwLocalY = g_pLocalPlayer->sVehicle.fY;
 		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
+	else
+		cameraCenterAt(g_pWorldCamera, uwLimboX, uwLimboY);
 	mapUpdateTiles();
 	worldDraw();
 
