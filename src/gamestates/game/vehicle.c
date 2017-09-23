@@ -20,8 +20,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
-	pVehicle->fX = (g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
-	pVehicle->fY = (g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	pVehicle->fX = (g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pVehicle->fY = (g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pVehicle->ubBodyAngle = ANGLE_90;
 	pVehicle->ubTurretAngle = ANGLE_90;
 	pVehicle->ubBaseAmmo = pVehicle->pType->ubMaxBaseAmmo;

@@ -16,7 +16,6 @@
 #include "gamestates/game/team.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/data.h"
-#include "gamestates/game/sim.h"
 #include "gamestates/game/hud.h"
 #include "gamestates/game/cursor.h"
 #include "gamestates/game/turret.h"
@@ -55,7 +54,7 @@ void gameEnterLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
-	g_pLocalPlayer->ubSpawnIdx = spawnFindNearest(0, 0, g_pLocalPlayer->ubTeam);
+	g_pLocalPlayer->ubSpawnIdx = spawnGetNearest(0, 0, g_pLocalPlayer->ubTeam);
 
 	uwLimboX = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_WIDTH/2));
 	uwLimboY = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_HEIGHT/2));
@@ -163,8 +162,8 @@ void gsGameCreate(void) {
 	);
 	g_pWorldMainBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
-		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_uwMapTileWidth << MAP_TILE_SIZE,
-		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_uwMapTileHeight << MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_fubMapTileWidth << MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_fubMapTileHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
 		TAG_DONE
@@ -239,9 +238,10 @@ void gsGameLoop(void) {
 	cursorUpdate();
 	dataRecv();                // Receives positions of other players from server
 	playerLocalProcessInput(); // Steer requests & limbo
-	simPlayers();              // Players: vehicle positions, death states, etc.
-	simTurrets();              // Turrets: targeting, rotation & projectile spawn
-	simProjectiles();          // Projectiles: new positions, damage
+	spawnSim();
+	playerSim();               // Players: vehicle positions, death states, etc.
+	turretSim();               // Turrets: targeting, rotation & projectile spawn
+	projectileSim();           // Projectiles: new positions, damage
 	dataSend();                // Sends data to server
 
 	// Steering-irrelevant player input

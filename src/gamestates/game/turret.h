@@ -38,7 +38,7 @@ void turretDestroy(
 	IN UWORD uwIdx
 );
 
-void turretProcess(void);
+void turretSim(void);
 
 void turretUpdateSprites(void);
 

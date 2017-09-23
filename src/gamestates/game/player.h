@@ -78,6 +78,11 @@ void playerSteerVehicle(
 
 void playerLocalProcessInput(void);
 
+void playerSim(void);
+void playerSimVehicle(
+	IN tPlayer *pPlayer
+);
+
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server

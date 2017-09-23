@@ -11,7 +11,7 @@
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/game.h"
 
-#define TURRET_SPRITE_OFFS    ((1 << MAP_TILE_SIZE) - TURRET_SPRITE_SIZE)
+#define TURRET_SPRITE_OFFS    (MAP_FULL_TILE - TURRET_SPRITE_SIZE)
 
 #define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
@@ -26,14 +26,14 @@ void turretListCreate(void) {
 	int i, t;
 	logBlockBegin("turretListCreate()");
 
-	s_uwMaxTurrets = (g_uwMapTileWidth/2 + 1) * g_uwMapTileHeight;
+	s_uwMaxTurrets = (g_fubMapTileWidth/2 + 1) * g_fubMapTileHeight;
 	s_pTurretList = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_uwMapTileWidth);
-	for(i = 0; i != g_uwMapTileWidth; ++i) {
-		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_uwMapTileHeight);
-		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_uwMapTileHeight);
+	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_fubMapTileWidth);
+	for(i = 0; i != g_fubMapTileWidth; ++i) {
+		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_fubMapTileHeight);
+		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_fubMapTileHeight);
 	}
 
 	// Attach sprites
@@ -79,9 +79,9 @@ void turretListDestroy(void) {
 	memFree(s_pTurretList, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	for(int i = 0; i != g_uwMapTileWidth; ++i)
-		memFree(s_pTurretTiles[i], sizeof(UWORD) * g_uwMapTileHeight);
-	memFree(s_pTurretTiles, sizeof(UWORD*) * g_uwMapTileWidth);
+	for(int i = 0; i != g_fubMapTileWidth; ++i)
+		memFree(s_pTurretTiles[i], sizeof(UWORD) * g_fubMapTileHeight);
+	memFree(s_pTurretTiles, sizeof(UWORD*) * g_fubMapTileWidth);
 
 	logAvgDestroy(s_pAvg);
 
@@ -107,8 +107,8 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 
 	// Initial values
 	tTurret *pTurret = &s_pTurretList[i];
-	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
-	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + (1 << MAP_TILE_SIZE)/2;
+	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->ubTeam = ubTeam;
 	pTurret->ubAngle = ANGLE_90;
 	pTurret->ubCooldown = 0;
@@ -142,7 +142,7 @@ void turretDestroy(UWORD uwIdx) {
 	pTurret->uwX = 0;
 }
 
-void turretProcess(void) {
+void turretSim(void) {
 	UBYTE ubPlayerIdx;
 	UWORD uwTurretIdx;
 	tPlayer *pPlayer, *pClosestPlayer;
@@ -263,8 +263,8 @@ void turretUpdateSprites(void) {
 	UWORD uwCameraY = g_pWorldCamera->uPos.sUwCoord.uwY;
 	// This is equivalent to number of cols/rows trimmed by view, if negative
 	// OffsX needs to be even 'cuz sprite pos lsbit is always 0
-	wSpriteOffsX = ((TURRET_SPRITE_OFFS>>1) - (uwCameraX & ((1 << MAP_TILE_SIZE) -1))) & 0xfffe;
-	wSpriteOffsY = (TURRET_SPRITE_OFFS>>1) - (uwCameraY & ((1 << MAP_TILE_SIZE) -1));
+	wSpriteOffsX = ((TURRET_SPRITE_OFFS>>1) - (uwCameraX & (MAP_FULL_TILE -1))) & 0xfffe;
+	wSpriteOffsY = (TURRET_SPRITE_OFFS>>1) - (uwCameraY & (MAP_FULL_TILE -1));
 
 	// Tile range to be checked
 	// If last sprite begins just at bottom-right end of screen, it garbles

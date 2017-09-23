@@ -1,5 +1,4 @@
 #include "gamestates/game/spawn.h"
-#include <stdint.h>
 #include <ace/macros.h>
 #include <ace/managers/log.h>
 #include <ace/managers/blit.h>
@@ -48,8 +47,8 @@ void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 	g_pSpawns[ubSpawnIdx].ubTeam = ubTeam;
 }
 
-UBYTE spawnFindNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
-	UBYTE ubNearestIdx = 0xFF;
+UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
+	UBYTE ubNearestIdx = SPAWN_INVALID;
 	UWORD uwNearestDist = 0xFF;
 	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
 		if(g_pSpawns[i].ubTeam != ubTeam)
@@ -65,6 +64,14 @@ UBYTE spawnFindNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 	return ubNearestIdx;
 }
 
+UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
+	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
+		if(g_pSpawns[i].ubTileX == ubTileX || g_pSpawns[i].ubTileY == ubTileY)
+			return i;
+	}
+	return SPAWN_INVALID;
+}
+
 void spawnSetBusy(UBYTE ubSpawnIdx, UBYTE ubBusyType, UBYTE ubVehicleType) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
 	pSpawn->ubBusy = ubBusyType;
@@ -73,18 +80,38 @@ void spawnSetBusy(UBYTE ubSpawnIdx, UBYTE ubBusyType, UBYTE ubVehicleType) {
 	// TODO capturing
 }
 
+void spawnSim(void) {
+	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
+		tSpawn *pSpawn = &g_pSpawns[i];
+		if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
+			if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN) {
+				++pSpawn->ubFrame;
+				logWrite("Sim: incremented to %hhu\n", pSpawn->ubFrame);
+			}
+			else {
+				pSpawn->ubBusy = SPAWN_BUSY_NOT;
+				logWrite("Sim: not busy anymore\n");
+			}
+		}
+		// TODO capturing
+	}
+}
+
 void spawnAnimate(UBYTE ubSpawnIdx) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
 	UBYTE ubFrameIdx;
+	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
+		return; // Most likely
 	if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
 		if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN) {
 			mapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
-			pSpawn->ubBusy = SPAWN_BUSY_NOT;
+			logWrite("Refreshed tile\n");
 		}
 		else {
 			UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
 			if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
 				ubFrameIdx = 5 - ubFrameIdx;
+			logWrite("Animating with frame %hhu\n", ubFrameIdx);
 			blitCopyAligned(
 				pSpawn->ubTeam == TEAM_GREEN ? s_pGreenAnims : s_pBrownAnims,
 				0, ubFrameIdx << MAP_TILE_SIZE,
@@ -93,7 +120,6 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 				MAP_FULL_TILE, MAP_FULL_TILE
 			);
 		}
-		++pSpawn->ubFrame;
 	}
 	// TODO capturing
 }

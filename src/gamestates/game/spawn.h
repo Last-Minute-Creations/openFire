@@ -8,6 +8,8 @@
 #define SPAWN_BUSY_SURFACING 2
 #define SPAWN_BUSY_BUNKERING 3
 
+#define SPAWN_INVALID 0xFF
+
 typedef struct _tSpawn {
 	UBYTE ubTileY;
 	UBYTE ubTileX;
@@ -34,10 +36,15 @@ void spawnCapture(
 	IN UBYTE ubTeam
 );
 
-UBYTE spawnFindNearest(
+UBYTE spawnGetNearest(
 	IN UBYTE ubTileX,
 	IN UBYTE ubTileY,
 	IN UBYTE ubTeam
+);
+
+UBYTE spawnGetAt(
+	IN UBYTE ubTileX,
+	IN UBYTE ubTileY
 );
 
 void spawnSetBusy(
@@ -49,6 +56,8 @@ void spawnSetBusy(
 void spawnAnimate(
 	IN UBYTE ubSpawnIdx
 );
+
+void spawnSim(void);
 
 extern tSpawn *g_pSpawns;
 

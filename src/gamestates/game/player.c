@@ -8,6 +8,8 @@
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/game.h"
+#include "gamestates/game/spawn.h"
+#include "gamestates/game/team.h"
 
 // Steer requests
 #define OF_KEY_FORWARD      KEY_W
@@ -173,6 +175,99 @@ void playerLocalProcessInput(void) {
 				}
 			}
 		} break;
+	}
+}
+
+void playerSimVehicle(tPlayer *pPlayer) {
+	tVehicle *pVehicle;
+	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
+	UWORD uwSiloDx, uwSiloDy;
+	UBYTE ubTileType;
+
+	pVehicle = &pPlayer->sVehicle;
+
+	uwVx = pVehicle->fX;
+	uwVy = pVehicle->fY;
+	uwVTileX = uwVx >> MAP_TILE_SIZE;
+	uwVTileY = uwVy >> MAP_TILE_SIZE;
+	ubTileType = g_pMap[uwVTileX][uwVTileY].ubIdx;
+
+	// Drowning
+	if(ubTileType == MAP_LOGIC_WATER) {
+		playerLoseVehicle(pPlayer);
+		return;
+	}
+
+	// Process standing on silos
+	g_ubDoSiloHighlight = 0;
+	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
+		UBYTE ubSpawnIdx = spawnGetAt(uwVTileX, uwVTileY);
+		if(
+			ubSpawnIdx != SPAWN_INVALID && (
+				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_BUNKERING ||
+				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_SURFACING
+			)
+		) {
+			// If one of them is standing on moving platform, destroy vehicle
+			playerDamageVehicle(pPlayer, 200);
+		}
+		else if(
+			(pPlayer->ubTeam == TEAM_GREEN && ubTileType == MAP_LOGIC_SPAWN1) ||
+			(pPlayer->ubTeam == TEAM_BROWN && ubTileType == MAP_LOGIC_SPAWN2)
+		) {
+			// Standing on own, unoccupied silo
+			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
+			uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
+			if(uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18) {
+				// Standing on bunkerable position
+				if(pPlayer == g_pLocalPlayer) {
+					// If one of them is local player, save data for highlight draw
+					g_ubDoSiloHighlight = 1;
+					g_uwSiloHighlightTileX = uwVTileX;
+					g_uwSiloHighlightTileY = uwVTileY;
+				}
+				// Hide in bunker
+				if(pPlayer->sSteerRequest.ubAction1 && g_ubDoSiloHighlight) {
+					playerHideInBunker(pPlayer);
+					return;
+				}
+			}
+		}
+	}
+
+	// Calculate vehicle positions based on steer requests
+	switch(pPlayer->ubCurrentVehicleType) {
+		case VEHICLE_TYPE_TANK:
+			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			break;
+		case VEHICLE_TYPE_JEEP:
+			vehicleSteerJeep(pVehicle, &pPlayer->sSteerRequest);
+			break;
+	}
+}
+
+/**
+ * Updates players' state machine.
+ */
+void playerSim(void) {
+	UBYTE ubPlayer;
+	tPlayer *pPlayer;
+
+	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
+		pPlayer = &g_pPlayers[ubPlayer];
+		switch(pPlayer->ubState) {
+			case PLAYER_STATE_OFF:
+				continue;
+			case PLAYER_STATE_SURFACING:
+				if(pPlayer->uwCooldown)
+					--pPlayer->uwCooldown;
+				else
+					pPlayer->ubState = PLAYER_STATE_DRIVING;
+				continue;
+			case PLAYER_STATE_DRIVING:
+				playerSimVehicle(pPlayer);
+				continue;
+		}
 	}
 }
 

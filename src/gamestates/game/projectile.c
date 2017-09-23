@@ -145,7 +145,7 @@ void projectileDraw(void) {
 	}
 }
 
-void projectileProcess(void) {
+void projectileSim(void) {
 	tProjectile *pProjectile;
 	tVehicle *pVehicle;
 	UBYTE i;
