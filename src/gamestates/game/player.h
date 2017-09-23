@@ -7,7 +7,7 @@
 #define PLAYER_NAME_MAX        20
 
 #define PLAYER_DEATH_COOLDOWN 150
-#define PLAYER_SURFACING_COOLDOWN 200
+#define PLAYER_SURFACING_COOLDOWN 60
 
 #define PLAYER_STATE_OFF       0 /* Offline */
 #define PLAYER_STATE_LIMBO     1 /* Dead / in bunker */
@@ -26,6 +26,7 @@ typedef struct _tPlayer {
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
 
+	UBYTE ubSpawnIdx;
 	// Stats for score table displaying - for CTF
 	UBYTE ubHasFlag;
 	// Vehicles available - for last man standing
@@ -79,7 +80,6 @@ void playerLocalProcessInput(void);
 
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
-extern UBYTE g_ubLocalPlayerSpawnIdx;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
 extern UBYTE g_ubPlayerCount;
 

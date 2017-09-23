@@ -3,12 +3,10 @@
 
 #include <ace/types.h>
 
-#define SPAWN_MAX 10
-
 #define SPAWN_BUSY_NOT 0
-#define SPAWN_BUSY_SURFACING 1
-#define SPAWN_BUSY_BUNKERING 2
-#define SPAWN_BUSY_CAPTURING 3 /* Final capturing stage - noone may spawn there */
+#define SPAWN_BUSY_CAPTURING 1 /* Final capturing stage - noone may spawn there */
+#define SPAWN_BUSY_SURFACING 2
+#define SPAWN_BUSY_BUNKERING 3
 
 typedef struct _tSpawn {
 	UBYTE ubTileY;
@@ -16,9 +14,16 @@ typedef struct _tSpawn {
 	UBYTE ubTeam;
 	UBYTE ubBusy;
 	UBYTE ubFrame;
+	UBYTE ubVehicleType;
 } tSpawn;
 
-UBYTE spawnCreate(
+void spawnManagerCreate(
+	IN UBYTE ubMaxCount
+);
+
+void spawnManagerDestroy(void);
+
+UBYTE spawnAdd(
 	IN UBYTE ubTileX,
 	IN UBYTE ubTileY,
 	IN UBYTE ubTeam
@@ -35,6 +40,16 @@ UBYTE spawnFindNearest(
 	IN UBYTE ubTeam
 );
 
-extern tSpawn g_pSpawns[SPAWN_MAX];
+void spawnSetBusy(
+	IN UBYTE ubSpawnIdx,
+	IN UBYTE ubBusyType,
+	IN UBYTE ubVehicleType
+);
+
+void spawnAnimate(
+	IN UBYTE ubSpawnIdx
+);
+
+extern tSpawn *g_pSpawns;
 
 #endif // GUARD_OF_GAMESTATES_GAME_SPAWN_H

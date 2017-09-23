@@ -102,7 +102,7 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
-	vehicleInit(&pPlayer->sVehicle, ubVehicleType, g_ubLocalPlayerSpawnIdx);
+	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 }
 
 void playerHideInBunker(tPlayer *pPlayer) {
@@ -180,4 +180,3 @@ tPlayer *g_pPlayers;
 UBYTE g_ubPlayerLimit;
 UBYTE g_ubPlayerCount;
 tPlayer *g_pLocalPlayer;
-UBYTE g_ubLocalPlayerSpawnIdx;

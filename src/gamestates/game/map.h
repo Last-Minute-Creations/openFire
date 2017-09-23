@@ -5,6 +5,8 @@
 #include <ace/utils/bitmap.h>
 
 #define MAP_TILE_SIZE 5
+#define MAP_FULL_TILE (1 << MAP_TILE_SIZE)
+#define MAP_HALF_TILE (MAP_FULL_TILE >> 1)
 
 #define MAP_LOGIC_WATER   '.'
 #define MAP_LOGIC_DIRT    ' '

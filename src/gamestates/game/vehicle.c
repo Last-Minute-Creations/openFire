@@ -48,6 +48,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 	pVehicle->ubCooldown = 0;
 
+	spawnSetBusy(ubSpawnIdx, SPAWN_BUSY_SURFACING, VEHICLE_TYPE_TANK);
+
 	logBlockEnd("vehicleInit()");
 }
 

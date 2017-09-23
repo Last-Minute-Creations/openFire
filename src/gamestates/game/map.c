@@ -116,10 +116,10 @@ void mapGenerateLogic(void) {
 				case MAP_LOGIC_WATER:
 					break;
 				case MAP_LOGIC_SPAWN1:
-					spawnCreate(x, y, TEAM_GREEN);
+					spawnAdd(x, y, TEAM_GREEN);
 					break;
 				case MAP_LOGIC_SPAWN2:
-					spawnCreate(x, y, TEAM_BROWN);
+					spawnAdd(x, y, TEAM_BROWN);
 					break;
 				case MAP_LOGIC_ROAD:
 					break;

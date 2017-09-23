@@ -53,10 +53,10 @@ void gameEnterLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
-	g_ubLocalPlayerSpawnIdx = spawnFindNearest(0, 0, g_pLocalPlayer->ubTeam);
+	g_pLocalPlayer->ubSpawnIdx = spawnFindNearest(0, 0, g_pLocalPlayer->ubTeam);
 
-	uwLimboX = MAX(0, (g_pSpawns[g_ubLocalPlayerSpawnIdx].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_WIDTH/2));
-	uwLimboY = MAX(0, (g_pSpawns[g_ubLocalPlayerSpawnIdx].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1)) - (WORLD_VPORT_HEIGHT/2));
+	uwLimboX = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_WIDTH/2));
+	uwLimboY = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_HEIGHT/2));
 }
 
 void gameEnterDriving(void) {
@@ -79,9 +79,17 @@ void worldDraw(void) {
 
 	// Vehicles
 	logAvgBegin(s_pDrawAvgVehicles);
-	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer)
-		if(g_pPlayers[ubPlayer].ubState == PLAYER_STATE_DRIVING)
-			vehicleDraw(&g_pPlayers[ubPlayer].sVehicle);
+	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
+		tPlayer *pPlayer = &g_pPlayers[ubPlayer];
+		if(pPlayer->ubState == PLAYER_STATE_DRIVING)
+			vehicleDraw(&pPlayer->sVehicle);
+		else if(
+			pPlayer->ubState == PLAYER_STATE_SURFACING ||
+			pPlayer->ubState == PLAYER_STATE_BUNKERING
+		) {
+			spawnAnimate(pPlayer->ubSpawnIdx);
+		}
+	}
 	logAvgEnd(s_pDrawAvgVehicles);
 
 	logAvgBegin(s_pDrawAvgProjectiles);
@@ -126,6 +134,7 @@ void gsGameCreate(void) {
 	randInit(2184);
 	teamsInit();
 	mapCreate("data/maps/test2025.txt");
+	spawnManagerCreate(10);
 
 	// Add players
 	playerListCreate(8);
@@ -283,6 +292,7 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pDrawAvgExplosions);
 	#endif
 
+	spawnManagerDestroy();
 	mapDestroy();
 	playerListDestroy();
 
