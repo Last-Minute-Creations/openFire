@@ -50,7 +50,7 @@ UWORD uwLimboY;
 
 ULONG g_ulGameFrame;
 
-void gameEnterLimbo(void) {
+void displayPrepareLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
@@ -60,7 +60,7 @@ void gameEnterLimbo(void) {
 	uwLimboY = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_HEIGHT/2));
 }
 
-void gameEnterDriving(void) {
+void displayPrepareDriving(void) {
 	cursorSetConstraints(0, 0, 320, 191);
 	hudChangeState(HUD_STATE_DRIVING);
 	g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
@@ -220,7 +220,7 @@ void gsGameCreate(void) {
 	// Now that world copperlist is created, prepare map logic & do the first draw
 	mapGenerateLogic();
 	mapRedraw();
-	gameEnterLimbo();
+	displayPrepareLimbo();
 
 	// Get some speed out of unnecessary DMA
 	custom.dmacon = BITCLR | DMAF_DISK;

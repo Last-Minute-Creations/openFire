@@ -48,9 +48,9 @@ UBYTE spawnGetAt(
 );
 
 void spawnSetBusy(
-	IN UBYTE ubSpawnIdx,
-	IN UBYTE ubBusyType,
-	IN UBYTE ubVehicleType
+	IN uint_fast8_t fubSpawnIdx,
+	IN uint_fast8_t fubBusyType,
+	IN uint_fast8_t fubVehicleType
 );
 
 void spawnAnimate(

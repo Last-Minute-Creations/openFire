@@ -72,11 +72,13 @@ UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
 	return SPAWN_INVALID;
 }
 
-void spawnSetBusy(UBYTE ubSpawnIdx, UBYTE ubBusyType, UBYTE ubVehicleType) {
-	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
-	pSpawn->ubBusy = ubBusyType;
-	if(ubBusyType == SPAWN_BUSY_BUNKERING || ubBusyType == SPAWN_BUSY_SURFACING)
+void spawnSetBusy(uint_fast8_t fubSpawnIdx, uint_fast8_t fubBusyType, uint_fast8_t fubVehicleType) {
+	tSpawn *pSpawn = &g_pSpawns[fubSpawnIdx];
+	pSpawn->ubBusy = fubBusyType;
+	if(fubBusyType == SPAWN_BUSY_BUNKERING || fubBusyType == SPAWN_BUSY_SURFACING) {
 		pSpawn->ubFrame = 0;
+		pSpawn->ubVehicleType = fubVehicleType;
+	}
 	// TODO capturing
 }
 

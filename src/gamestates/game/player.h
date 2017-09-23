@@ -60,7 +60,8 @@ void playerSelectVehicle(
 );
 
 void playerHideInBunker(
-	IN tPlayer *pPlayer
+	IN tPlayer *pPlayer,
+	IN uint_fast8_t fubSpawnIdx
 );
 
 void playerDamageVehicle(
