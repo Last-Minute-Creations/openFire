@@ -29,6 +29,7 @@ UBYTE mapIsWater(UBYTE ubMapTile) {
 UBYTE mapIsWall(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_WALL    ||
+		ubMapTile == MAP_LOGIC_SENTRY0 ||
 		ubMapTile == MAP_LOGIC_SENTRY1 ||
 		ubMapTile == MAP_LOGIC_SENTRY2 ||
 		0
@@ -38,6 +39,7 @@ UBYTE mapIsWall(UBYTE ubMapTile) {
 UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_ROAD   ||
+		ubMapTile == MAP_LOGIC_SPAWN0 ||
 		ubMapTile == MAP_LOGIC_SPAWN1 ||
 		ubMapTile == MAP_LOGIC_SPAWN2 ||
 		ubMapTile == MAP_LOGIC_GATE1  ||
@@ -106,7 +108,11 @@ void mapCreate(char *szPath) {
 				while(ubTileIdx == '\n' || ubTileIdx == '\r');
 			g_pMap[x][y].ubIdx = ubTileIdx;
 			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
-			if(ubTileIdx == MAP_LOGIC_SPAWN1 || ubTileIdx == MAP_LOGIC_SPAWN2)
+			if(
+				ubTileIdx == MAP_LOGIC_SPAWN0 ||
+				ubTileIdx == MAP_LOGIC_SPAWN1 ||
+				ubTileIdx == MAP_LOGIC_SPAWN2
+			)
 				++fub_spawnCnt;
 		}
 	}
@@ -125,6 +131,9 @@ void mapGenerateLogic(void) {
 			ubTileIdx = g_pMap[x][y].ubIdx;
 			switch(ubTileIdx) {
 				case MAP_LOGIC_WATER:
+					break;
+				case MAP_LOGIC_SPAWN0:
+					spawnAdd(x, y, TEAM_NONE);
 					break;
 				case MAP_LOGIC_SPAWN1:
 					spawnAdd(x, y, TEAM_GREEN);
@@ -145,6 +154,7 @@ void mapGenerateLogic(void) {
 						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_GREEN : TEAM_BROWN
 					);
 					break;
+				case MAP_LOGIC_SENTRY0:
 				case MAP_LOGIC_SENTRY1:
 				case MAP_LOGIC_SENTRY2:
 					// Change logic type so that projectiles will threat turret walls
@@ -153,7 +163,9 @@ void mapGenerateLogic(void) {
 					g_pMap[x][y].ubData = buildingAdd(
 						x, y,
 						BUILDING_TYPE_TURRET,
-						ubTileIdx == MAP_LOGIC_SENTRY1 ? TEAM_GREEN : TEAM_BROWN
+						ubTileIdx == MAP_LOGIC_SENTRY0? TEAM_NONE
+							:MAP_LOGIC_SENTRY1? TEAM_GREEN
+							:TEAM_BROWN
 					);
 					break;
 				case MAP_LOGIC_DIRT:
@@ -182,6 +194,7 @@ UBYTE mapTileFromLogic(uint_fast8_t fubTileX, uint_fast8_t fubTileY) {
 	switch(fubLogicIdx) {
 		case MAP_LOGIC_WATER:
 			return MAP_TILE_WATER;
+		case MAP_LOGIC_SPAWN0:
 		case MAP_LOGIC_SPAWN1:
 			return MAP_TILE_SPAWN1;
 		case MAP_LOGIC_SPAWN2:
@@ -194,6 +207,7 @@ UBYTE mapTileFromLogic(uint_fast8_t fubTileX, uint_fast8_t fubTileY) {
 			return MAP_TILE_FLAG1L;
 		case MAP_LOGIC_FLAG2:
 			return MAP_TILE_FLAG2L;
+		case MAP_LOGIC_SENTRY0:
 		case MAP_LOGIC_SENTRY1:
 		case MAP_LOGIC_SENTRY2:
 			return MAP_TILE_WALL;

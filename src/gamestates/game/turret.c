@@ -10,6 +10,7 @@
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/game.h"
+#include "gamestates/game/team.h"
 
 #define TURRET_SPRITE_OFFS    (MAP_FULL_TILE - TURRET_SPRITE_SIZE)
 
@@ -153,7 +154,7 @@ void turretSim(void) {
 
 	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
 		pTurret = &s_pTurretList[uwTurretIdx];
-		if(!pTurret->uwX)
+		if(!pTurret->uwX || pTurret->ubTeam == TEAM_NONE)
 			continue;
 
 		// Process cooldown

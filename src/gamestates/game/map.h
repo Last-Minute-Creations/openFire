@@ -12,14 +12,19 @@
 #define MAP_LOGIC_DIRT    ' '
 #define MAP_LOGIC_ROAD    '#'
 #define MAP_LOGIC_WALL    '-'
+#define MAP_LOGIC_SPAWN0  '0'
 #define MAP_LOGIC_SPAWN1  '1'
 #define MAP_LOGIC_SPAWN2  '2'
+#define MAP_LOGIC_SENTRY0 '$'
 #define MAP_LOGIC_SENTRY1 's'
 #define MAP_LOGIC_SENTRY2 'S'
 #define MAP_LOGIC_FLAG1   'f'
 #define MAP_LOGIC_FLAG2   'F'
 #define MAP_LOGIC_GATE1   'g'
 #define MAP_LOGIC_GATE2   'G'
+#define MAP_LOGIC_CAPTURE0 'o'
+#define MAP_LOGIC_CAPTURE1 'c'
+#define MAP_LOGIC_CAPTURE2 'C'
 
 #define MAP_TILE_WATER  0
 #define MAP_TILE_SPAWN1 1
