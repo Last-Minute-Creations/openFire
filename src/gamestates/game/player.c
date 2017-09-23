@@ -60,16 +60,14 @@ void playerListDestroy() {
  *  @todo Vehicle global for whole team
  */
 tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
-	UBYTE i;
-	tPlayer *pPlayer;
-
-	for(i = 0; i != g_ubPlayerLimit; ++i) {
+	for(uint_fast8_t i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].szName[0])
 			continue;
-		pPlayer = &g_pPlayers[i];
+		tPlayer *pPlayer = &g_pPlayers[i];
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
 		pPlayer->ubState = PLAYER_STATE_LIMBO;
+		pPlayer->ubCurrentVehicleType = 0xFF;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;

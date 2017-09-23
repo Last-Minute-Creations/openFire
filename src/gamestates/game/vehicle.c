@@ -29,26 +29,26 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 	pVehicle->ubFuel = pVehicle->pType->ubMaxFuel;
 	pVehicle->ubLife = pVehicle->pType->ubMaxLife;
 	pVehicle->bRotDiv = 0;
-	logWrite("Created vehicle %hu @%f,%f\n", ubVehicleType, pVehicle->fX, pVehicle->fY);
-
-	// Set main bob frames
-	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
-	bobChangeFrame(pVehicle->pBob, angleToFrame(ANGLE_90));
-
-	// Set aux bob frames
-	if(ubVehicleType == VEHICLE_TYPE_TANK) {
-		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource);
-		pVehicle->pAuxBob->uwHeight = VEHICLE_TURRET_HEIGHT;
-		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ANGLE_90));
-	}
-	else
-		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
-
 	pVehicle->ubCooldown = 0;
 
+	vehicleSetupBob(pVehicle);
 	spawnSetBusy(ubSpawnIdx, SPAWN_BUSY_SURFACING, VEHICLE_TYPE_TANK);
 
 	logBlockEnd("vehicleInit()");
+}
+
+void vehicleSetupBob(tVehicle *pVehicle) {
+	// Set main bob frames
+	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
+	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
+
+	// Set aux bob frames
+	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
+		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource);
+		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
+	}
+	else
+		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
 }
 
 void vehicleUnset(tVehicle *pVehicle) {

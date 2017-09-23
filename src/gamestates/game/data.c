@@ -28,31 +28,50 @@ void dataRecv(void) {
 		// Fill players
 		pFrame->pPlayerStates[i].fDx = 0;
 		pFrame->pPlayerStates[i].fDy = 0;
-		pFrame->pPlayerStates[i].fX = 4 << MAP_TILE_SIZE;
-		pFrame->pPlayerStates[i].fY = (7+2*i) << MAP_TILE_SIZE;
+		pFrame->pPlayerStates[i].fX = (10+i*2) << MAP_TILE_SIZE;
+		pFrame->pPlayerStates[i].fY = 2 << MAP_TILE_SIZE;
 		pFrame->pPlayerStates[i].ubBodyAngle = 0;
 		pFrame->pPlayerStates[i].ubDestAngle = 0;
 		pFrame->pPlayerStates[i].ubTurretAngle = 0;
-		pFrame->pPlayerStates[i].ubVehicleState = PLAYER_STATE_DRIVING;
+		pFrame->pPlayerStates[i].ubPlayerState = PLAYER_STATE_DRIVING;
 		pFrame->pPlayerStates[i].ubVehicleType = VEHICLE_TYPE_TANK;
 	}
 	s_isPacketRead = 1;
 
 	if(s_isPacketRead) {
-		// TODO: process
 		for(UBYTE i = 0; i != 8; ++i) {
-			if(&g_pPlayers[i] != g_pLocalPlayer) {
-				tPlayer *pPlayer = &g_pPlayers[i];
-				pPlayer->sVehicle.fX = pFrame->pPlayerStates[i].fX;
-				pPlayer->sVehicle.fY = pFrame->pPlayerStates[i].fY;
-				pPlayer->sVehicle.ubBodyAngle = pFrame->pPlayerStates[i].ubBodyAngle;
-				pPlayer->sVehicle.ubTurretAngle = pFrame->pPlayerStates[i].ubTurretAngle;
-				pPlayer->ubState = pFrame->pPlayerStates[i].ubVehicleState;
-			}
+			if(&g_pPlayers[i] != g_pLocalPlayer) // TODO later remove
+				dataForcePlayerState(&g_pPlayers[i], &pFrame->pPlayerStates[i]);
 		}
+		// TODO force projectiles
+		// TODO force turrets
+		// TODO force explosions
 		s_isPacketRead = 0;
 	}
 	else {
 		// Prediction
+	}
+}
+
+void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
+	if(pPlayer->ubState != pState->ubPlayerState) {
+		pPlayer->ubState = pState->ubPlayerState;
+		if(pState->ubPlayerState == PLAYER_STATE_DRIVING)
+			pPlayer->sVehicle.pBob->ubFlags = BOB_FLAG_START_DRAWING;
+		// TODO something here
+	}
+	if(pPlayer->ubState != PLAYER_STATE_LIMBO && pPlayer->ubState != PLAYER_STATE_OFF) {
+		// Driving, surfacing or bunkering
+		pPlayer->sVehicle.fX = pState->fX;
+		pPlayer->sVehicle.fY = pState->fY;
+		pPlayer->sVehicle.ubBodyAngle = pState->ubBodyAngle;
+		pPlayer->sVehicle.ubTurretAngle = pState->ubTurretAngle;
+		// TODO: destination angle
+		// TODO: delta x,y
+		if(pPlayer->ubCurrentVehicleType != pState->ubVehicleType) {
+			pPlayer->ubCurrentVehicleType = pState->ubVehicleType;
+			pPlayer->sVehicle.pType = &g_pVehicleTypes[pState->ubVehicleType];
+			vehicleSetupBob(&pPlayer->sVehicle);
+		}
 	}
 }

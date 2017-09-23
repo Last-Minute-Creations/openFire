@@ -80,6 +80,7 @@ void playerSteerVehicle(
 void playerLocalProcessInput(void);
 
 void playerSim(void);
+
 void playerSimVehicle(
 	IN tPlayer *pPlayer
 );

@@ -12,19 +12,23 @@ static UBYTE s_ubSpawnMaxCount;
 static tBitMap *s_pGreenAnims;
 static tBitMap *s_pBrownAnims;
 
-void spawnManagerCreate(UBYTE ubMaxCount) {
-	s_ubSpawnMaxCount = ubMaxCount;
+void spawnManagerCreate(uint_fast8_t fubMaxCount) {
+	logBlockBegin("spawnManagerCreate(fubMaxCount: %"PRIuFAST8")", fubMaxCount);
+	s_ubSpawnMaxCount = fubMaxCount;
 	s_ubSpawnCount = 0;
-	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * ubMaxCount);
+	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * fubMaxCount);
 	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/bunkering_green.bm");
 	// TODO: bunkering_brown.bm
 	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/bunkering_green.bm");
+	logBlockEnd("spawnManagerCreate()");
 }
 
 void spawnManagerDestroy(void) {
+	logBlockBegin("spawnManagerDestroy()");
 	memFree(g_pSpawns, sizeof(tSpawn) * s_ubSpawnMaxCount);
 	bitmapDestroy(s_pGreenAnims);
 	bitmapDestroy(s_pBrownAnims);
+	logBlockEnd("spawnManagerDestroy()");
 }
 
 UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {

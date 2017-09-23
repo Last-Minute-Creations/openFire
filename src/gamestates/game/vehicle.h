@@ -72,4 +72,8 @@ void vehicleUndraw(
 	IN tVehicle *pVehicle
 );
 
+void vehicleSetupBob(
+	IN tVehicle *pVehicle
+);
+
 #endif

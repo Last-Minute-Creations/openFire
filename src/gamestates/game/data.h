@@ -32,10 +32,10 @@ typedef struct _tVehicleState {
 	UBYTE ubBodyAngle;   ///< Measured clockwise, +90deg is to bottom.
 	UBYTE ubTurretAngle; ///< NOT relative to body angle, measured as above.
 	// Aligned with ubDestAngle
-	UBYTE ubVehicleType;  /// Could be combined with ubVehicleState per nibble
-	UBYTE ubVehicleState; /// DEAD, SURFACING, etc.
+	UBYTE ubVehicleType;  ///< Could be combined with ubVehicleState per nibble
+	UBYTE ubPlayerState;  ///< DEAD, SURFACING, etc.
 	// For vehicle prediction
-	UBYTE ubDestAngle;
+	UBYTE ubDestAngle;    ///< Turret.
 	float fDx;
 	float fDy;
 } tVehicleState;
@@ -54,8 +54,8 @@ typedef struct _tProjectileState {
 	UBYTE ubAngle;
 	union {
 		struct {
-			UBYTE ubType;              ///< See PROJECTILE_TYPE_* defines.
-			UBYTE ubOwnerType;         ///< See PROJECTILE_OWNER_TYPE_* defines.
+			UBYTE ubType;          ///< See PROJECTILE_TYPE_* defines.
+			UBYTE ubOwnerType;     ///< See PROJECTILE_OWNER_TYPE_* defines.
 		} sCreated;
 		struct {
 			// Idx could be bigger if ubWhat would reside in lower 2 bits
@@ -119,5 +119,10 @@ typedef struct _tDataJoinResponse {
 
 void dataSend(void);
 void dataRecv(void);
+
+void dataForcePlayerState(
+	IN tPlayer *pPlayer,
+	IN tVehicleState *pState
+);
 
 #endif // GUARD_OF_GAMESTATES_GAME_DATA_H

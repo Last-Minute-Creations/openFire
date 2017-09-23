@@ -20,7 +20,7 @@ typedef struct _tSpawn {
 } tSpawn;
 
 void spawnManagerCreate(
-	IN UBYTE ubMaxCount
+	IN uint_fast8_t fubMaxCount
 );
 
 void spawnManagerDestroy(void);

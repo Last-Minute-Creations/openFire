@@ -139,7 +139,7 @@ void gsGameCreate(void) {
 	for(UBYTE i = 0; i != 7; ++i) {
 		char szName[10];
 		sprintf(szName, "player%hhu", i);
-		playerSelectVehicle(playerAdd(szName, TEAM_GREEN), VEHICLE_TYPE_TANK);
+		playerAdd(szName, TEAM_GREEN);
 	}
 
 	// Create everything needed to display world view
