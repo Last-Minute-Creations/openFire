@@ -132,7 +132,6 @@ void gsGameCreate(void) {
 	randInit(2184);
 	teamsInit();
 	mapCreate("data/maps/snafu.txt");
-	spawnManagerCreate(10);
 
 	// Add players
 	playerListCreate(8);
@@ -294,7 +293,6 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pDrawAvgExplosions);
 	#endif
 
-	spawnManagerDestroy();
 	mapDestroy();
 	playerListDestroy();
 

@@ -70,7 +70,8 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 }
 
 void mapCreate(char *szPath) {
-	UBYTE x, y, ubTileIdx;
+	uint_fast8_t x, y;
+	UBYTE ubTileIdx;
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
 	char szHeaderBfr[256];
@@ -97,6 +98,7 @@ void mapCreate(char *szPath) {
 	buildingManagerReset();
 
 	// Read map data
+	uint_fast8_t fub_spawnCnt = 0;
 	for(y = 0; y != g_fubMapTileHeight; ++y) {
 		for(x = 0; x != g_fubMapTileWidth; ++x) {
 			do
@@ -104,14 +106,17 @@ void mapCreate(char *szPath) {
 				while(ubTileIdx == '\n' || ubTileIdx == '\r');
 			g_pMap[x][y].ubIdx = ubTileIdx;
 			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
+			if(ubTileIdx == MAP_LOGIC_SPAWN1 || ubTileIdx == MAP_LOGIC_SPAWN2)
+				++fub_spawnCnt;
 		}
 	}
 	fclose(pMapFile);
+	spawnManagerCreate(fub_spawnCnt);
 	logBlockEnd("mapCreate()");
 }
 
 void mapGenerateLogic(void) {
-	UBYTE x, y, ubTileIdx;
+	uint_fast8_t x, y, ubTileIdx;
 	logBlockBegin("mapGenerateLogic()");
 	turretListCreate();
 	// 2nd data pass - generate additional logic
@@ -207,6 +212,7 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 }
 
 void mapDestroy(void) {
+	spawnManagerDestroy();
 	uint_fast8_t x;
 
 	logBlockBegin("mapDestroy()");
