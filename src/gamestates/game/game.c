@@ -242,7 +242,7 @@ void gsGameLoop(void) {
 
 	// Steering-irrelevant player input
 	if(keyUse(KEY_C))
-		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "bufDump.bmp");
+		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 

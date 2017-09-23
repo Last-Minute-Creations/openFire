@@ -26,25 +26,30 @@
 #define MAP_LOGIC_CAPTURE1 'c'
 #define MAP_LOGIC_CAPTURE2 'C'
 
-#define MAP_TILE_WATER  0
-#define MAP_TILE_SPAWN1 1
-#define MAP_TILE_SPAWN2 2
+#define MAP_TILE_WATER    0
+#define MAP_TILE_SPAWN1   1
+#define MAP_TILE_SPAWN2   2
+#define MAP_TILE_SPAWN0   3
+// Capture points
+#define MAP_TILE_CAPTURE1 4
+#define MAP_TILE_CAPTURE2 5
+#define MAP_TILE_CAPTURE0 6
 // Flag buildings - 'live' & destroyed
-#define MAP_TILE_FLAG1L 3
-#define MAP_TILE_FLAG2L 4
-#define MAP_TILE_FLAGD  5
+#define MAP_TILE_FLAG1L   7
+#define MAP_TILE_FLAG2L   8
+#define MAP_TILE_FLAGD    9
 // Destroyed wall tile
-#define MAP_TILE_WALLD  6
+#define MAP_TILE_WALLD    10
 // Gates - horizontal & vertical, 'live' & destroyed
-#define MAP_TILE_GATEVL 7
-#define MAP_TILE_GATEVD 8
-#define MAP_TILE_GATEHL 9
-#define MAP_TILE_GATEHD 10
+#define MAP_TILE_GATEVL   11
+#define MAP_TILE_GATEVD   12
+#define MAP_TILE_GATEHL   13
+#define MAP_TILE_GATEHD   14
 // 16-variant tiles - base codes, ends 16 positions later.
-#define MAP_TILE_DIRT   16
-#define MAP_TILE_ROAD   32
-#define MAP_TILE_WALL   48
-#define MAP_TILE_TURRET 64
+#define MAP_TILE_DIRT     16
+#define MAP_TILE_ROAD     32
+#define MAP_TILE_WALL     48
+#define MAP_TILE_TURRET   64
 
 typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx

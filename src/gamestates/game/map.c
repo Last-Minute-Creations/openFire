@@ -38,14 +38,19 @@ UBYTE mapIsWall(UBYTE ubMapTile) {
 
 UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
 	return (
-		ubMapTile == MAP_LOGIC_ROAD   ||
-		ubMapTile == MAP_LOGIC_SPAWN0 ||
-		ubMapTile == MAP_LOGIC_SPAWN1 ||
-		ubMapTile == MAP_LOGIC_SPAWN2 ||
-		ubMapTile == MAP_LOGIC_GATE1  ||
-		ubMapTile == MAP_LOGIC_GATE2  ||
-		ubMapTile == MAP_LOGIC_FLAG1 ||
-		ubMapTile == MAP_LOGIC_FLAG2 ||
+		ubMapTile == MAP_LOGIC_ROAD     ||
+		ubMapTile == MAP_LOGIC_SPAWN0   ||
+		ubMapTile == MAP_LOGIC_SPAWN1   ||
+		ubMapTile == MAP_LOGIC_SPAWN2   ||
+		ubMapTile == MAP_LOGIC_CAPTURE0 ||
+		ubMapTile == MAP_LOGIC_CAPTURE1 ||
+		ubMapTile == MAP_LOGIC_CAPTURE2 ||
+		ubMapTile == MAP_LOGIC_SPAWN2   ||
+		ubMapTile == MAP_LOGIC_SPAWN2   ||
+		ubMapTile == MAP_LOGIC_GATE1    ||
+		ubMapTile == MAP_LOGIC_GATE2    ||
+		ubMapTile == MAP_LOGIC_FLAG1    ||
+		ubMapTile == MAP_LOGIC_FLAG2    ||
 		0
 	);
 }
@@ -195,6 +200,7 @@ UBYTE mapTileFromLogic(uint_fast8_t fubTileX, uint_fast8_t fubTileY) {
 		case MAP_LOGIC_WATER:
 			return MAP_TILE_WATER;
 		case MAP_LOGIC_SPAWN0:
+			return MAP_TILE_SPAWN0;
 		case MAP_LOGIC_SPAWN1:
 			return MAP_TILE_SPAWN1;
 		case MAP_LOGIC_SPAWN2:
@@ -211,6 +217,12 @@ UBYTE mapTileFromLogic(uint_fast8_t fubTileX, uint_fast8_t fubTileY) {
 		case MAP_LOGIC_SENTRY1:
 		case MAP_LOGIC_SENTRY2:
 			return MAP_TILE_WALL;
+		case MAP_LOGIC_CAPTURE0:
+			return MAP_TILE_CAPTURE0;
+		case MAP_LOGIC_CAPTURE1:
+			return MAP_TILE_CAPTURE1;
+		case MAP_LOGIC_CAPTURE2:
+			return MAP_TILE_CAPTURE2;
 		case MAP_LOGIC_DIRT:
 		default:
 			return MAP_TILE_DIRT + mapCheckNeighbours(fubTileX, fubTileY, mapIsWater);
