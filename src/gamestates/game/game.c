@@ -131,7 +131,7 @@ void gsGameCreate(void) {
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
 	teamsInit();
-	mapCreate("data/maps/test2025.txt");
+	mapCreate("data/maps/snafu.txt");
 	spawnManagerCreate(10);
 
 	// Add players
