@@ -49,6 +49,8 @@ tAvg *s_pUndrawAvgVehicles;
 UWORD uwLimboX;
 UWORD uwLimboY;
 
+ULONG g_ulGameFrame;
+
 void gameEnterLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
@@ -214,6 +216,7 @@ void gsGameCreate(void) {
 	// Initial values
 	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
+	g_ulGameFrame = 0;
 
 	// Now that world copperlist is created, prepare map logic & do the first draw
 	mapGenerateLogic();
@@ -270,6 +273,7 @@ void gsGameLoop(void) {
 
 	viewProcessManagers(g_pWorldView);
 	copProcessBlocks();
+	++g_ulGameFrame;
 }
 
 void gsGameDestroy(void) {

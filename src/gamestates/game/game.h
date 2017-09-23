@@ -46,6 +46,7 @@ extern tCameraManager *g_pWorldCamera;
 
 extern UBYTE g_ubActiveState;
 extern UWORD g_uwMouseX, g_uwMouseY;
+extern ULONG g_ulGameFrame;
 
 void gsGameCreate(void);
 void gsGameLoop(void);
