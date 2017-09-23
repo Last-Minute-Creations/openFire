@@ -84,14 +84,10 @@ void spawnSim(void) {
 	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
 		if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
-			if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN) {
+			if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN)
 				++pSpawn->ubFrame;
-				logWrite("Sim: incremented to %hhu\n", pSpawn->ubFrame);
-			}
-			else {
+			else
 				pSpawn->ubBusy = SPAWN_BUSY_NOT;
-				logWrite("Sim: not busy anymore\n");
-			}
 		}
 		// TODO capturing
 	}
@@ -103,15 +99,12 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
 	if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
-		if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN) {
+		if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
 			mapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
-			logWrite("Refreshed tile\n");
-		}
 		else {
 			UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
 			if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
 				ubFrameIdx = 5 - ubFrameIdx;
-			logWrite("Animating with frame %hhu\n", ubFrameIdx);
 			blitCopyAligned(
 				pSpawn->ubTeam == TEAM_GREEN ? s_pGreenAnims : s_pBrownAnims,
 				0, ubFrameIdx << MAP_TILE_SIZE,
