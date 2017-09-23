@@ -20,7 +20,6 @@ static tBitmapMask *s_pMask;
 void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 	// Find free explosion slot
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
-		logWrite("Explosion %hu (%p) has flags: %hhu\n", i, s_pExplosions[i].pBob, s_pExplosions[i].pBob->ubFlags);
 		if(s_pExplosions[i].pBob->ubFlags == BOB_FLAG_NODRAW) {
 			// Free slot found - setup explosion
 			s_pExplosions[i].uwX = uwX;

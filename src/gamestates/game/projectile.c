@@ -4,7 +4,6 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/building.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
 
@@ -146,7 +145,7 @@ void projectileDraw(void) {
 	}
 }
 
-void projectileProcess(void) {
+void projectileSim(void) {
 	tProjectile *pProjectile;
 	tVehicle *pVehicle;
 	UBYTE i;

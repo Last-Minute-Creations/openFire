@@ -3,9 +3,22 @@
 #include <ace/config.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
+#include <ace/managers/mouse.h>
+#include <ace/managers/key.h>
 #include "gamestates/game/vehicle.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/explosions.h"
+#include "gamestates/game/game.h"
+#include "gamestates/game/spawn.h"
+#include "gamestates/game/team.h"
+
+// Steer requests
+#define OF_KEY_FORWARD      KEY_W
+#define OF_KEY_BACKWARD     KEY_S
+#define OF_KEY_LEFT         KEY_A
+#define OF_KEY_RIGHT        KEY_D
+#define OF_KEY_ACTION1      KEY_F
+#define OF_KEY_ACTION2      KEY_R
+#define OF_KEY_ACTION3      KEY_V
 
 void playerListCreate(UBYTE ubPlayerLimit) {
 	UBYTE i;
@@ -55,7 +68,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		pPlayer = &g_pPlayers[i];
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
-		pPlayer->ubState = PLAYER_STATE_BUNKERED;
+		pPlayer->ubState = PLAYER_STATE_LIMBO;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
@@ -91,19 +104,23 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
-	vehicleInit(&pPlayer->sVehicle, ubVehicleType);
+	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 }
 
 void playerHideInBunker(tPlayer *pPlayer) {
 	vehicleUnset(&pPlayer->sVehicle);
-	pPlayer->ubState = PLAYER_STATE_BUNKERED;
-	if(pPlayer == g_pLocalPlayer)
-		worldHide();
+	pPlayer->ubState = PLAYER_STATE_BUNKERING;
+	if(pPlayer == g_pLocalPlayer) {
+		// TODO something
+	}
 }
 
 void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
-		// TODO explosion
+		explosionsAdd(
+			pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
+			pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
+		);
 		playerLoseVehicle(pPlayer);
 	}
 	else
@@ -112,15 +129,146 @@ void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 
 void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
-	explosionsAdd(
-		pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
-		pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
-	);
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
-	pPlayer->ubState = PLAYER_STATE_DEAD;
-	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+	pPlayer->ubState = PLAYER_STATE_LIMBO;
+	if(pPlayer == g_pLocalPlayer) {
+		pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+		gameEnterLimbo();
+	}
+}
+
+void playerLocalProcessInput(void) {
+	switch(g_pLocalPlayer->ubState) {
+		case PLAYER_STATE_DRIVING: {
+			// Receive player's steer request
+			tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
+			pReq->ubForward     = keyCheck(OF_KEY_FORWARD);
+			pReq->ubBackward    = keyCheck(OF_KEY_BACKWARD);
+			pReq->ubLeft        = keyCheck(OF_KEY_LEFT);
+			pReq->ubRight       = keyCheck(OF_KEY_RIGHT);
+			pReq->ubAction1     = mouseCheck(MOUSE_LMB);
+			pReq->ubAction2     = mouseCheck(MOUSE_RMB);
+			pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
+
+			pReq->ubDestAngle = getAngleBetweenPoints(
+				g_pLocalPlayer->sVehicle.fX, g_pLocalPlayer->sVehicle.fY,
+				g_pWorldCamera->uPos.sUwCoord.uwX + g_uwMouseX,
+				g_pWorldCamera->uPos.sUwCoord.uwY + g_uwMouseY
+			);
+		} break;
+		case PLAYER_STATE_LIMBO: {
+			if(mouseUse(MOUSE_LMB)) {
+				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
+				tUwRect sTankRect = {
+					.uwX = 2 + 5, .uwY = uwHudOffs + 5, .uwWidth = 28, .uwHeight = 20
+				};
+				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
+				#define inRect(x, y, r) (                \
+					x >= r.uwX && x <= r.uwX + r.uwWidth   \
+					&& y >= r.uwY && y <= r.uwY+r.uwHeight \
+				)
+				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
+					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
+					gameEnterDriving();
+				}
+			}
+		} break;
+	}
+}
+
+void playerSimVehicle(tPlayer *pPlayer) {
+	tVehicle *pVehicle;
+	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
+	UWORD uwSiloDx, uwSiloDy;
+	UBYTE ubTileType;
+
+	pVehicle = &pPlayer->sVehicle;
+
+	uwVx = pVehicle->fX;
+	uwVy = pVehicle->fY;
+	uwVTileX = uwVx >> MAP_TILE_SIZE;
+	uwVTileY = uwVy >> MAP_TILE_SIZE;
+	ubTileType = g_pMap[uwVTileX][uwVTileY].ubIdx;
+
+	// Drowning
+	if(ubTileType == MAP_LOGIC_WATER) {
+		playerLoseVehicle(pPlayer);
+		return;
+	}
+
+	// Process standing on silos
+	g_ubDoSiloHighlight = 0;
+	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
+		UBYTE ubSpawnIdx = spawnGetAt(uwVTileX, uwVTileY);
+		if(
+			ubSpawnIdx != SPAWN_INVALID && (
+				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_BUNKERING ||
+				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_SURFACING
+			)
+		) {
+			// If one of them is standing on moving platform, destroy vehicle
+			playerDamageVehicle(pPlayer, 200);
+		}
+		else if(
+			(pPlayer->ubTeam == TEAM_GREEN && ubTileType == MAP_LOGIC_SPAWN1) ||
+			(pPlayer->ubTeam == TEAM_BROWN && ubTileType == MAP_LOGIC_SPAWN2)
+		) {
+			// Standing on own, unoccupied silo
+			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
+			uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
+			if(uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18) {
+				// Standing on bunkerable position
+				if(pPlayer == g_pLocalPlayer) {
+					// If one of them is local player, save data for highlight draw
+					g_ubDoSiloHighlight = 1;
+					g_uwSiloHighlightTileX = uwVTileX;
+					g_uwSiloHighlightTileY = uwVTileY;
+				}
+				// Hide in bunker
+				if(pPlayer->sSteerRequest.ubAction1 && g_ubDoSiloHighlight) {
+					playerHideInBunker(pPlayer);
+					return;
+				}
+			}
+		}
+	}
+
+	// Calculate vehicle positions based on steer requests
+	switch(pPlayer->ubCurrentVehicleType) {
+		case VEHICLE_TYPE_TANK:
+			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			break;
+		case VEHICLE_TYPE_JEEP:
+			vehicleSteerJeep(pVehicle, &pPlayer->sSteerRequest);
+			break;
+	}
+}
+
+/**
+ * Updates players' state machine.
+ */
+void playerSim(void) {
+	UBYTE ubPlayer;
+	tPlayer *pPlayer;
+
+	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
+		pPlayer = &g_pPlayers[ubPlayer];
+		switch(pPlayer->ubState) {
+			case PLAYER_STATE_OFF:
+				continue;
+			case PLAYER_STATE_SURFACING:
+				if(pPlayer->uwCooldown)
+					--pPlayer->uwCooldown;
+				else
+					pPlayer->ubState = PLAYER_STATE_DRIVING;
+				continue;
+			case PLAYER_STATE_DRIVING:
+				playerSimVehicle(pPlayer);
+				continue;
+		}
+	}
 }
 
 tPlayer *g_pPlayers;

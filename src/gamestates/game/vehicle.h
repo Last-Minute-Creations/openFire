@@ -41,7 +41,8 @@ typedef struct _tVehicle {
 
 void vehicleInit(
 	IN tVehicle *pVehicle,
-	IN UBYTE ubVehicleType
+	IN UBYTE ubVehicleType,
+	IN UBYTE ubSpawnIdx
 );
 
 void vehicleUnset(

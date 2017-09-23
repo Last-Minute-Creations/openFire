@@ -7,12 +7,14 @@
 #define PLAYER_NAME_MAX        20
 
 #define PLAYER_DEATH_COOLDOWN 150
+#define PLAYER_SURFACING_COOLDOWN 60
 
-#define PLAYER_STATE_OFF       0
-#define PLAYER_STATE_DEAD      1
-#define PLAYER_STATE_BUNKERED  2
-#define PLAYER_STATE_SURFACING 3
-#define PLAYER_STATE_DRIVING   4
+#define PLAYER_STATE_OFF       0 /* Offline */
+#define PLAYER_STATE_LIMBO     1 /* Dead / in bunker */
+#define PLAYER_STATE_SURFACING 2 /* Animation out of bunker */
+#define PLAYER_STATE_DRIVING   3 /* On map */
+#define PLAYER_STATE_PARKING   4 /* Changing angle to facing south */
+#define PLAYER_STATE_BUNKERING 5 /* Animating to bunker */
 
 typedef struct _tPlayer {
 	// General
@@ -24,12 +26,13 @@ typedef struct _tPlayer {
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
 
-	// Vehicles available
-	UBYTE pVehiclesLeft[4];
-
-	// Stats for score table displaying
+	UBYTE ubSpawnIdx;
+	// Stats for score table displaying - for CTF
 	UBYTE ubHasFlag;
-	UBYTE pVehiclesKilled[4];
+	// Vehicles available - for last man standing
+	UBYTE pVehiclesLeft[4];
+	// Score - kills?
+	UWORD uwScore;
 } tPlayer;
 
 void playerListCreate(
@@ -70,6 +73,13 @@ void playerLoseVehicle(
 );
 
 void playerSteerVehicle(
+	IN tPlayer *pPlayer
+);
+
+void playerLocalProcessInput(void);
+
+void playerSim(void);
+void playerSimVehicle(
 	IN tPlayer *pPlayer
 );
 

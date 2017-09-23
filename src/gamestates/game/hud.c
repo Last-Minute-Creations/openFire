@@ -4,13 +4,13 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/player.h"
 #include "vehicletypes.h"
 
 static tVPort *s_pHudVPort;
 static tSimpleBufferManager *s_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
+static UBYTE s_ubHudState;
 
 void hudCreate(void) {
 	s_pHudVPort = vPortCreate(0,
@@ -56,11 +56,38 @@ void hudCreate(void) {
 	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
 	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
 	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
+}
+
+void hudChangeState(UBYTE ubState) {
+	s_ubHudState = ubState;
+	tBitMap *pHudPanels[2];
+	pHudPanels[HUD_STATE_DRIVING] = s_pHudDriving;
+	pHudPanels[HUD_STATE_SELECTING] = s_pHudSelecting;
+
 	blitCopy(
-		s_pHudDriving, 0, 0, s_pHudBfr->pBuffer, 2, 2,
+		pHudPanels[ubState], 0, 0, s_pHudBfr->pBuffer, 2, 2,
 		bitmapGetByteWidth(s_pHudDriving) << 3,
 		s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
 	);
+
+	UWORD uwDmaCon;
+	void *pCrossCtl;
+	tCopCmd *pFrontList = g_pWorldView->pCopList->pFrontBfr->pList;
+	tCopCmd *pBackList = g_pWorldView->pCopList->pBackBfr->pList;
+	if(ubState == HUD_STATE_DRIVING) {
+		pCrossCtl = &custom.spr[2].ctl;
+		uwDmaCon = BITCLR | DMAF_RASTER | DMAF_SPRITE;
+	}
+	else {
+		pCrossCtl = &custom.spr[0].ctl;
+		uwDmaCon = BITCLR | DMAF_RASTER;
+	}
+	// Disable/enable sprite DMA during hud
+	copSetMove(&pBackList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &custom.dmacon, uwDmaCon);
+	copSetMove(&pFrontList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &custom.dmacon, uwDmaCon);
+	// Disable/enable crosshair sprite during hud
+	copSetMove(&pBackList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
+	copSetMove(&pFrontList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
 }
 
 void drawHudBar(
@@ -90,17 +117,19 @@ void drawHudBar(
 }
 
 void hudUpdate(void) {
-	// TODO one thing per frame, HP - always
-	tVehicle *pVehicle = &g_pLocalPlayer->sVehicle;
-	tVehicleType *pType = &g_pVehicleTypes[g_pLocalPlayer->ubCurrentVehicleType];
+	if(s_ubHudState == HUD_STATE_DRIVING) {
+		// TODO one thing per frame, HP - always
+		tVehicle *pVehicle = &g_pLocalPlayer->sVehicle;
+		tVehicleType *pType = &g_pVehicleTypes[g_pLocalPlayer->ubCurrentVehicleType];
 
-	// Draw bars
-	const UWORD uwBarLifeY = 5;
-	const UWORD uwBarAmmoY = 13;
-	const UWORD uwBarFuelY = 21;
-	drawHudBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
-	drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
-	drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
+		// Draw bars
+		const UWORD uwBarLifeY = 5;
+		const UWORD uwBarAmmoY = 13;
+		const UWORD uwBarFuelY = 21;
+		drawHudBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
+		drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
+		drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
+	}
 }
 
 void hudDestroy(void) {

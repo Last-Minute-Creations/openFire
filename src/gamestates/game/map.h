@@ -5,6 +5,8 @@
 #include <ace/utils/bitmap.h>
 
 #define MAP_TILE_SIZE 5
+#define MAP_FULL_TILE (1 << MAP_TILE_SIZE)
+#define MAP_HALF_TILE (MAP_FULL_TILE >> 1)
 
 #define MAP_LOGIC_WATER   '.'
 #define MAP_LOGIC_DIRT    ' '
@@ -41,7 +43,7 @@
 
 typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx
-	UBYTE ubData; ///< Data field. For buildings/gates used as idx in obj array.
+	UBYTE ubData; ///< Data field. For buildings/gates/spawns used as array idx.
 } tTile;
 
 typedef struct _tTileCoord {
@@ -49,7 +51,7 @@ typedef struct _tTileCoord {
 	UBYTE ubY;
 } tTileCoord;
 
-extern UWORD g_uwMapTileWidth, g_uwMapTileHeight;
+extern uint_fast8_t g_fubMapTileWidth, g_fubMapTileHeight;
 extern char g_szMapName[256];
 extern tTile **g_pMap;
 
@@ -76,6 +78,11 @@ void mapSetSrcDst(
 void mapRequestUpdateTile(
 	IN UBYTE ubX,
 	IN UBYTE ubY
+);
+
+UBYTE mapTileFromLogic(
+	IN uint_fast8_t ubTileX,
+	IN uint_fast8_t ubTileY
 );
 
 void mapUpdateTiles(void);

@@ -53,7 +53,7 @@ void projectileDestroy(
 
 void projectileUndraw(void);
 void projectileDraw(void);
-void projectileProcess(void);
+void projectileSim(void);
 
 UBYTE projectileHasCollidedWithAnyPlayer(
 	IN tProjectile *pProjectile

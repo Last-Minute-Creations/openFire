@@ -7,11 +7,11 @@
 #include "gamestates/game/team.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/projectile.h"
-#include "gamestates/game/world.h"
 #include "gamestates/game/explosions.h"
+#include "gamestates/game/spawn.h"
 #include "vehicletypes.h"
 
-void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
+void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 	logBlockBegin(
 		"vehicleInit(pVehicle: %p, ubVehicleType: %hhu)",
@@ -20,8 +20,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
-	pVehicle->fX = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileX << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
-	pVehicle->fY = (g_pTeams[TEAM_GREEN].pSilos[0].ubTileY << MAP_TILE_SIZE) + (1 << (MAP_TILE_SIZE-1));
+	pVehicle->fX = (g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pVehicle->fY = (g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pVehicle->ubBodyAngle = ANGLE_90;
 	pVehicle->ubTurretAngle = ANGLE_90;
 	pVehicle->ubBaseAmmo = pVehicle->pType->ubMaxBaseAmmo;
@@ -30,7 +30,6 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 	pVehicle->ubLife = pVehicle->pType->ubMaxLife;
 	pVehicle->bRotDiv = 0;
 	logWrite("Created vehicle %hu @%f,%f\n", ubVehicleType, pVehicle->fX, pVehicle->fY);
-	logWrite("Spawn is at tile %hu, %hu\n", g_pTeams[TEAM_GREEN].pSilos[0].ubTileX, g_pTeams[TEAM_GREEN].pSilos[0].ubTileY);
 
 	// Set main bob frames
 	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
@@ -48,6 +47,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType) {
 		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
 
 	pVehicle->ubCooldown = 0;
+
+	spawnSetBusy(ubSpawnIdx, SPAWN_BUSY_SURFACING, VEHICLE_TYPE_TANK);
 
 	logBlockEnd("vehicleInit()");
 }
