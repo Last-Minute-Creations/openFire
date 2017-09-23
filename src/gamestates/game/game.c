@@ -63,8 +63,6 @@ void displayPrepareLimbo(void) {
 void displayPrepareDriving(void) {
 	cursorSetConstraints(0, 0, 320, 191);
 	hudChangeState(HUD_STATE_DRIVING);
-	g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
-	g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 }
 
 void worldDraw(void) {
@@ -82,14 +80,14 @@ void worldDraw(void) {
 	logAvgBegin(s_pDrawAvgVehicles);
 	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
 		tPlayer *pPlayer = &g_pPlayers[ubPlayer];
-		if(pPlayer->ubState == PLAYER_STATE_DRIVING)
-			vehicleDraw(&pPlayer->sVehicle);
-		else if(
+		if(
 			pPlayer->ubState == PLAYER_STATE_SURFACING ||
 			pPlayer->ubState == PLAYER_STATE_BUNKERING
 		) {
 			spawnAnimate(pPlayer->ubSpawnIdx);
 		}
+		else
+			vehicleDraw(&pPlayer->sVehicle);
 	}
 	logAvgEnd(s_pDrawAvgVehicles);
 
@@ -114,8 +112,7 @@ void worldUndraw(void) {
 
 	// Vehicles
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
-		if(g_pPlayers[ubPlayer].ubState == PLAYER_STATE_DRIVING)
-			vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
+		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
 
 	// Silo highlight
 	if(s_ubWasSiloHighlighted)
@@ -282,6 +279,7 @@ void gsGameDestroy(void) {
 	logBlockBegin("gsGameDestroy()");
 
 	cursorDestroy();
+	hudDestroy();
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);

@@ -34,14 +34,12 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 	// Set main bob frames
 	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(ANGLE_90));
-	pVehicle->pBob->ubFlags = BOB_FLAG_START_DRAWING;
 
 	// Set aux bob frames
 	if(ubVehicleType == VEHICLE_TYPE_TANK) {
 		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource);
 		pVehicle->pAuxBob->uwHeight = VEHICLE_TURRET_HEIGHT;
 		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ANGLE_90));
-		pVehicle->pAuxBob->ubFlags = BOB_FLAG_START_DRAWING;
 	}
 	else
 		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
@@ -215,14 +213,17 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 void vehicleDraw(tVehicle *pVehicle) {
 	UWORD uwX = pVehicle->fX - VEHICLE_BODY_WIDTH/2;
 	UWORD uwY = pVehicle->fY - VEHICLE_BODY_HEIGHT/2;
-	bobDraw(pVehicle->pBob, g_pWorldMainBfr->pBuffer, uwX, uwY);
-	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
+	if(
+		bobDraw(pVehicle->pBob, g_pWorldMainBfr->pBuffer, uwX, uwY)
+		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]
+	) {
 		blitCopyMask(
 			pVehicle->pAuxBob->sSource.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
 			g_pWorldMainBfr->pBuffer, uwX, uwY,
 			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
 			pVehicle->pAuxBob->sSource.pMask->pData
 		);
+	}
 }
 
 void vehicleUndraw(tVehicle *pVehicle) {

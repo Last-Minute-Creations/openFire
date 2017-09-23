@@ -12,7 +12,7 @@
 /// Used when bob is going to be active - no undraw, draw
 #define BOB_FLAG_START_DRAWING 2
 /// Used when bob is active - undraw, draw
-#define BOB_FLAG_DRAW          4
+#define BOB_FLAG_DRAW          3
 
 typedef struct _tBobSource {
 	tBitMap *pBitmap;

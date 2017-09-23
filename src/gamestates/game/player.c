@@ -1,6 +1,7 @@
 #include "gamestates/game/player.h"
 #include <string.h>
 #include <ace/config.h>
+#include <ace/macros.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
 #include <ace/managers/mouse.h>
@@ -166,12 +167,10 @@ void playerLocalProcessInput(void) {
 					.uwX = 2 + 5, .uwY = uwHudOffs + 5, .uwWidth = 28, .uwHeight = 20
 				};
 				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
-				#define inRect(x, y, r) (                \
-					x >= r.uwX && x <= r.uwX + r.uwWidth   \
-					&& y >= r.uwY && y <= r.uwY+r.uwHeight \
-				)
 				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
+					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
+					g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 					displayPrepareDriving();
 				}
 			}
@@ -262,8 +261,15 @@ void playerSim(void) {
 			case PLAYER_STATE_SURFACING:
 				if(pPlayer->uwCooldown)
 					--pPlayer->uwCooldown;
-				else
+				else {
 					pPlayer->ubState = PLAYER_STATE_DRIVING;
+					// TODO: somewhere else?
+					pPlayer->sVehicle.pBob->ubFlags = BOB_FLAG_START_DRAWING;
+					if(pPlayer->ubCurrentVehicleType == VEHICLE_TYPE_TANK)
+						pPlayer->sVehicle.pAuxBob->ubFlags = BOB_FLAG_START_DRAWING;
+					else
+						pPlayer->sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+				}
 				continue;
 			case PLAYER_STATE_BUNKERING:
 				if(pPlayer->uwCooldown)
