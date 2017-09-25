@@ -197,6 +197,7 @@ void gsGameCreate(void) {
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS],
 		sizeof(tCopCmd)
 	);
+	copRawDisableSprites(g_pWorldView->pCopList, 251, WORLD_COP_SPRITEEN_POS+1);
 
 	// Crosshair stuff
 	cursorCreate();

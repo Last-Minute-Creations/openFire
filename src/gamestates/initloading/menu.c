@@ -37,6 +37,7 @@ void menuCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
 		TAG_DONE
 	);
+	copBlockDisableSprites(s_pView->pCopList, 0xFF);
 	paletteLoad("data/amidb16.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 
