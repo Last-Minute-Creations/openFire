@@ -24,11 +24,13 @@ typedef struct _tTurret {
 } tTurret;
 
 extern tBobSource g_sBrownTurretSource;
+extern UWORD g_uwTurretCount;
+extern tTurret *g_pTurrets;
 
 void turretListCreate(void);
 void turretListDestroy(void);
 
-UWORD turretCreate(
+UWORD turretAdd(
 	IN UWORD uwX,
 	IN UWORD uwY,
 	IN UBYTE ubTeam

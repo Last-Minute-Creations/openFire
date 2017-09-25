@@ -60,7 +60,7 @@ void playerListDestroy() {
  *  @todo Vehicle global for whole team
  */
 tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
-	for(uint_fast8_t i = 0; i != g_ubPlayerLimit; ++i) {
+	for(FUBYTE i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].szName[0])
 			continue;
 		tPlayer *pPlayer = &g_pPlayers[i];
@@ -106,7 +106,7 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 }
 
-void playerHideInBunker(tPlayer *pPlayer, uint_fast8_t fubSpawnIdx) {
+void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	vehicleUnset(&pPlayer->sVehicle);
 	pPlayer->ubState = PLAYER_STATE_BUNKERING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;

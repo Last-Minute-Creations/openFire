@@ -61,7 +61,7 @@ typedef struct _tTileCoord {
 	UBYTE ubY;
 } tTileCoord;
 
-extern uint_fast8_t g_fubMapTileWidth, g_fubMapTileHeight;
+extern FUBYTE g_fubMapTileWidth, g_fubMapTileHeight;
 extern char g_szMapName[256];
 extern tTile **g_pMap;
 
@@ -91,8 +91,8 @@ void mapRequestUpdateTile(
 );
 
 UBYTE mapTileFromLogic(
-	IN uint_fast8_t ubTileX,
-	IN uint_fast8_t ubTileY
+	IN FUBYTE ubTileX,
+	IN FUBYTE ubTileY
 );
 
 void mapUpdateTiles(void);

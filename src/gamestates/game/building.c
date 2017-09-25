@@ -49,7 +49,7 @@ UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 			// Setup building
 			s_sBuildingManager.pBuildings[ubIdx].ubHp = s_pBuildingHps[ubType];
 			if(ubType == BUILDING_TYPE_TURRET)
-				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = turretCreate(
+				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = turretAdd(
 					ubX, ubY,	ubTeam
 				);
 			else

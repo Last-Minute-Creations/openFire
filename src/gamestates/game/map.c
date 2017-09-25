@@ -8,7 +8,7 @@
 #include "gamestates/game/turret.h"
 
 tTile **g_pMap;
-uint_fast8_t g_fubMapTileWidth, g_fubMapTileHeight;
+FUBYTE g_fubMapTileWidth, g_fubMapTileHeight;
 char g_szMapName[256];
 
 tTileCoord g_pTilesToRedraw[9] = {{0, 0}};
@@ -77,7 +77,7 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 }
 
 void mapCreate(char *szPath) {
-	uint_fast8_t x, y;
+	FUBYTE x, y;
 	UBYTE ubTileIdx;
 	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
@@ -92,11 +92,11 @@ void mapCreate(char *szPath) {
 		logWrite("ERR: File doesn't exist: %s\n", szPath);
 	fgets(g_szMapName, 256, pMapFile);
 	fscanf(
-		pMapFile, "%" PRIuFAST8 "x%" PRIuFAST8 "\n",
+		pMapFile, "%" PRI_FUBYTE "x%" PRI_FUBYTE "\n",
 		&g_fubMapTileWidth, &g_fubMapTileHeight
 	);
 	logWrite(
-		"Dimensions: %" PRIuFAST8 ", %" PRIuFAST8 "\n",
+		"Dimensions: %" PRI_FUBYTE ", %" PRI_FUBYTE "\n",
 		g_fubMapTileWidth, g_fubMapTileHeight
 	);
 	g_pMap = memAllocFast(sizeof(tTile*) * g_fubMapTileWidth);
@@ -105,7 +105,7 @@ void mapCreate(char *szPath) {
 	buildingManagerReset();
 
 	// Read map data
-	uint_fast8_t fub_spawnCnt = 0;
+	FUBYTE fub_spawnCnt = 0;
 	for(y = 0; y != g_fubMapTileHeight; ++y) {
 		for(x = 0; x != g_fubMapTileWidth; ++x) {
 			do
@@ -127,7 +127,7 @@ void mapCreate(char *szPath) {
 }
 
 void mapGenerateLogic(void) {
-	uint_fast8_t x, y, ubTileIdx;
+	FUBYTE x, y, ubTileIdx;
 	logBlockBegin("mapGenerateLogic()");
 	turretListCreate();
 	// 2nd data pass - generate additional logic
@@ -183,7 +183,7 @@ void mapGenerateLogic(void) {
 }
 
 void mapRedraw(void) {
-	uint_fast8_t x, y;
+	FUBYTE x, y;
 	UBYTE ubTileIdx, ubOutTile;
 
 	for(x = 0; x != g_fubMapTileWidth; ++x) {
@@ -194,8 +194,8 @@ void mapRedraw(void) {
 	}
 }
 
-UBYTE mapTileFromLogic(uint_fast8_t fubTileX, uint_fast8_t fubTileY) {
-	uint_fast8_t fubLogicIdx = g_pMap[fubTileX][fubTileY].ubIdx;
+UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
+	FUBYTE fubLogicIdx = g_pMap[fubTileX][fubTileY].ubIdx;
 	switch(fubLogicIdx) {
 		case MAP_LOGIC_WATER:
 			return MAP_TILE_WATER;
@@ -239,7 +239,7 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 
 void mapDestroy(void) {
 	spawnManagerDestroy();
-	uint_fast8_t x;
+	FUBYTE x;
 
 	logBlockBegin("mapDestroy()");
 	for(x = 0; x != g_fubMapTileWidth; ++x) {
@@ -262,8 +262,8 @@ void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
  */
 void mapUpdateTiles(void) {
 	while(g_ubPendingTileCount) {
-		uint_fast8_t fubTileX = g_pTilesToRedraw[g_ubPendingTileCount].ubX;
-		uint_fast8_t fubTileY = g_pTilesToRedraw[g_ubPendingTileCount].ubY;
+		FUBYTE fubTileX = g_pTilesToRedraw[g_ubPendingTileCount].ubX;
+		FUBYTE fubTileY = g_pTilesToRedraw[g_ubPendingTileCount].ubY;
 		mapDrawTile(fubTileX, fubTileY, mapTileFromLogic(fubTileX, fubTileY));
 		--g_ubPendingTileCount;
 	}

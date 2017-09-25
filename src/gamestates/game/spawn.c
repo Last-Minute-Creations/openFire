@@ -7,15 +7,15 @@
 #include "gamestates/game/team.h"
 
 tSpawn *g_pSpawns;
-static UBYTE s_ubSpawnCount;
+UBYTE g_ubSpawnCount;
 static UBYTE s_ubSpawnMaxCount;
 static tBitMap *s_pGreenAnims;
 static tBitMap *s_pBrownAnims;
 
-void spawnManagerCreate(uint_fast8_t fubMaxCount) {
-	logBlockBegin("spawnManagerCreate(fubMaxCount: %"PRIuFAST8")", fubMaxCount);
+void spawnManagerCreate(FUBYTE fubMaxCount) {
+	logBlockBegin("spawnManagerCreate(fubMaxCount: %"PRI_FUBYTE")", fubMaxCount);
 	s_ubSpawnMaxCount = fubMaxCount;
-	s_ubSpawnCount = 0;
+	g_ubSpawnCount = 0;
 	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * fubMaxCount);
 	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/bunkering_green.bm");
 	// TODO: bunkering_brown.bm
@@ -32,11 +32,11 @@ void spawnManagerDestroy(void) {
 }
 
 UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
-	if(s_ubSpawnCount == s_ubSpawnMaxCount) {
+	if(g_ubSpawnCount == s_ubSpawnMaxCount) {
 		logWrite("ERR: No more room for spawns");
 		return 0;
 	}
-	tSpawn *pSpawn = &g_pSpawns[s_ubSpawnCount];
+	tSpawn *pSpawn = &g_pSpawns[g_ubSpawnCount];
 
 	pSpawn->ubBusy = SPAWN_BUSY_NOT;
 	pSpawn->ubFrame = 0;
@@ -44,7 +44,7 @@ UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 	pSpawn->ubTileX = ubTileX;
 	pSpawn->ubTileY = ubTileY;
 
-	return s_ubSpawnCount++;
+	return g_ubSpawnCount++;
 }
 
 void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
@@ -54,7 +54,7 @@ void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 	UBYTE ubNearestIdx = SPAWN_INVALID;
 	UWORD uwNearestDist = 0xFF;
-	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
+	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		if(g_pSpawns[i].ubTeam != ubTeam)
 			continue;
 		// Maybe this will suffice
@@ -69,14 +69,14 @@ UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 }
 
 UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
-	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
+	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		if(g_pSpawns[i].ubTileX == ubTileX || g_pSpawns[i].ubTileY == ubTileY)
 			return i;
 	}
 	return SPAWN_INVALID;
 }
 
-void spawnSetBusy(uint_fast8_t fubSpawnIdx, uint_fast8_t fubBusyType, uint_fast8_t fubVehicleType) {
+void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType) {
 	tSpawn *pSpawn = &g_pSpawns[fubSpawnIdx];
 	pSpawn->ubBusy = fubBusyType;
 	if(fubBusyType == SPAWN_BUSY_BUNKERING || fubBusyType == SPAWN_BUSY_SURFACING) {
@@ -87,7 +87,7 @@ void spawnSetBusy(uint_fast8_t fubSpawnIdx, uint_fast8_t fubBusyType, uint_fast8
 }
 
 void spawnSim(void) {
-	for(uint_fast8_t i = 0; i != s_ubSpawnCount; ++i) {
+	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
 		if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
 			if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN)

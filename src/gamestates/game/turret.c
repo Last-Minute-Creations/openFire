@@ -16,10 +16,12 @@
 
 #define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
-static UWORD s_uwMaxTurrets;
-static tTurret *s_pTurretList; // 20x25: 1100*7 ~ 8KiB
-static UWORD **s_pTurretTiles; // 20x25: +2KiB
+UWORD g_uwTurretCount;
+tTurret *g_pTurrets; // 20x25: 1100*7 ~ 8KiB
 tBobSource g_sBrownTurretSource, g_sGreenTurretSource;
+
+static UWORD s_uwMaxTurrets;
+static UWORD **s_pTurretTiles; // 20x25: +2KiB
 
 static tAvg *s_pAvg;
 
@@ -27,8 +29,9 @@ void turretListCreate(void) {
 	int i, t;
 	logBlockBegin("turretListCreate()");
 
+	g_uwTurretCount = 0;
 	s_uwMaxTurrets = (g_fubMapTileWidth/2 + 1) * g_fubMapTileHeight;
-	s_pTurretList = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
+	g_pTurrets = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
 	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_fubMapTileWidth);
@@ -77,7 +80,7 @@ void turretListCreate(void) {
 void turretListDestroy(void) {
 	logBlockBegin("turretListDestroy()");
 
-	memFree(s_pTurretList, s_uwMaxTurrets * sizeof(tTurret));
+	memFree(g_pTurrets, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
 	for(int i = 0; i != g_fubMapTileWidth; ++i)
@@ -89,25 +92,14 @@ void turretListDestroy(void) {
 	logBlockEnd("turretListDestroy()");
 }
 
-UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
+UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	logBlockBegin(
-		"turretCreate(uwTileX: %hu, uwTileY: %hu, ubTeam: %hhu)",
+		"turretAdd(uwTileX: %hu, uwTileY: %hu, ubTeam: %hhu)",
 		uwTileX, uwTileY, ubTeam
 	);
 
-	// Find next free turret
-	UWORD i;
-	for(i = 0; i != s_uwMaxTurrets; ++i)
-		if(!s_pTurretList[i].uwX)
-			break;
-	if(i == s_uwMaxTurrets) {
-		logWrite("ERR: No more room for another turret!\n");
-		logBlockEnd("turretCreate()");
-		return TURRET_INVALID;
-	}
-
 	// Initial values
-	tTurret *pTurret = &s_pTurretList[i];
+	tTurret *pTurret = &g_pTurrets[g_uwTurretCount];
 	pTurret->uwX = (uwTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->ubTeam = ubTeam;
@@ -115,10 +107,10 @@ UWORD turretCreate(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->ubCooldown = 0;
 
 	// Add to tile-based list
-	s_pTurretTiles[uwTileX][uwTileY] = i;
+	s_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;
 
-	logBlockEnd("turretCreate()");
-	return i;
+	logBlockEnd("turretAdd()");
+	return g_uwTurretCount++;
 }
 
 void turretDestroy(UWORD uwIdx) {
@@ -127,7 +119,7 @@ void turretDestroy(UWORD uwIdx) {
 		logWrite("ERR: turretDestroy() - Index out of range %u\n", uwIdx);
 		return;
 	}
-	tTurret *pTurret = &s_pTurretList[uwIdx];
+	tTurret *pTurret = &g_pTurrets[uwIdx];
 
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
@@ -153,7 +145,7 @@ void turretSim(void) {
 	tTurret *pTurret;
 
 	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
-		pTurret = &s_pTurretList[uwTurretIdx];
+		pTurret = &g_pTurrets[uwTurretIdx];
 		if(!pTurret->uwX || pTurret->ubTeam == TEAM_NONE)
 			continue;
 
@@ -162,7 +154,7 @@ void turretSim(void) {
 			--pTurret->ubCooldown;
 
 		// Scan nearby enemies
-		uwClosestDist = TURRET_MIN_DISTANCE;
+		uwClosestDist = TURRET_MIN_DISTANCE*TURRET_MIN_DISTANCE;
 		pClosestPlayer = 0;
 		for(ubPlayerIdx = 0; ubPlayerIdx != g_ubPlayerCount; ++ubPlayerIdx) {
 			pPlayer = &g_pPlayers[ubPlayerIdx];
@@ -175,9 +167,9 @@ void turretSim(void) {
 			wDx = pPlayer->sVehicle.fX - pTurret->uwX;
 			wDy = pPlayer->sVehicle.fY - pTurret->uwY;
 			if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
-				continue; // If too far, don't do costly sqrt calculations
-			uwDist = fix16_to_int(fix16_sqrt(fix16_from_int(wDx*wDx + wDy*wDy)));
-			if(uwDist < TURRET_MIN_DISTANCE && uwDist <= uwClosestDist) {
+				continue; // If too far, don't do costly multiplications
+			uwDist = wDx*wDx + wDy*wDy; // No need for sqrt at that point
+			if(uwDist <= uwClosestDist) {
 				pClosestPlayer = pPlayer;
 				uwClosestDist = uwDist;
 			}
@@ -186,6 +178,7 @@ void turretSim(void) {
 		// Anything in range?
 		if(!pClosestPlayer)
 			continue;
+		uwClosestDist = fix16_to_int(fix16_sqrt(fix16_from_int(uwClosestDist)));
 
 		// Determine destination angle
 		ubDestAngle = getAngleBetweenPoints(
@@ -313,7 +306,7 @@ void turretUpdateSprites(void) {
 			// Get turret from tile, skip if there is none
 			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
 			continue;
-			pTurret = &s_pTurretList[s_pTurretTiles[uwTileX][uwTileY]];
+			pTurret = &g_pTurrets[s_pTurretTiles[uwTileX][uwTileY]];
 
 			// Get proper turret sprite data
 			// 0 < wCopHPos < 0xE2 always 'cuz only 8px after 0xE2

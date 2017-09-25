@@ -20,7 +20,7 @@ typedef struct _tSpawn {
 } tSpawn;
 
 void spawnManagerCreate(
-	IN uint_fast8_t fubMaxCount
+	IN FUBYTE fubMaxCount
 );
 
 void spawnManagerDestroy(void);
@@ -48,9 +48,9 @@ UBYTE spawnGetAt(
 );
 
 void spawnSetBusy(
-	IN uint_fast8_t fubSpawnIdx,
-	IN uint_fast8_t fubBusyType,
-	IN uint_fast8_t fubVehicleType
+	IN FUBYTE fubSpawnIdx,
+	IN FUBYTE fubBusyType,
+	IN FUBYTE fubVehicleType
 );
 
 void spawnAnimate(
@@ -60,5 +60,6 @@ void spawnAnimate(
 void spawnSim(void);
 
 extern tSpawn *g_pSpawns;
+extern UBYTE g_ubSpawnCount;
 
 #endif // GUARD_OF_GAMESTATES_GAME_SPAWN_H
