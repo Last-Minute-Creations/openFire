@@ -107,12 +107,19 @@ void worldDraw(void) {
 void worldUndraw(void) {
 	UBYTE ubPlayer;
 
+	logAvgBegin(s_pUndrawAvgExplosions);
 	explosionsUndraw(g_pWorldMainBfr->pBuffer);
+	logAvgEnd(s_pUndrawAvgExplosions);
+
+	logAvgBegin(s_pUndrawAvgProjectiles);
 	projectileUndraw();
+	logAvgEnd(s_pUndrawAvgProjectiles);
 
 	// Vehicles
+	logAvgBegin(s_pUndrawAvgVehicles);
 	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
 		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
+	logAvgEnd(s_pUndrawAvgVehicles);
 
 	// Silo highlight
 	if(s_ubWasSiloHighlighted)
