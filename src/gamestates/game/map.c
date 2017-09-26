@@ -1,4 +1,6 @@
 #include "gamestates/game/map.h"
+#define JSMN_STRICT
+#include "jsmn.h"
 #include <ace/config.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -6,6 +8,7 @@
 #include "gamestates/game/team.h"
 #include "gamestates/game/building.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/control.h"
 
 tTile **g_pMap;
 FUBYTE g_fubMapTileWidth, g_fubMapTileHeight;
@@ -16,6 +19,8 @@ UBYTE g_ubPendingTileCount;
 
 tBitMap *s_pTileset;
 tBitMap *s_pBuffer;
+
+// https://alisdair.mcdiarmid.org/jsmn-example/
 
 void mapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
 	s_pTileset = pTileset;
@@ -76,53 +81,150 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	return ubOut;
 }
 
+void mapJsonGetMeta(
+	char *szJson, jsmntok_t *pTokens, FUWORD fuwTokenCnt,
+	FUBYTE *pWidth, FUBYTE *pHeight, FUBYTE *pControlPointCount
+) {
+	for(FUWORD i = 1; i < fuwTokenCnt; ++i) { // Skip first gigantic obj
+		// Read property name
+		FUWORD fuwWidth = pTokens[i].end - pTokens[i].start;
+		if(pTokens[i].type != JSMN_STRING)
+			continue;
+		if(!memcmp(szJson + pTokens[i].start, "width", fuwWidth))
+			*pWidth = strtoul(szJson + pTokens[++i].start, 0, 10);
+		else if(!memcmp(szJson + pTokens[i].start, "height", fuwWidth))
+			*pHeight = strtoul(szJson + pTokens[++i].start, 0, 10);
+		else if(!memcmp(szJson + pTokens[i].start, "controlPoints", fuwWidth))
+			*pControlPointCount = pTokens[++i].size;
+	}
+}
+
+void mapJsonReadTiles(
+	char *szJson, jsmntok_t *pTokens, FUWORD fuwTokenCnt,
+	FUBYTE *pSpawnCount
+) {
+	// Find 'tiles' in JSON
+	FUBYTE fubFound = 0;
+	FUWORD i;
+	for(i = 1; i < fuwTokenCnt && !fubFound; ++i) { // Skip first obj
+		FUWORD fuwWidth = pTokens[i].end - pTokens[i].start;
+		if(pTokens[i].type != JSMN_STRING)
+			continue;
+		if(memcmp(szJson + pTokens[i].start, "tiles", fuwWidth))
+			continue;
+		fubFound = 1;
+	}
+	if(!fubFound) {
+		logWrite("JSON 'tiles' array not found!");
+	}
+
+	// Tiles found - check row count
+	if(pTokens[i].size != g_fubMapTileHeight) {
+		logWrite(
+			"Only %d rows provided, %"PRI_FUBYTE"expected\n",
+			pTokens[i].size, g_fubMapTileHeight
+		);
+		return;
+	}
+
+	// Do some reading
+	*pSpawnCount = 0;
+	for(FUBYTE y = 0; y < g_fubMapTileHeight; ++y) {
+		++i;
+		FUWORD fuwWidth = pTokens[i].end - pTokens[i].start;
+
+		// Sanity check
+		if(pTokens[i].type != JSMN_STRING) {
+			logWrite("Unexpected row type @y %"PRI_FUBYTE": %d", y, pTokens[i].type);
+			return;
+		}
+		if(fuwWidth != g_fubMapTileWidth) {
+			logWrite(
+				"Row @y %"PRI_FUBYTE" is too short: %"PRI_FUWORD", expected %"PRI_FUBYTE"\n",
+				y, fuwWidth, g_fubMapTileWidth
+			);
+			return;
+		}
+
+		// Read row
+		for(FUBYTE x = 0; x < fuwWidth; ++x) {
+			g_pMap[x][y].ubIdx = (UBYTE)szJson[pTokens[i].start + x];
+			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
+			if(
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN2
+			)
+				++*pSpawnCount;
+		}
+	}
+}
+
 void mapCreate(char *szPath) {
-	FUBYTE x, y;
 	UBYTE ubTileIdx;
-	FILE *pMapFile;
 	tSimpleBufferManager *pManager;
-	char szHeaderBfr[256];
 
 	logBlockBegin("mapCreate(szPath: %s)", szPath);
 	g_ubPendingTileCount = 0;
 
-	// Header & mem alloc
-	pMapFile = fopen(szPath, "rb");
+	// Read whole file to string
+	FILE *pMapFile = fopen(szPath, "rb");
 	if(!pMapFile)
 		logWrite("ERR: File doesn't exist: %s\n", szPath);
-	fgets(g_szMapName, 256, pMapFile);
-	fscanf(
-		pMapFile, "%" PRI_FUBYTE "x%" PRI_FUBYTE "\n",
-		&g_fubMapTileWidth, &g_fubMapTileHeight
-	);
-	logWrite(
-		"Dimensions: %" PRI_FUBYTE ", %" PRI_FUBYTE "\n",
-		g_fubMapTileWidth, g_fubMapTileHeight
-	);
-	g_pMap = memAllocFast(sizeof(tTile*) * g_fubMapTileWidth);
-	for(x = 0; x != g_fubMapTileWidth; ++x)
-		g_pMap[x] = memAllocFast(sizeof(tTile) * g_fubMapTileHeight);
-	buildingManagerReset();
-
-	// Read map data
-	FUBYTE fub_spawnCnt = 0;
-	for(y = 0; y != g_fubMapTileHeight; ++y) {
-		for(x = 0; x != g_fubMapTileWidth; ++x) {
-			do
-				fread(&ubTileIdx, 1, 1, pMapFile);
-				while(ubTileIdx == '\n' || ubTileIdx == '\r');
-			g_pMap[x][y].ubIdx = ubTileIdx;
-			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
-			if(
-				ubTileIdx == MAP_LOGIC_SPAWN0 ||
-				ubTileIdx == MAP_LOGIC_SPAWN1 ||
-				ubTileIdx == MAP_LOGIC_SPAWN2
-			)
-				++fub_spawnCnt;
-		}
-	}
+	fseek(pMapFile, 0, SEEK_END);
+	ULONG ulFileSize = ftell(pMapFile);
+	fseek(pMapFile, 0, SEEK_SET);
+	UBYTE *szMapFileContent = memAllocFast(ulFileSize+1);
+	fread(szMapFileContent, 1, ulFileSize, pMapFile);
+	szMapFileContent[ulFileSize] = '\0';
 	fclose(pMapFile);
-	spawnManagerCreate(fub_spawnCnt);
+
+	jsmn_parser sJsonParser;
+	jsmn_init(&sJsonParser);
+
+	// Count tokens & alloc
+	FWORD fwTokenCount = jsmn_parse(&sJsonParser, szMapFileContent, ulFileSize+1, 0, 0);
+	if(fwTokenCount < 0) {
+		logWrite("ERR: JSON token counting: %"PRI_FWORD"\n", fwTokenCount);
+		return;
+	}
+	jsmntok_t *pJsonTokens = memAllocFast(fwTokenCount * sizeof(jsmntok_t));
+
+	// Read tokens
+	jsmn_init(&sJsonParser);
+	FWORD fwResult = jsmn_parse(
+		&sJsonParser, szMapFileContent, ulFileSize+1, pJsonTokens, fwTokenCount
+	);
+	if(fwResult < 0) {
+		logWrite("ERR: JSON tokenize: %"PRI_FWORD"\n", fwResult);
+		return;
+	}
+
+	// Objects may have properties passed in random order
+	// so 1st pass will extract only general data
+	FUBYTE fubControlPointCount;
+	mapJsonGetMeta(
+		szMapFileContent, pJsonTokens, fwTokenCount,
+		&g_fubMapTileWidth, &g_fubMapTileHeight, &fubControlPointCount
+	);
+
+	logWrite(
+		"Dimensions: %" PRI_FUBYTE "x%" PRI_FUBYTE ", control pts: %"PRI_FUBYTE"\n",
+		g_fubMapTileWidth, g_fubMapTileHeight, fubControlPointCount
+	);
+
+	g_pMap = memAllocFast(sizeof(tTile*) * g_fubMapTileWidth);
+	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
+		g_pMap[x] = memAllocFast(sizeof(tTile) * g_fubMapTileHeight);
+
+	buildingManagerReset();
+	controlManagerCreate(fubControlPointCount);
+	FUBYTE fubSpawnCount;
+	mapJsonReadTiles(szMapFileContent, pJsonTokens, fwTokenCount, &fubSpawnCount);
+	spawnManagerCreate(fubSpawnCount);
+
+	memFree(pJsonTokens, fwTokenCount * sizeof(jsmntok_t));
+	memFree(szMapFileContent, ulFileSize+1);
 	logBlockEnd("mapCreate()");
 }
 
@@ -238,10 +340,11 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 }
 
 void mapDestroy(void) {
+	logBlockBegin("mapDestroy()");
+	controlManagerDestroy();
 	spawnManagerDestroy();
 	FUBYTE x;
 
-	logBlockBegin("mapDestroy()");
 	for(x = 0; x != g_fubMapTileWidth; ++x) {
 		memFree(g_pMap[x], sizeof(tTile) * g_fubMapTileHeight);
 	}

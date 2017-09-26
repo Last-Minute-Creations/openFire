@@ -128,17 +128,13 @@ void worldUndraw(void) {
 		);
 }
 
-// One 32x32@5bpp tile takes 640 bytes.
-// 20x20 map (400 tiles) takes 256000 bytes - 250 KB
-// One 32x32@4bpp tile takes 512 bytes
-// so 250KB consists of 500 tiles - 20x25
 void gsGameCreate(void) {
 	UBYTE i;
 
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
 	teamsInit();
-	mapCreate("data/maps/snafu.txt");
+	mapCreate("data/maps/snafu.json");
 
 	// Add players
 	playerListCreate(8);
