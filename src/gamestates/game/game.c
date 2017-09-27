@@ -217,8 +217,7 @@ void gsGameCreate(void) {
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
-	// Now that world copperlist is created, prepare map logic & do the first draw
-	mapGenerateLogic();
+	// Now that world buffer is created, do the first draw
 	mapRedraw();
 	displayPrepareLimbo();
 
