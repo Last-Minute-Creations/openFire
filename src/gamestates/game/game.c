@@ -129,30 +129,35 @@ void worldUndraw(void) {
 }
 
 void gsGameCreate(void) {
-	UBYTE i;
 
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
-	teamsInit();
-	mapCreate("data/maps/snafu.json");
 
-	// Add players
-	playerListCreate(8);
-	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
-	for(UBYTE i = 0; i != 7; ++i) {
-		char szName[10];
-		sprintf(szName, "player%hhu", i);
-		playerAdd(szName, TEAM_GREEN);
-	}
-
-	// Create everything needed to display world view
-	// Prepare view & viewport
+	// Prepare view
+	// Must be before mapCreate 'cuz turretListCreate() needs copperlist
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
 		TAG_DONE
 	);
+
+	// Load gfx
+	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
+	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
+
+	// Add players
+	teamsInit();
+	playerListCreate(8);
+	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
+	for(FUBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player%hhu", i);
+		playerAdd(szName, TEAM_GREEN);
+	}
+
+	mapCreate("data/maps/snafu.json");
+	// Create viewports
 	s_pWorldMainVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, g_pWorldView,
 		TAG_VPORT_HEIGHT, WORLD_VPORT_HEIGHT,
@@ -172,18 +177,11 @@ void gsGameCreate(void) {
 		gamePopState();
 		return;
 	}
+	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
+	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	paletteLoad("data/amidb16.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/amidb16.plt", &s_pWorldMainVPort->pPalette[16], 16);
-	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
-
 	hudCreate();
-
-	// Load gfx
-	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
-
-	// Associate map with world's buffer & tileset
-	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
@@ -197,7 +195,6 @@ void gsGameCreate(void) {
 
 	// Crosshair stuff
 	cursorCreate();
-	cursorSetConstraints(0, 0, 320, 192);
 
 	// Explosions
 	explosionsCreate();

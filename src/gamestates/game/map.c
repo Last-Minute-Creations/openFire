@@ -111,7 +111,6 @@ void mapCreate(char *szPath) {
 	FUBYTE fubSpawnCount;
 	mapJsonReadTiles(pMapJson, &fubSpawnCount);
 	spawnManagerCreate(fubSpawnCount);
-	// FIXME figure out why moving mapGenerateLogic here prevents hud from being displayed
 	mapGenerateLogic();
 	mapJsonReadControlPoints(pMapJson);
 
