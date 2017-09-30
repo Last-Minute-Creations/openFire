@@ -69,6 +69,7 @@ void displayPrepareDriving(void) {
 void worldDraw(void) {
 	UBYTE ubPlayer;
 
+	mapUpdateTiles();
 	controlRedrawPoints();
 
 	// Silo highlight
@@ -268,7 +269,6 @@ void gsGameLoop(void) {
 			2 * SGN(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY)
 		);
 	}
-	mapUpdateTiles();
 	worldDraw();
 
 	viewProcessManagers(g_pWorldView);

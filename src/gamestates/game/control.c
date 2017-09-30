@@ -114,6 +114,8 @@ void controlMaskIterateSpawns(
 	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		FUBYTE fubX = g_pSpawns[i].ubTileX;
 		FUBYTE fubY = g_pSpawns[i].ubTileY;
+		if(fubX < fubX1 || fubX > fubX2)
+			continue;
 		FUBYTE isInPoly = 0, isEdgeProcessed;
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			isEdgeProcessed = 0;
@@ -141,6 +143,8 @@ void controlMaskIterateTurrets(
 	for(FUBYTE i = 0; i != g_uwTurretCount; ++i) {
 		FUBYTE fubX = g_pTurrets[i].uwX >> MAP_TILE_SIZE;
 		FUBYTE fubY = g_pTurrets[i].uwY >> MAP_TILE_SIZE;
+		if(fubX < fubX1 || fubX > fubX2)
+			continue;
 		FUBYTE isInPoly = 0, isProcessed;
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			isProcessed = 0;
@@ -192,7 +196,7 @@ void controlAddPoint(
 	pPoint->fubTurretCount = 0;
 	controlMaskIterateTurrets(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, increaseTurretCount);
 	pPoint->pTurrets = memAllocFast(s_ubAllocTurretCount * sizeof(UWORD));
-	controlMaskIterateSpawns(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addTurret);
+	controlMaskIterateTurrets(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addTurret);
 
 	// Determine team
 	if(pPoint->fubSpawnCount)
@@ -227,14 +231,14 @@ void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 	if(pPoint->fubTeam == fubTeam)
 		return;
 	logWrite(
-		"Control point at %hu,%hu captured by team %u",
+		"Control point at %hu,%hu captured by team %u\n",
 		pPoint->fubTileX, pPoint->fubTileY, fubTeam
 	);
 	pPoint->fubTeam = fubTeam;
 	for(FUBYTE i = 0; i != pPoint->fubSpawnCount; ++i)
-		spawnCapture(i, fubTeam);
+		spawnCapture(pPoint->pSpawns[i], fubTeam);
 	for(FUBYTE i = 0; i != pPoint->fubTurretCount; ++i)
-		turretCapture(i, fubTeam);
+		turretCapture(pPoint->pTurrets[i], fubTeam);
 }
 
 void controlSim(void) {

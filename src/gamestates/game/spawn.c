@@ -49,13 +49,11 @@ UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 
 void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 	g_pSpawns[ubSpawnIdx].ubTeam = ubTeam;
-	g_pMap[g_pSpawns[ubSpawnIdx].ubTileX][g_pSpawns[ubSpawnIdx].ubTileY].ubIdx =
+	mapChangeTile(
+		g_pSpawns[ubSpawnIdx].ubTileX, g_pSpawns[ubSpawnIdx].ubTileY,
 		ubTeam == TEAM_GREEN ? MAP_LOGIC_SPAWN1
 		: ubTeam == TEAM_BROWN ? MAP_LOGIC_SPAWN2
-		: MAP_LOGIC_SPAWN0;
-	mapRequestUpdateTile(
-		g_pSpawns[ubSpawnIdx].ubTileX,
-		g_pSpawns[ubSpawnIdx].ubTileY
+		: MAP_LOGIC_SPAWN0
 	);
 }
 

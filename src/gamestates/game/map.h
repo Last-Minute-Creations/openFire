@@ -79,10 +79,10 @@ void mapDestroy(void);
 void mapRedraw(void);
 void mapGenerateLogic(void);
 
-void mapDrawTile(
+void mapChangeTile(
 	IN UBYTE ubX,
 	IN UBYTE ubY,
-	IN UBYTE ubTileIdx
+	IN UBYTE ubLogicTileIdx
 );
 
 void mapSetSrcDst(

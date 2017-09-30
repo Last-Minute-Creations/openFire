@@ -173,6 +173,14 @@ void mapGenerateLogic(void) {
 	logBlockEnd("mapGenerateLogic()");
 }
 
+void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
+	blitCopyAligned(
+		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
+		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
+		MAP_FULL_TILE, MAP_FULL_TILE
+	);
+}
+
 void mapRedraw(void) {
 	FUBYTE x, y;
 	UBYTE ubTileIdx, ubOutTile;
@@ -220,14 +228,6 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 	}
 }
 
-void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
-	blitCopyAligned(
-		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
-		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
-		MAP_FULL_TILE, MAP_FULL_TILE
-	);
-}
-
 void mapDestroy(void) {
 	logBlockBegin("mapDestroy()");
 	controlManagerDestroy();
@@ -259,4 +259,9 @@ void mapUpdateTiles(void) {
 		mapDrawTile(fubTileX, fubTileY, mapTileFromLogic(fubTileX, fubTileY));
 		--g_ubPendingTileCount;
 	}
+}
+
+void mapChangeTile(UBYTE ubX,	UBYTE ubY, UBYTE ubLogicTileIdx) {
+	g_pMap[ubX][ubY].ubIdx = ubLogicTileIdx;
+	mapRequestUpdateTile(ubX, ubY);
 }
