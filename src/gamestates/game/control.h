@@ -17,6 +17,11 @@ typedef struct _tControlPoint {
 	FUBYTE fubSpawnCount;
 	FUWORD *pTurrets;
 	FUBYTE *pSpawns;
+	FUBYTE fubGreenCount; ///< Nearby player count from green team.
+	FUBYTE fubBrownCount; ///< Ditto, brown team.
+	FUWORD fuwLife;       ///< Capture life
+	FUBYTE fubTeam;       ///< Controlling team.
+	FUBYTE fubDestTeam;   ///< Conquering team.
 	char szName[CONTROL_NAME_MAX];
 } tControlPoint;
 
@@ -38,5 +43,10 @@ void controlAddPoint(
 );
 
 void controlSim(void);
+
+void controlRedrawPoints(void);
+
+extern tControlPoint *g_pControlPoints;
+extern FUBYTE g_fubControlPointCount;
 
 #endif // GUARD_OF_GAMESTATES_GAME_CONTROL_H

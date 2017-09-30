@@ -20,6 +20,7 @@
 #include "gamestates/game/cursor.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/spawn.h"
+#include "gamestates/game/control.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -67,6 +68,8 @@ void displayPrepareDriving(void) {
 
 void worldDraw(void) {
 	UBYTE ubPlayer;
+
+	controlRedrawPoints();
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight)
@@ -236,6 +239,7 @@ void gsGameLoop(void) {
 	playerLocalProcessInput(); // Steer requests & limbo
 	spawnSim();
 	playerSim();               // Players: vehicle positions, death states, etc.
+	controlSim();
 	turretSim();               // Turrets: targeting, rotation & projectile spawn
 	projectileSim();           // Projectiles: new positions, damage
 	dataSend();                // Sends data to server

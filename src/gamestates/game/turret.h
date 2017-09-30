@@ -40,6 +40,11 @@ void turretDestroy(
 	IN UWORD uwIdx
 );
 
+void turretCapture(
+	IN UWORD uwIdx,
+	IN FUBYTE fubTeam
+);
+
 void turretSim(void);
 
 void turretUpdateSprites(void);

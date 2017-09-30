@@ -1,30 +1,37 @@
 #include "gamestates/game/control.h"
 #include <ace/macros.h>
+#include <ace/managers/blit.h>
 #include "gamestates/game/map.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/game.h"
 
-tControlPoint *s_pControlPoints;
+#define CONTROL_POINT_LIFE 250 /* 15s */
+#define CONTROL_POINT_LIFE_BROWN   0
+#define CONTROL_POINT_LIFE_NEUTRAL (CONTROL_POINT_LIFE)
+#define CONTROL_POINT_LIFE_GREEN   (CONTROL_POINT_LIFE*2)
+
+tControlPoint *g_pControlPoints;
+FUBYTE g_fubControlPointCount;
 FUBYTE s_fubControlPointMaxCount;
-FUBYTE s_fubControlPointCount;
 
 void controlManagerCreate(FUBYTE fubPointCount) {
 	logBlockBegin(
 		"controlManagerCreate(fubPointCount: %"PRI_FUBYTE")", fubPointCount
 	);
 	s_fubControlPointMaxCount = fubPointCount;
-	s_pControlPoints = memAllocFastClear(sizeof(tControlPoint) * fubPointCount);
-	s_fubControlPointCount = 0;
+	g_pControlPoints = memAllocFastClear(sizeof(tControlPoint) * fubPointCount);
+	g_fubControlPointCount = 0;
 	logBlockEnd("controlManagerCreate()");
 }
 
 void controlManagerDestroy(void) {
 	logBlockBegin("controlManagerDestroy()");
-	for(FUBYTE i = 0; i != s_fubControlPointCount; ++i) {
-		tControlPoint *pPoint = &s_pControlPoints[i];
+	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+		tControlPoint *pPoint = &g_pControlPoints[i];
 		memFree(pPoint->pSpawns, pPoint->fubSpawnCount * sizeof(FUBYTE));
 		memFree(pPoint->pTurrets, pPoint->fubTurretCount * sizeof(UWORD));
 	}
-	memFree(s_pControlPoints, sizeof(tControlPoint) * s_fubControlPointMaxCount);
+	memFree(g_pControlPoints, sizeof(tControlPoint) * s_fubControlPointMaxCount);
 	logBlockEnd("controlManagerDestroy()");
 }
 
@@ -162,8 +169,10 @@ void controlAddPoint(
 		"fubCaptureTileY: %"PRI_FUBYTE", fubPolyPtCnt: %"PRI_FUBYTE", pPolyPts: %p)",
 		szName, fubCaptureTileX, fubCaptureTileY, fubPolyPtCnt, pPolyPts
 	);
-	tControlPoint *pPoint = &s_pControlPoints[s_fubControlPointCount];
+	tControlPoint *pPoint = &g_pControlPoints[g_fubControlPointCount];
 	strcpy(pPoint->szName, szName);
+	pPoint->fubTileX = fubCaptureTileX;
+	pPoint->fubTileY = fubCaptureTileY;
 
 	// Plot polygon on mask
 	FUBYTE fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2;
@@ -185,9 +194,28 @@ void controlAddPoint(
 	pPoint->pTurrets = memAllocFast(s_ubAllocTurretCount * sizeof(UWORD));
 	controlMaskIterateSpawns(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addTurret);
 
+	// Determine team
+	if(pPoint->fubSpawnCount)
+		pPoint->fubTeam = g_pSpawns[pPoint->pSpawns[0]].ubTeam;
+	else if(pPoint->fubTurretCount)
+		pPoint->fubTeam = g_pTurrets[pPoint->pTurrets[0]].ubTeam;
+	else
+		pPoint->fubTeam = TEAM_NONE;
+
+	if(pPoint->fubTeam == TEAM_GREEN)
+		pPoint->fuwLife = CONTROL_POINT_LIFE_GREEN;
+	else if(pPoint->fubTeam == TEAM_BROWN)
+		pPoint->fuwLife = CONTROL_POINT_LIFE_BROWN;
+	else
+		pPoint->fuwLife = CONTROL_POINT_LIFE_NEUTRAL;
+
+	pPoint->fubDestTeam = pPoint->fubTeam;
+	pPoint->fubBrownCount = 0;
+	pPoint->fubGreenCount = 0;
+
 	// Free polygon mask
 	controlPolygonMaskDestroy(pMask);
-	++s_fubControlPointCount;
+	++g_fubControlPointCount;
 	logWrite(
 		"Spawns: %"PRI_FUBYTE", turrets: %"PRI_FUBYTE"\n",
 		pPoint->fubSpawnCount, pPoint->fubTurretCount
@@ -195,8 +223,100 @@ void controlAddPoint(
 	logBlockEnd("controlAddPoint()");
 }
 
+void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
+	if(pPoint->fubTeam == fubTeam)
+		return;
+	logWrite(
+		"Control point at %hu,%hu captured by team %u",
+		pPoint->fubTileX, pPoint->fubTileY, fubTeam
+	);
+	pPoint->fubTeam = fubTeam;
+	for(FUBYTE i = 0; i != pPoint->fubSpawnCount; ++i)
+		spawnCapture(i, fubTeam);
+	for(FUBYTE i = 0; i != pPoint->fubTurretCount; ++i)
+		turretCapture(i, fubTeam);
+}
+
 void controlSim(void) {
-	//solo:
-	// bring to neutral: 15s (IGN: 20s)
-	// take ownership:  +15s (IGN: +20s)
+	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+		tControlPoint *pPoint = &g_pControlPoints[i];
+		FBYTE fbCaptureDir;
+
+		// Determine destination team
+		if(pPoint->fubBrownCount == pPoint->fubGreenCount) {
+			if(!pPoint->fubBrownCount && pPoint->fubTeam == TEAM_NONE && pPoint->fuwLife != CONTROL_POINT_LIFE_NEUTRAL) {
+				// Abandoned neutral point
+				fbCaptureDir = SGN(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
+			}
+			else
+				continue;
+		}
+		else if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
+			// Brown taking over green
+			fbCaptureDir = -1;
+			if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL)
+				pPoint->fubDestTeam = TEAM_NONE;
+			else
+				pPoint->fubDestTeam = TEAM_BROWN;
+		}
+		else {
+			// Green taking over brown
+			fbCaptureDir = 1;
+			if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL)
+				pPoint->fubDestTeam = TEAM_NONE;
+			else
+				pPoint->fubDestTeam = TEAM_GREEN;
+		}
+
+		// Process takeover
+		pPoint->fuwLife = CLAMP(
+			pPoint->fuwLife+fbCaptureDir,
+			CONTROL_POINT_LIFE_BROWN,	CONTROL_POINT_LIFE_GREEN
+		);
+
+		if(pPoint->fuwLife == CONTROL_POINT_LIFE_BROWN)
+			controlCapturePoint(pPoint, TEAM_BROWN);
+		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_GREEN)
+			controlCapturePoint(pPoint, TEAM_GREEN);
+		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL)
+			controlCapturePoint(pPoint, TEAM_NONE);
+
+		// Reset for next counting during player process
+		pPoint->fubBrownCount = 0;
+		pPoint->fubGreenCount = 0;
+	}
+}
+
+void controlRedrawPoints(void) {
+	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+		tControlPoint *pPoint = &g_pControlPoints[i];
+		// TODO could be drawn only on fubTileLife change
+		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
+		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
+		// N -> B: 250..0
+		// N -> G: 250..500
+		// B -> N: 0..250
+		// G -> N: 500..250
+		FUWORD fuwTileProgress = ABS(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
+		if(pPoint->fubDestTeam == TEAM_NONE)
+			fuwTileProgress = CONTROL_POINT_LIFE - fuwTileProgress;
+		fuwTileProgress = (MAP_FULL_TILE * fuwTileProgress) / CONTROL_POINT_LIFE;
+		FUWORD fuwAntiProgress = MAP_FULL_TILE - fuwTileProgress;
+
+		if(fuwTileProgress != MAP_FULL_TILE) {
+			blitCopyAligned(
+				g_pMapTileset, 0,
+				(MAP_TILE_CAPTURE_GREEN + pPoint->fubTeam) << MAP_TILE_SIZE,
+				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				MAP_FULL_TILE, fuwAntiProgress
+			);
+		}
+		if(fuwTileProgress)
+			blitCopyAligned(
+				g_pMapTileset, 0,
+				((MAP_TILE_CAPTURE_GREEN + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
+				g_pWorldMainBfr->pBuffer, uwX, uwY + fuwAntiProgress,
+				MAP_FULL_TILE, fuwTileProgress
+			);
+	}
 }

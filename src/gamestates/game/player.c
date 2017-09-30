@@ -11,6 +11,7 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/team.h"
+#include "gamestates/game/control.h"
 
 // Steer requests
 #define OF_KEY_FORWARD      KEY_W
@@ -196,7 +197,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 		return;
 	}
 
-	// Process standing on silos
+	// Standing on silos
 	g_ubDoSiloHighlight = 0;
 	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
 		UBYTE ubSpawnIdx = spawnGetAt(uwVTileX, uwVTileY);
@@ -230,6 +231,22 @@ void playerSimVehicle(tPlayer *pPlayer) {
 					return;
 				}
 			}
+		}
+	}
+
+	// Increase counters for control point domination
+	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+		// Calc distance
+		// Increase vehicle count near control point for given team
+		if(
+			ABS(uwVTileX - g_pControlPoints[i].fubTileX) <= 2 &&
+			ABS(uwVTileY - g_pControlPoints[i].fubTileY) <= 2
+		) {
+			if(pPlayer->ubTeam == TEAM_GREEN)
+				++g_pControlPoints[i].fubGreenCount;
+			else
+				++g_pControlPoints[i].fubBrownCount;
+			break; // Player can't be in two bases at same time
 		}
 	}
 

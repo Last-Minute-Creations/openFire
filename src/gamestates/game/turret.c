@@ -250,7 +250,7 @@ void turretUpdateSprites(void) {
 	// Sprite's visible lines
 	UWORD uwFirstVisibleSpriteLine;
 	// Iterators, counters, flags
-	UWORD uwTileX, uwTileY;
+	FUWORD uwTileX, uwTileY;
 	UWORD uwTurretsInRow;
 
 	UWORD uwCameraX = g_pWorldCamera->uPos.sUwCoord.uwX;
@@ -352,9 +352,9 @@ void turretUpdateSprites(void) {
 		// and then re-enabled only in topmost line.
 		// NOTE NOTE NOTE This should wait for blitter to finish or at least
 		// give it a bit of headstart
-		for(UWORD uwRow = 0; uwRow != wRowsToCopy; ++uwRow) {
+		for(FUWORD fuwRow = 0; fuwRow != wRowsToCopy; ++fuwRow) {
 			++wCopVPos;
-			for(UWORD i = 0; i != uwTurretsInRow; ++i) {
+			for(FUWORD i = 0; i != uwTurretsInRow; ++i) {
 				// Get turret gfx
 				pRowSpriteBpls[i] += uwWordsPerRow;
 				UWORD *pRow = pRowSpriteBpls[i];
@@ -381,4 +381,8 @@ void turretUpdateSprites(void) {
 	// DMA-exact HOG on turretsFull map
 	// Avg turretUpdateSprites():  30.311 ms, min:  30.677 ms, max:  41.228 ms
 
+}
+
+void turretCapture(UWORD uwIdx, FUBYTE fubTeam) {
+	g_pTurrets[uwIdx].ubTeam = fubTeam;
 }

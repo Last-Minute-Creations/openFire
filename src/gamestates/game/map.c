@@ -17,11 +17,11 @@ char g_szMapName[256];
 tTileCoord g_pTilesToRedraw[9] = {{0, 0}};
 UBYTE g_ubPendingTileCount;
 
-tBitMap *s_pTileset;
+tBitMap *g_pMapTileset;
 tBitMap *s_pBuffer;
 
 void mapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
-	s_pTileset = pTileset;
+	g_pMapTileset = pTileset;
 	s_pBuffer = pDst;
 }
 
@@ -78,7 +78,6 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 		ubOut |= ubS;
 	return ubOut;
 }
-
 
 void mapCreate(char *szPath) {
 	UBYTE ubTileIdx;
@@ -192,11 +191,11 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 		case MAP_LOGIC_WATER:
 			return MAP_TILE_WATER;
 		case MAP_LOGIC_SPAWN0:
-			return MAP_TILE_SPAWN0;
+			return MAP_TILE_SPAWN_NONE;
 		case MAP_LOGIC_SPAWN1:
-			return MAP_TILE_SPAWN1;
+			return MAP_TILE_SPAWN_GREEN;
 		case MAP_LOGIC_SPAWN2:
-			return MAP_TILE_SPAWN2;
+			return MAP_TILE_SPAWN_BROWN;
 		case MAP_LOGIC_ROAD:
 			return MAP_TILE_ROAD + mapCheckNeighbours(fubTileX, fubTileY, mapIsRoadFriend);
 		case MAP_LOGIC_WALL:
@@ -210,11 +209,11 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 		case MAP_LOGIC_SENTRY2:
 			return MAP_TILE_WALL;
 		case MAP_LOGIC_CAPTURE0:
-			return MAP_TILE_CAPTURE0;
+			return MAP_TILE_CAPTURE_NONE;
 		case MAP_LOGIC_CAPTURE1:
-			return MAP_TILE_CAPTURE1;
+			return MAP_TILE_CAPTURE_GREEN;
 		case MAP_LOGIC_CAPTURE2:
-			return MAP_TILE_CAPTURE2;
+			return MAP_TILE_CAPTURE_BROWN;
 		case MAP_LOGIC_DIRT:
 		default:
 			return MAP_TILE_DIRT + mapCheckNeighbours(fubTileX, fubTileY, mapIsWater);
@@ -223,7 +222,7 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 
 void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 	blitCopyAligned(
-		s_pTileset, 0, ubTileIdx << MAP_TILE_SIZE,
+		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
 		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
 		MAP_FULL_TILE, MAP_FULL_TILE
 	);
