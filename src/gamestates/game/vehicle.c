@@ -1,5 +1,4 @@
 #include "gamestates/game/vehicle.h"
-#include <math.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
@@ -20,8 +19,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
-	pVehicle->fX = (g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-	pVehicle->fY = (g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pVehicle->fX = fix16_from_int((g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE);
+	pVehicle->fY = fix16_from_int((g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE);
 	pVehicle->ubBodyAngle = ANGLE_90;
 	pVehicle->ubTurretAngle = ANGLE_90;
 	pVehicle->ubBaseAmmo = pVehicle->pType->ubMaxBaseAmmo;
@@ -56,13 +55,15 @@ void vehicleUnset(tVehicle *pVehicle) {
 	pVehicle->pAuxBob->ubFlags = BOB_FLAG_STOP_DRAWING;
 }
 
-UBYTE vehicleCollides(float fX, float fY, tBCoordYX *pCollisionPoints) {
+// TODO accept UWORD instead of fix16_t? Conversion may then be counted only once.
+UBYTE vehicleCollides(fix16_t fX, fix16_t fY, tBCoordYX *pCollisionPoints) {
 	UBYTE p;
 	UBYTE ubLogicTile;
 	UWORD uwPX, uwPY;
+	UWORD uwX = fix16_to_int(fX), uwY = fix16_to_int(fY);
 	for(p = 0; p != 9; ++p) {
-		uwPX = fX - VEHICLE_BODY_WIDTH/2 + pCollisionPoints[p].bX;
-		uwPY = fY - VEHICLE_BODY_HEIGHT/2 + pCollisionPoints[p].bY;
+		uwPX = uwX - VEHICLE_BODY_WIDTH/2 + pCollisionPoints[p].bX;
+		uwPY = uwY - VEHICLE_BODY_HEIGHT/2 + pCollisionPoints[p].bY;
 		ubLogicTile = g_pMap[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
@@ -80,18 +81,18 @@ UBYTE vehicleCollides(float fX, float fY, tBCoordYX *pCollisionPoints) {
 void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	UBYTE ubNewAngle;
 	UBYTE ubNewTurretAngle;
-	float fNewPosX, fNewPosY;
+	fix16_t fNewPosX, fNewPosY;
 
 	// Move forward/backward
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
 	if(pSteerRequest->ubForward) {
-		fNewPosX += ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed;
-		fNewPosY += csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed;
+		fNewPosX = fix16_add(fNewPosX, ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed);
+		fNewPosY = fix16_add(fNewPosY, csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed);
 	}
 	else if(pSteerRequest->ubBackward) {
-		fNewPosX -= ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
-		fNewPosY -= csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
+		fNewPosX = fix16_sub(fNewPosX, ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosY = fix16_sub(fNewPosY, csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
 	}
 
 	// Body rotation: left/right
@@ -141,14 +142,13 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	pVehicle->ubTurretAngle += ANGLE_360 + getDeltaAngleDirection(
 		pVehicle->ubTurretAngle, pSteerRequest->ubDestAngle, 1
 	);
-if(pVehicle->ubTurretAngle >= ANGLE_360)
-	pVehicle->ubTurretAngle -= ANGLE_360;
+	if(pVehicle->ubTurretAngle >= ANGLE_360)
+		pVehicle->ubTurretAngle -= ANGLE_360;
 	bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
 
 	// Fire straight
-	if(pVehicle->ubCooldown) {
+	if(pVehicle->ubCooldown)
 		--pVehicle->ubCooldown;
-	}
 	else if(pSteerRequest->ubAction1 && pVehicle->ubBaseAmmo) {
 		tProjectileOwner uOwner;
 		uOwner.pVehicle = pVehicle;
@@ -161,7 +161,7 @@ if(pVehicle->ubTurretAngle >= ANGLE_360)
 
 void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	UBYTE ubNewAngle;
-	float fNewPosX, fNewPosY;
+	fix16_t fNewPosX, fNewPosY;
 
 	ubNewAngle = pVehicle->ubBodyAngle;
 	if(pSteerRequest->ubLeft) {
@@ -195,12 +195,12 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
 	if(pSteerRequest->ubForward) {
-		fNewPosX += ccos(ubNewAngle) * pVehicle->pType->ubFwdSpeed;
-		fNewPosY += csin(ubNewAngle) * pVehicle->pType->ubFwdSpeed;
+		fNewPosX = fix16_add(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubFwdSpeed);
+		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubFwdSpeed);
 	}
 	else if(pSteerRequest->ubBackward) {
-		fNewPosX -= ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed;
-		fNewPosY -= csin(ubNewAngle) * pVehicle->pType->ubBwSpeed;
+		fNewPosX = fix16_add(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubBwSpeed);
 	}
 
 	if(!vehicleCollides(fNewPosX, fNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1])) {
@@ -211,8 +211,8 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 }
 
 void vehicleDraw(tVehicle *pVehicle) {
-	UWORD uwX = pVehicle->fX - VEHICLE_BODY_WIDTH/2;
-	UWORD uwY = pVehicle->fY - VEHICLE_BODY_HEIGHT/2;
+	UWORD uwX = fix16_to_int(pVehicle->fX) - VEHICLE_BODY_WIDTH/2;
+	UWORD uwY = fix16_to_int(pVehicle->fY) - VEHICLE_BODY_HEIGHT/2;
 	if(
 		bobDraw(pVehicle->pBob, g_pWorldMainBfr->pBuffer, uwX, uwY)
 		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]

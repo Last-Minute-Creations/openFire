@@ -26,8 +26,8 @@ typedef struct _tVehicle {
 	tVehicleType *pType; ///< Ptr to vehicle type definition
 	tBob *pBob;          ///< Main body bob
 	tBob *pAuxBob;       ///< Tank - turret, chopper - takeoff anim
-	float fX;            ///< Vehicle X-position relative to center of gfx.
-	float fY;            ///< Ditto, vehicle Y.
+	fix16_t fX;          ///< Vehicle X-position relative to center of gfx.
+	fix16_t fY;          ///< Ditto, vehicle Y.
 	UBYTE ubBodyAngle;   ///< Measured clockwise, +90deg is to bottom.
 	UBYTE ubTurretAngle; ///< NOT relative to body angle, measured as above.
 	UBYTE ubBaseAmmo;

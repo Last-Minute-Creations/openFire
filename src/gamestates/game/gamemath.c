@@ -1,5 +1,4 @@
 #include "gamestates/game/gamemath.h"
-#include <math.h>
 
 UBYTE getAngleBetweenPoints(
 	UWORD uwSrcX, UWORD uwSrcY, UWORD uwDstX, UWORD uwDstY
@@ -33,7 +32,7 @@ WORD getDeltaAngleDirection(UBYTE ubPrevAngle, UBYTE ubNewAngle, WORD wUnit) {
 void generateSine(void) {
 	UBYTE i;
 	for(i = 0; i != 128; ++i)
-		g_pSin[i] = sin(i*2*M_PI/128);
+		g_pSin[i] = fix16_sin(fix16_div(i*2*fix16_pi, fix16_from_int(128)));
 }
 
-float g_pSin[128];
+fix16_t g_pSin[128];

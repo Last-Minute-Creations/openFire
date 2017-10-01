@@ -1,5 +1,4 @@
 #include "vehicletypes.h"
-#include <math.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
 #include <ace/libfixmath/fix16.h>
@@ -126,12 +125,12 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 
 	for(ubFrame = 1; ubFrame != VEHICLE_BODY_ANGLE_COUNT; ++ubFrame) {
 		// Rotate chunky source
+		fix16_t fAngle = fix16_div(
+			-2*ubFrame * fix16_pi,
+			fix16_from_int(VEHICLE_BODY_ANGLE_COUNT)
+		);
 		chunkyRotate(
-			pChunkySrc, pChunkyRotated,
-			//-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT,
-			fix16_from_float(-2*M_PI*ubFrame/VEHICLE_BODY_ANGLE_COUNT),
-			0,
-			uwFrameWidth, uwFrameWidth
+			pChunkySrc, pChunkyRotated,	fAngle, 0, uwFrameWidth, uwFrameWidth
 		);
 
 		// Convert rotated chunky frame to planar on huge-ass bitmap
@@ -194,18 +193,24 @@ void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
 		"vehicleTypeGenerateRotatedCollisions(pCollisions: %p)", pCollisions
 	);
 	UBYTE p, i;
-	float fAng;
+	fix16_t fAng;
 	for(i = VEHICLE_BODY_ANGLE_COUNT; i--;) {
-		fAng = i*2*M_PI/VEHICLE_BODY_ANGLE_COUNT;
+		fAng = fix16_div(i*2*fix16_pi, fix16_from_int(VEHICLE_BODY_ANGLE_COUNT));
 		for(p = 0; p != 8; ++p) {
-			pCollisions[i][p].bX =
-				+ (pCollisions[0][p].bX-VEHICLE_BODY_WIDTH/2)*cos(fAng)
-				- (pCollisions[0][p].bY-VEHICLE_BODY_HEIGHT/2)*sin(fAng)
-				+ VEHICLE_BODY_WIDTH/2;
-			pCollisions[i][p].bY =
-				+ (pCollisions[0][p].bX-VEHICLE_BODY_WIDTH/2)*sin(fAng)
-				+ (pCollisions[0][p].bY-VEHICLE_BODY_HEIGHT/2)*cos(fAng)
-				+ VEHICLE_BODY_HEIGHT/2;
+			pCollisions[i][p].bX = fix16_to_int(fix16_add(
+				fix16_sub(
+					(pCollisions[0][p].bX-VEHICLE_BODY_WIDTH/2) * fix16_cos(fAng),
+					(pCollisions[0][p].bY-VEHICLE_BODY_HEIGHT/2) * fix16_sin(fAng)
+				),
+				fix16_from_int(VEHICLE_BODY_WIDTH/2)
+			));
+			pCollisions[i][p].bY = fix16_to_int(fix16_add(
+				fix16_add(
+					(pCollisions[0][p].bX-VEHICLE_BODY_WIDTH/2) * fix16_sin(fAng),
+					(pCollisions[0][p].bY-VEHICLE_BODY_HEIGHT/2) * fix16_cos(fAng)
+				),
+				fix16_from_int(VEHICLE_BODY_HEIGHT/2)
+			));
 		}
 	}
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");

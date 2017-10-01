@@ -119,8 +119,8 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
 		explosionsAdd(
-			pPlayer->sVehicle.fX - (VEHICLE_BODY_WIDTH >> 1),
-			pPlayer->sVehicle.fY - (VEHICLE_BODY_HEIGHT >> 1)
+			fix16_to_int(pPlayer->sVehicle.fX) - (VEHICLE_BODY_WIDTH >> 1),
+			fix16_to_int(pPlayer->sVehicle.fY) - (VEHICLE_BODY_HEIGHT >> 1)
 		);
 		playerLoseVehicle(pPlayer);
 	}
@@ -154,7 +154,8 @@ void playerLocalProcessInput(void) {
 			pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
-				g_pLocalPlayer->sVehicle.fX, g_pLocalPlayer->sVehicle.fY,
+				fix16_to_int(g_pLocalPlayer->sVehicle.fX),
+				fix16_to_int(g_pLocalPlayer->sVehicle.fY),
 				g_pWorldCamera->uPos.sUwCoord.uwX + g_uwMouseX,
 				g_pWorldCamera->uPos.sUwCoord.uwY + g_uwMouseY
 			);
@@ -185,8 +186,8 @@ void playerSimVehicle(tPlayer *pPlayer) {
 
 	pVehicle = &pPlayer->sVehicle;
 
-	uwVx = pVehicle->fX;
-	uwVy = pVehicle->fY;
+	uwVx = fix16_to_int(pVehicle->fX);
+	uwVy = fix16_to_int(pVehicle->fY);
 	uwVTileX = uwVx >> MAP_TILE_SIZE;
 	uwVTileY = uwVy >> MAP_TILE_SIZE;
 	ubTileType = g_pMap[uwVTileX][uwVTileY].ubIdx;

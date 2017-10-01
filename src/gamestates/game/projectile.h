@@ -27,10 +27,10 @@ typedef union _tProjectileOwner {
 typedef struct _tProjectile {
 	tProjectileOwner uOwner;  ///< Owner for scoring kills
 	tBob *pBob;                ///< Bob for projectile display
-	float fX;                  ///< X-coord of current position.
-	float fY;                  ///< Ditto, Y-coord.
-	float fDx;                 ///< Delta X per frame.
-	float fDy;                 ///< Ditto, delta Y.
+	fix16_t fX;                ///< X-coord of current position.
+	fix16_t fY;                ///< Ditto, Y-coord.
+	fix16_t fDx;               ///< Delta X per frame.
+	fix16_t fDy;               ///< Ditto, delta Y.
 	UWORD uwFrameLife;         ///< Projectile life, in remaining frame count.
 	UBYTE ubType;              ///< See PROJECTILE_TYPE_* defines.
 	UBYTE ubOwnerType;         ///< See PROJECTILE_OWNER_TYPE_* defines.

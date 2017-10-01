@@ -54,7 +54,7 @@ ace: $(ACE_OBJS)
 of: $(OF_OBJS)
 	@echo.
 	@echo Linking...
-	$(CC) $(CC_FLAGS) -lamiga -lmieee -o $@ $^ $(ACE_OBJS)
+	$(CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
 
 # Main files
 $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c

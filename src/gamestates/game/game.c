@@ -1,5 +1,4 @@
 #include "gamestates/game/game.h"
-#include <math.h>
 #include <hardware/intbits.h> // INTB_COPER
 #include <ace/macros.h>
 #include <ace/managers/copper.h>
@@ -258,8 +257,8 @@ void gsGameLoop(void) {
 	worldUndraw();
 	if(g_pLocalPlayer->sVehicle.ubLife) {
 		UWORD uwLocalX, uwLocalY;
-		uwLocalX = g_pLocalPlayer->sVehicle.fX;
-		uwLocalY = g_pLocalPlayer->sVehicle.fY;
+		uwLocalX = fix16_to_int(g_pLocalPlayer->sVehicle.fX);
+		uwLocalY = fix16_to_int(g_pLocalPlayer->sVehicle.fY);
 		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
 	else {

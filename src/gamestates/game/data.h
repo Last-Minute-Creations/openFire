@@ -27,8 +27,8 @@ typedef struct _tDataHeader {
 // size: 22 (could be 20)
 typedef struct _tVehicleState {
 	// Copypasta from tVehicle
-	float fX;            ///< Vehicle X-position relative to center of gfx.
-	float fY;            ///< Ditto, vehicle Y.
+	fix16_t fX;          ///< Vehicle X-position relative to center of gfx.
+	fix16_t fY;          ///< Ditto, vehicle Y.
 	UBYTE ubBodyAngle;   ///< Measured clockwise, +90deg is to bottom.
 	UBYTE ubTurretAngle; ///< NOT relative to body angle, measured as above.
 	// Aligned with ubDestAngle
@@ -36,8 +36,8 @@ typedef struct _tVehicleState {
 	UBYTE ubPlayerState;  ///< DEAD, SURFACING, etc.
 	// For vehicle prediction
 	UBYTE ubDestAngle;    ///< Turret.
-	float fDx;
-	float fDy;
+	fix16_t fDx;
+	fix16_t fDy;
 } tVehicleState;
 
 #define DATA_PROJECTILE_STATE_TYPE_CREATED   1
@@ -63,8 +63,8 @@ typedef struct _tProjectileState {
 			UBYTE ubIdx;  // Player idx or building idx
 		} sDestroyed;
 	} u;
-	float fX;                  ///< X-coord of current position.
-	float fY;                  ///< Ditto, Y-coord.
+	fix16_t fX;                ///< X-coord of current position.
+	fix16_t fY;                ///< Ditto, Y-coord.
 } tProjectileState;
 
 typedef struct _tAction {

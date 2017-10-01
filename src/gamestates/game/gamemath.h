@@ -14,7 +14,7 @@
 #define ccos(x) ((x < 96?csin(ANGLE_90+x):csin(x-3*ANGLE_90)))
 #define angleToFrame(angle) (angle>>1)
 
-extern float g_pSin[128];
+extern fix16_t g_pSin[128];
 
 /**
  *  Calculates angle between source and destination points.

@@ -28,8 +28,8 @@ void dataRecv(void) {
 		// Fill players
 		pFrame->pPlayerStates[i].fDx = 0;
 		pFrame->pPlayerStates[i].fDy = 0;
-		pFrame->pPlayerStates[i].fX = (10+i*2) << MAP_TILE_SIZE;
-		pFrame->pPlayerStates[i].fY = 2 << MAP_TILE_SIZE;
+		pFrame->pPlayerStates[i].fX = fix16_from_int((10+i*2) << MAP_TILE_SIZE);
+		pFrame->pPlayerStates[i].fY = fix16_from_int(2 << MAP_TILE_SIZE);
 		pFrame->pPlayerStates[i].ubBodyAngle = 0;
 		pFrame->pPlayerStates[i].ubDestAngle = 0;
 		pFrame->pPlayerStates[i].ubTurretAngle = 0;
