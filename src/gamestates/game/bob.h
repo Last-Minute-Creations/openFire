@@ -4,6 +4,7 @@
 #include <ace/config.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
+#include <ace/managers/viewport/simplebuffer.h>
 
 /// Used when bob is inactive - no undraw, no draw
 #define BOB_FLAG_NODRAW        0
@@ -26,6 +27,7 @@ typedef struct _tBob {
 	UWORD uwOffsY;
 	UWORD uwHeight;
 	UBYTE ubFlags;
+	UBYTE isDrawn;
 } tBob;
 
 tBob *bobCreate(
@@ -62,12 +64,12 @@ void bobChangeFrame(
 
 UWORD bobUndraw(
 	IN tBob *pBob,
-	IN tBitMap *pDest
+	IN tSimpleBufferManager *pDest
 );
 
 UWORD bobDraw(
 	IN tBob *pBob,
-	IN tBitMap *pDest,
+	IN tSimpleBufferManager *pDest,
 	IN UWORD uwX,
 	IN UWORD uwY
 );

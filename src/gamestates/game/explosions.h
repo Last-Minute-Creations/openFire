@@ -3,6 +3,7 @@
 
 #include <ace/types.h>
 #include <ace/utils/bitmap.h>
+#include <ace/managers/viewport/simplebuffer.h>
 
 #define EXPLOSIONS_MAX 8
 
@@ -16,11 +17,11 @@ void explosionsCreate(void);
 void explosionsDestroy(void);
 
 void explosionsDraw(
-	IN tBitMap *pBfr
+	IN tSimpleBufferManager *pBfr
 );
 
 void explosionsUndraw(
-	IN tBitMap *pBfr
+	IN tSimpleBufferManager *pBfr
 );
 
 

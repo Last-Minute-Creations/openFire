@@ -74,7 +74,7 @@ void worldDraw(void) {
 	// Silo highlight
 	if(g_ubDoSiloHighlight)
 		bobDraw(
-			s_pSiloHighlight, g_pWorldMainBfr->pBuffer,
+			s_pSiloHighlight, g_pWorldMainBfr,
 			g_uwSiloHighlightTileX << MAP_TILE_SIZE,
 			g_uwSiloHighlightTileY << MAP_TILE_SIZE
 		);
@@ -99,7 +99,7 @@ void worldDraw(void) {
 	logAvgEnd(s_pDrawAvgProjectiles);
 
 	logAvgBegin(s_pDrawAvgExplosions);
-	explosionsDraw(g_pWorldMainBfr->pBuffer);
+	explosionsDraw(g_pWorldMainBfr);
 	logAvgEnd(s_pDrawAvgExplosions);
 
 	turretUpdateSprites();
@@ -111,7 +111,7 @@ void worldUndraw(void) {
 	UBYTE ubPlayer;
 
 	logAvgBegin(s_pUndrawAvgExplosions);
-	explosionsUndraw(g_pWorldMainBfr->pBuffer);
+	explosionsUndraw(g_pWorldMainBfr);
 	logAvgEnd(s_pUndrawAvgExplosions);
 
 	logAvgBegin(s_pUndrawAvgProjectiles);
@@ -127,7 +127,7 @@ void worldUndraw(void) {
 	// Silo highlight
 	if(s_ubWasSiloHighlighted)
 		bobUndraw(
-			s_pSiloHighlight, g_pWorldMainBfr->pBuffer
+			s_pSiloHighlight, g_pWorldMainBfr
 		);
 }
 

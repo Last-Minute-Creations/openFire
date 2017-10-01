@@ -25,6 +25,7 @@ void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 			s_pExplosions[i].uwX = uwX;
 			s_pExplosions[i].uwY = uwY;
 			s_pExplosions[i].pBob->ubFlags = BOB_FLAG_START_DRAWING;
+			s_pExplosions[i].pBob->isDrawn = 0;
 			return;
 		}
 	}
@@ -53,7 +54,7 @@ void explosionsDestroy(void) {
 	logBlockEnd("explosionsDestroy()");
 }
 
-void explosionsUndraw(tBitMap *pBfr) {
+void explosionsUndraw(tSimpleBufferManager *pBfr) {
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		if(!bobUndraw(s_pExplosions[i].pBob, pBfr))
 			continue;
@@ -71,7 +72,7 @@ void explosionsUndraw(tBitMap *pBfr) {
 	}
 }
 
-void explosionsDraw(tBitMap *pBfr) {
+void explosionsDraw(tSimpleBufferManager *pBfr) {
 	for(UWORD i = 0; i != EXPLOSIONS_MAX; ++i) {
 		bobDraw(
 			s_pExplosions[i].pBob, pBfr,

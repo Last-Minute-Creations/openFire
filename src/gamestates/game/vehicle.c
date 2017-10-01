@@ -40,6 +40,7 @@ void vehicleSetupBob(tVehicle *pVehicle) {
 	// Set main bob frames
 	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
+	pVehicle->pBob->isDrawn = 0;
 
 	// Set aux bob frames
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
@@ -214,7 +215,7 @@ void vehicleDraw(tVehicle *pVehicle) {
 	UWORD uwX = fix16_to_int(pVehicle->fX) - VEHICLE_BODY_WIDTH/2;
 	UWORD uwY = fix16_to_int(pVehicle->fY) - VEHICLE_BODY_HEIGHT/2;
 	if(
-		bobDraw(pVehicle->pBob, g_pWorldMainBfr->pBuffer, uwX, uwY)
+		bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY)
 		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]
 	) {
 		blitCopyMask(
@@ -227,5 +228,5 @@ void vehicleDraw(tVehicle *pVehicle) {
 }
 
 void vehicleUndraw(tVehicle *pVehicle) {
-	bobUndraw(pVehicle->pBob,	g_pWorldMainBfr->pBuffer);
+	bobUndraw(pVehicle->pBob,	g_pWorldMainBfr);
 }

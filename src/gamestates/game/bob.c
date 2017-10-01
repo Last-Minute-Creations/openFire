@@ -20,6 +20,7 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 	pBob->uwOffsY = uwFrameIdx*uwFrameHeight;
 	pBob->uwHeight = uwFrameHeight;
 	pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	pBob->isDrawn = 0;
 
 	// BG buffer
 	pBob->pBg = bitmapCreate(
@@ -87,25 +88,31 @@ void bobChangeFrame(tBob *pBob, UWORD uwFrameIdx) {
 	pBob->uwOffsY = uwFrameIdx * pBob->uwHeight;
 }
 
-UWORD bobUndraw(tBob *pBob, tBitMap *pDest) {
-	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING)
+UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest) {
+	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING || !pBob->isDrawn)
 		return 0;
 	blitCopyAligned(
 		pBob->pBg, 0, 0,
-		pDest, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0, pBob->sPrevCoord.sUwCoord.uwY,
+		pDest->pBuffer, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0, pBob->sPrevCoord.sUwCoord.uwY,
 		bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
 	);
+	pBob->isDrawn = 0;
 	if(pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
 		pBob->ubFlags = BOB_FLAG_NODRAW;
 	return 1;
 }
 
-UWORD bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
+UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
 	// Save BG
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
 		return 0;
+	if(!simpleBufferIsRectVisible(
+		pDest, uwX, uwY, bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
+	)) {
+		return 0;
+	}
 	blitCopyAligned(
-		pDest, uwX & 0xFFF0, uwY,
+		pDest->pBuffer, uwX & 0xFFF0, uwY,
 		pBob->pBg, 0, 0,
 		bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
 	);
@@ -113,7 +120,7 @@ UWORD bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	// Redraw bob
 	blitCopyMask(
 		pBob->sSource.pBitmap, 0, pBob->uwOffsY,
-		pDest, uwX, uwY,
+		pDest->pBuffer, uwX, uwY,
 		bitmapGetByteWidth(pBob->sSource.pBitmap)<<3, pBob->pBg->Rows,
 		pBob->sSource.pMask->pData
 	);
@@ -121,6 +128,7 @@ UWORD bobDraw(tBob *pBob, tBitMap *pDest, UWORD uwX, UWORD uwY) {
 	// Update bob position
 	pBob->sPrevCoord.sUwCoord.uwX = uwX;
 	pBob->sPrevCoord.sUwCoord.uwY = uwY;
+	pBob->isDrawn = 1;
 
 	if(pBob->ubFlags == BOB_FLAG_START_DRAWING)
 		pBob->ubFlags = BOB_FLAG_DRAW;

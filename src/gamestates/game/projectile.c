@@ -106,6 +106,7 @@ tProjectile *projectileCreate(
 
 	// Bob
 	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	pProjectile->pBob->isDrawn = 0;
 	return pProjectile;
 }
 
@@ -120,7 +121,7 @@ void projectileUndraw(void) {
 
 	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
 	for(i = s_ubProjectileCount; i--;) {
-		bobUndraw(pProjectile->pBob, g_pWorldMainBfr->pBuffer);
+		bobUndraw(pProjectile->pBob, g_pWorldMainBfr);
 		--pProjectile;
 	}
 }
@@ -136,7 +137,7 @@ void projectileDraw(void) {
 		wProjectileX = fix16_to_int(fix16_add(pProjectile->fX, fHalf))-PROJECTILE_BULLET_HEIGHT/2;
 		wProjectileY = fix16_to_int(fix16_add(pProjectile->fY, fHalf))-PROJECTILE_BULLET_HEIGHT/2;
 		bobDraw(
-			pProjectile->pBob, g_pWorldMainBfr->pBuffer,
+			pProjectile->pBob, g_pWorldMainBfr,
 			wProjectileX, wProjectileY
 		);
 		++pProjectile;
