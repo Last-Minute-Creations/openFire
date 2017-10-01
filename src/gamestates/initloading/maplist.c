@@ -24,13 +24,13 @@ void mapListCreate(void) {
 	// Get map count
 	s_sMapList.uwMapCount = 0;
 	BPTR pLock;
-	struct FileInfoBlock *pFileBlock;
+	struct FileInfoBlock sFileBlock;
 	pLock = Lock("data/maps", ACCESS_READ);
 	LONG lResult;
-	lResult = Examine(pLock, pFileBlock);
+	lResult = Examine(pLock, &sFileBlock);
 	while(lResult != DOSFALSE) {
 		++s_sMapList.uwMapCount;
-		lResult = ExNext(pLock, pFileBlock);
+		lResult = ExNext(pLock, &sFileBlock);
 	}
 	UnLock(pLock);
 
@@ -38,12 +38,12 @@ void mapListCreate(void) {
 	s_sMapList.pMaps = memAllocFast(s_sMapList.uwMapCount * sizeof(tMapListEntry));
 	pLock = Lock("data/maps", ACCESS_READ);
 	UWORD i = 0;
-	lResult = Examine(pLock, pFileBlock);
+	lResult = Examine(pLock, &sFileBlock);
 	while(lResult != DOSFALSE) {
-		memcpy(s_sMapList.pMaps[i].szFileName, pFileBlock->fib_FileName, MAPLIST_FILENAME_MAX);
+		memcpy(s_sMapList.pMaps[i].szFileName, sFileBlock.fib_FileName, MAPLIST_FILENAME_MAX);
 		++s_sMapList.uwMapCount;
 		++i;
-		lResult = ExNext(pLock, pFileBlock);
+		lResult = ExNext(pLock, &sFileBlock);
 	}
 	UnLock(pLock);
 }
