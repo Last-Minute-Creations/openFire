@@ -50,11 +50,18 @@ UWORD uwLimboY;
 
 ULONG g_ulGameFrame;
 
-void displayPrepareLimbo(void) {
+void displayPrepareLimbo(FUBYTE fubSpawnIdx) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 
-	g_pLocalPlayer->ubSpawnIdx = spawnGetNearest(0, 0, g_pLocalPlayer->ubTeam);
+	if(fubSpawnIdx == SPAWN_INVALID)
+		g_pLocalPlayer->ubSpawnIdx = spawnGetNearest(
+			fix16_to_int(g_pLocalPlayer->sVehicle.fX) >> MAP_TILE_SIZE,
+			fix16_to_int(g_pLocalPlayer->sVehicle.fY) >> MAP_TILE_SIZE,
+			g_pLocalPlayer->ubTeam
+		);
+	else
+		g_pLocalPlayer->ubSpawnIdx = fubSpawnIdx;
 
 	uwLimboX = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_WIDTH/2));
 	uwLimboY = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_HEIGHT/2));
@@ -219,7 +226,7 @@ void gsGameCreate(void) {
 
 	// Now that world buffer is created, do the first draw
 	mapRedraw();
-	displayPrepareLimbo();
+	displayPrepareLimbo(SPAWN_INVALID);
 
 	// Get some speed out of unnecessary DMA
 	custom.dmacon = BITCLR | DMAF_DISK;
@@ -255,7 +262,7 @@ void gsGameLoop(void) {
 	// Update main vport
 	vPortWaitForEnd(s_pWorldMainVPort);
 	worldUndraw();
-	if(g_pLocalPlayer->sVehicle.ubLife) {
+	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		UWORD uwLocalX, uwLocalY;
 		uwLocalX = fix16_to_int(g_pLocalPlayer->sVehicle.fX);
 		uwLocalY = fix16_to_int(g_pLocalPlayer->sVehicle.fY);

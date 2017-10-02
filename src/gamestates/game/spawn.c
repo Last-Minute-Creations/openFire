@@ -75,8 +75,8 @@ UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 }
 
 UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
-	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
-		if(g_pSpawns[i].ubTileX == ubTileX || g_pSpawns[i].ubTileY == ubTileY)
+	for(FUBYTE i = g_ubSpawnCount; i--;) {
+		if(g_pSpawns[i].ubTileX == ubTileX && g_pSpawns[i].ubTileY == ubTileY)
 			return i;
 	}
 	return SPAWN_INVALID;

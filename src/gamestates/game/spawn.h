@@ -4,9 +4,8 @@
 #include <ace/types.h>
 
 #define SPAWN_BUSY_NOT 0
-#define SPAWN_BUSY_CAPTURING 1 /* Final capturing stage - noone may spawn there */
-#define SPAWN_BUSY_SURFACING 2
-#define SPAWN_BUSY_BUNKERING 3
+#define SPAWN_BUSY_SURFACING 1
+#define SPAWN_BUSY_BUNKERING 2
 
 #define SPAWN_INVALID 0xFF
 

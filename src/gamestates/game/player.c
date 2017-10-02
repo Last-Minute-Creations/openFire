@@ -113,7 +113,7 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 	spawnSetBusy(fubSpawnIdx, SPAWN_BUSY_BUNKERING, VEHICLE_TYPE_TANK);
 	if(pPlayer == g_pLocalPlayer)
-		displayPrepareLimbo();
+		displayPrepareLimbo(fubSpawnIdx);
 }
 
 void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
@@ -136,7 +136,7 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
 	if(pPlayer == g_pLocalPlayer) {
 		pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
-		displayPrepareLimbo();
+		displayPrepareLimbo(SPAWN_INVALID);
 	}
 }
 
@@ -225,11 +225,11 @@ void playerSimVehicle(tPlayer *pPlayer) {
 					g_ubDoSiloHighlight = 1;
 					g_uwSiloHighlightTileX = uwVTileX;
 					g_uwSiloHighlightTileY = uwVTileY;
-				}
-				// Hide in bunker
-				if(pPlayer->sSteerRequest.ubAction1 && g_ubDoSiloHighlight) {
-					playerHideInBunker(pPlayer, ubSpawnIdx);
-					return;
+					// Hide in bunker
+					if(pPlayer->sSteerRequest.ubAction1) {
+						playerHideInBunker(pPlayer, ubSpawnIdx);
+						return;
+					}
 				}
 			}
 		}
