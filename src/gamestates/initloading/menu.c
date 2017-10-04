@@ -38,7 +38,7 @@ void menuCreate(void) {
 		TAG_DONE
 	);
 	copBlockDisableSprites(s_pView->pCopList, 0xFF);
-	paletteLoad("data/amidb16.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
+	paletteLoad("data/softiron.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 
 	menuDrawButton(64, 96, 320-128, 32, "PLAY GAME", 0);
