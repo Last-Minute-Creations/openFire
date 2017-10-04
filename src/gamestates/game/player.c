@@ -53,7 +53,7 @@ void playerListDestroy() {
 		bobDestroy(g_pPlayers[i].sVehicle.pBob);
 		bobDestroy(g_pPlayers[i].sVehicle.pAuxBob);
 	}
-	memFree(g_pPlayers, sizeof(tPlayer));
+	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
 }
 
 /**
