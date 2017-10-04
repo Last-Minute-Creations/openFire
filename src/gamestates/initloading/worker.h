@@ -4,7 +4,7 @@
 #include <ace/config.h>
 #include "vehicletypes.h"
 
-#define WORKER_MAX_STEP 100
+#define WORKER_MAX_STEP 255
 
 extern UBYTE g_ubWorkerStep;
 extern BYTE g_pWorkerProgress[VEHICLE_TYPE_COUNT];

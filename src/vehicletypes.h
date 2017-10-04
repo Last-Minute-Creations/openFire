@@ -3,6 +3,7 @@
 
 #include <ace/config.h>
 #include "gamestates/game/bob.h"
+#include "gamestates/game/team.h"
 
 #define VEHICLE_TYPE_COUNT 4
 #define VEHICLE_TYPE_TANK 0
@@ -25,8 +26,8 @@ typedef struct {
 	UBYTE ubMaxSuperAmmo;                                 ///< Chopper rockets, ASV mines
 	UBYTE ubMaxFuel;
 	UBYTE ubMaxLife;
-	tBobSource sMainSource;                               ///< Main bob gfx source.
-	tBobSource sAuxSource;                                ///< Tank turret & chopper takeoff gfx source.
+	tBobSource sMainSource[TEAM_COUNT];                   ///< Main bob gfx source.
+	tBobSource sAuxSource[TEAM_COUNT];                    ///< Tank turret & chopper takeoff gfx source.
 	tBCoordYX pCollisionPts[VEHICLE_BODY_ANGLE_COUNT][8]; ///< Collision points
 } tVehicleType;
 
@@ -39,8 +40,11 @@ void vehicleTypesDestroy(void);
 UWORD vehicleTypeBobSourceLoad(
 	IN char *szName,
 	IN tBobSource *pBobSource,
-	IN UBYTE isWithMask,
-	OUT BYTE *pProgress
+	IN UBYTE isWithMask
+);
+
+void vehicleTypeBobSourceUnload(
+	IN tBobSource *pSource
 );
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];

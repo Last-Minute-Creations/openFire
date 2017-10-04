@@ -16,7 +16,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
  *
  *  @todo Make it accept bitmaps wider than 32px?
  */
-UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask, BYTE *pProgress) {
+UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask) {
 	UBYTE *pChunkySrc;
 	UBYTE *pChunkyRotated;
 	char szFullFileName[50];
@@ -28,12 +28,9 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 	UWORD uwFrameOffs, uwFrameWidth;
 
 	logBlockBegin(
-		"vehicleBobSourceLoad(szName: %s, pBobSource: %p, pProgress: %p)",
-		szName, pBobSource, pProgress
+		"vehicleBobSourceLoad(szName: %s, pBobSource: %p, isWithMask: %hhu)",
+		szName, pBobSource, isWithMask
 	);
-
-	if(pProgress)
-		*pProgress = -1;
 
 	// Load first frame to determine sizes
 	sprintf(szFullFileName, "data/vehicles/%s.bm", szName);
@@ -120,9 +117,6 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		}
 	}
 
-	if(pProgress)
-		*pProgress = 0;
-
 	for(ubFrame = 1; ubFrame != VEHICLE_BODY_ANGLE_COUNT; ++ubFrame) {
 		// Rotate chunky source
 		fix16_t fAngle = fix16_div(
@@ -163,17 +157,11 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 				}
 			}
 		}
-
-		// Update progress
-		if(pProgress)
-			*pProgress = ubFrame;
 	}
 
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	logBlockEnd("vehicleBobSourceLoad()");
-	if(pProgress)
-		*pProgress = 0;
 	return 1;
 fail:
 	if(pMaskFile)
@@ -216,6 +204,11 @@ void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }
 
+void vehicleTypeSetBlankBobSource(tBobSource *pSource) {
+	pSource->pBitmap = 0;
+	pSource->pMask = 0;
+}
+
 /**
  *  Generates vehicle type defs.
  *  This fn fills g_pVehicleTypes array
@@ -239,10 +232,14 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
-	vehicleTypeBobSourceLoad("tank", &pType->sMainSource, 1, &pProgress[0]);
-	g_ubWorkerStep += 10;
-	vehicleTypeBobSourceLoad("tankturret", &pType->sAuxSource, 1, &pProgress[1]);
-	g_ubWorkerStep += 10;
+	vehicleTypeBobSourceLoad("tank_green", &pType->sMainSource[TEAM_GREEN], 1);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("tank_turret_green", &pType->sAuxSource[TEAM_GREEN], 1);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("tank_brown", &pType->sMainSource[TEAM_BROWN], 1);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("tank_turret_brown", &pType->sAuxSource[TEAM_BROWN], 1);
+	g_ubWorkerStep += 5;
 
 	// Tank collision coords
 	logWrite("Generating tank coords...\n");
@@ -267,10 +264,13 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
-	vehicleTypeBobSourceLoad("jeep", &pType->sMainSource, 1, &pProgress[2]);
-	pType->sAuxSource.pBitmap = 0;
-	pType->sAuxSource.pMask = 0;
-	g_ubWorkerStep += 10;
+
+	vehicleTypeBobSourceLoad("jeep_green", &pType->sMainSource[TEAM_GREEN], 1);
+	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_GREEN]);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("jeep_brown", &pType->sMainSource[TEAM_BROWN], 1);
+	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_BROWN]);
+	g_ubWorkerStep += 5;
 
 	// Jeep collision coords
 	logWrite("Generating jeep coords...\n");
@@ -288,34 +288,30 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	logBlockEnd("vehicleTypesCreate");
 }
 
-/**
- *  @todo ASV
- *  @todo Chopper
- *  @todo loop
- */
+void vehicleTypeBobSourceUnload(tBobSource *pSource) {
+	if(pSource->pBitmap)
+		bitmapDestroy(pSource->pBitmap);
+	if(pSource->pMask)
+		bitmapMaskDestroy(pSource->pMask);
+}
+
+void vehicleTypeUnloadAllBobSources(tVehicleType *pType) {
+	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_GREEN]);
+	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_GREEN]);
+	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_BROWN]);
+	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_BROWN]);
+}
+
 void vehicleTypesDestroy(void) {
 	tVehicleType *pType;
 
 	logBlockBegin("vehicleTypesDestroy()");
 
-	pType = &g_pVehicleTypes[VEHICLE_TYPE_TANK];
-	bitmapDestroy(pType->sMainSource.pBitmap);
-	bitmapMaskDestroy(pType->sMainSource.pMask);
-	if(pType->sAuxSource.pBitmap) {
-		bitmapDestroy(pType->sAuxSource.pBitmap);
-		if(pType->sAuxSource.pMask)
-			bitmapMaskDestroy(pType->sAuxSource.pMask);
-	}
-
-	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
-	bitmapDestroy(pType->sMainSource.pBitmap);
-	bitmapMaskDestroy(pType->sMainSource.pMask);
-	if(pType->sAuxSource.pBitmap) {
-		bitmapDestroy(pType->sAuxSource.pBitmap);
-		if(pType->sAuxSource.pMask)
-			bitmapMaskDestroy(pType->sAuxSource.pMask);
-		bitmapMaskDestroy(pType->sAuxSource.pMask);
-	}
+	// Free bob sources
+	vehicleTypeUnloadAllBobSources(&g_pVehicleTypes[VEHICLE_TYPE_TANK]);
+	vehicleTypeUnloadAllBobSources(&g_pVehicleTypes[VEHICLE_TYPE_JEEP]);
+	// TODO ASV
+	// TODO Chopper
 
 	logBlockEnd("vehicleTypesDestroy()");
 }

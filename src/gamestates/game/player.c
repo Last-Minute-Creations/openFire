@@ -29,15 +29,15 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
 	for(i = 0; i != ubPlayerLimit; ++i) {
 		g_pPlayers[i].sVehicle.pBob = bobCreate(
-			g_pVehicleTypes[0].sMainSource.pBitmap,
-			g_pVehicleTypes[0].sMainSource.pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_GREEN].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_GREEN].pMask,
 			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
 
 		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
-			g_pVehicleTypes[0].sAuxSource.pBitmap,
-			g_pVehicleTypes[0].sAuxSource.pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_GREEN].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_GREEN].pMask,
 			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;

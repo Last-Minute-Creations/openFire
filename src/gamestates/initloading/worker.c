@@ -35,16 +35,21 @@ void workerMain(void) {
 
 	// Turret stuff
 	logWrite("Loading brown turret frames...\n");
-	vehicleTypeBobSourceLoad("turret_brown_16", &g_sBrownTurretSource, 0, &g_pLoadProgress[3]);
+	vehicleTypeBobSourceLoad("turret_brown", &g_sTurretSource[TEAM_GREEN], 0);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("turret_green", &g_sTurretSource[TEAM_BROWN], 0);
+	g_ubWorkerStep += 5;
+	vehicleTypeBobSourceLoad("turret_none", &g_sTurretSource[TEAM_NONE], 0);
+	g_ubWorkerStep += 5;
 
 	// Generate math table
 	logWrite("Generating sine table...\n");
 	generateSine();
-	g_ubWorkerStep = 50;
+	g_ubWorkerStep += 5;
 
 	logWrite("Working on projectiles...\n");
 	projectileListCreate(20);
-	g_ubWorkerStep = 100;
+	g_ubWorkerStep = WORKER_MAX_STEP;
 }
 
 const tSeg s_sFakeSeg = {sizeof(tSeg), 0, 0x4EF9, workerMain};
@@ -82,7 +87,7 @@ void workerCleanup(void) {
 	vehicleTypesDestroy();
 
 	// Cleanup after turrets
-	bitmapDestroy(g_sBrownTurretSource.pBitmap);
-	if(g_sBrownTurretSource.pMask)
-		bitmapMaskDestroy(g_sBrownTurretSource.pMask);
+	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_GREEN]);
+	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_BROWN]);
+	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_NONE]);
 }
