@@ -28,7 +28,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 	UWORD uwFrameOffs, uwFrameWidth;
 
 	logBlockBegin(
-		"vehicleBobSourceLoad(szName: %s, pBobSource: %p, isWithMask: %hhu)",
+		"vehicleTypeBobSourceLoad(szName: %s, pBobSource: %p, isWithMask: %hhu)",
 		szName, pBobSource, isWithMask
 	);
 
@@ -161,7 +161,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
-	logBlockEnd("vehicleBobSourceLoad()");
+	logBlockEnd("vehicleTypeBobSourceLoad()");
 	return 1;
 fail:
 	if(pMaskFile)
@@ -172,7 +172,7 @@ fail:
 		bitmapDestroy(pBitmap);
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
-	logBlockEnd("vehicleBobSourceLoad()");
+	logBlockEnd("vehicleTypeBobSourceLoad()");
 	return 0;
 }
 
@@ -232,13 +232,13 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
-	vehicleTypeBobSourceLoad("tank_green", &pType->sMainSource[TEAM_GREEN], 1);
+	vehicleTypeBobSourceLoad("blue/tank", &pType->sMainSource[TEAM_BLUE], 1);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("tank_turret_green", &pType->sAuxSource[TEAM_GREEN], 1);
+	vehicleTypeBobSourceLoad("blue/tank_turret", &pType->sAuxSource[TEAM_BLUE], 1);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("tank_brown", &pType->sMainSource[TEAM_BROWN], 1);
+	vehicleTypeBobSourceLoad("red/tank", &pType->sMainSource[TEAM_RED], 1);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("tank_turret_brown", &pType->sAuxSource[TEAM_BROWN], 1);
+	vehicleTypeBobSourceLoad("red/tank_turret", &pType->sAuxSource[TEAM_RED], 1);
 	g_ubWorkerStep += 5;
 
 	// Tank collision coords
@@ -265,11 +265,11 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
 
-	vehicleTypeBobSourceLoad("jeep_green", &pType->sMainSource[TEAM_GREEN], 1);
-	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_GREEN]);
+	vehicleTypeBobSourceLoad("blue/jeep", &pType->sMainSource[TEAM_BLUE], 1);
+	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_BLUE]);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("jeep_brown", &pType->sMainSource[TEAM_BROWN], 1);
-	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_BROWN]);
+	vehicleTypeBobSourceLoad("red/jeep", &pType->sMainSource[TEAM_RED], 1);
+	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_RED]);
 	g_ubWorkerStep += 5;
 
 	// Jeep collision coords
@@ -296,10 +296,10 @@ void vehicleTypeBobSourceUnload(tBobSource *pSource) {
 }
 
 void vehicleTypeUnloadAllBobSources(tVehicleType *pType) {
-	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_GREEN]);
-	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_GREEN]);
-	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_BROWN]);
-	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_BROWN]);
+	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_BLUE]);
+	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_BLUE]);
+	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_RED]);
+	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_RED]);
 }
 
 void vehicleTypesDestroy(void) {

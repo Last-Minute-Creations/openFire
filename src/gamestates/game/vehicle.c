@@ -38,13 +38,13 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 void vehicleSetupBob(tVehicle *pVehicle) {
 	// Set main bob frames
-	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource[TEAM_GREEN]);
+	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource[TEAM_BLUE]);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
 	pVehicle->pBob->isDrawn = 0;
 
 	// Set aux bob frames
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource[TEAM_GREEN]);
+		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource[TEAM_BLUE]);
 		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
 	}
 	else

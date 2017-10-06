@@ -17,9 +17,9 @@ void spawnManagerCreate(FUBYTE fubMaxCount) {
 	s_ubSpawnMaxCount = fubMaxCount;
 	g_ubSpawnCount = 0;
 	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * fubMaxCount);
-	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/bunkering_green.bm");
+	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/blue/bunkering.bm");
 	// TODO: bunkering_brown.bm
-	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/bunkering_green.bm");
+	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/red/bunkering.bm");
 	logBlockEnd("spawnManagerCreate()");
 }
 
@@ -51,8 +51,8 @@ void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 	g_pSpawns[ubSpawnIdx].ubTeam = ubTeam;
 	mapChangeTile(
 		g_pSpawns[ubSpawnIdx].ubTileX, g_pSpawns[ubSpawnIdx].ubTileY,
-		ubTeam == TEAM_GREEN ? MAP_LOGIC_SPAWN1
-		: ubTeam == TEAM_BROWN ? MAP_LOGIC_SPAWN2
+		ubTeam == TEAM_BLUE ? MAP_LOGIC_SPAWN1
+		: ubTeam == TEAM_RED ? MAP_LOGIC_SPAWN2
 		: MAP_LOGIC_SPAWN0
 	);
 }
@@ -118,7 +118,7 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 			if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
 				ubFrameIdx = 5 - ubFrameIdx;
 			blitCopyAligned(
-				pSpawn->ubTeam == TEAM_GREEN ? s_pGreenAnims : s_pBrownAnims,
+				pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
 				0, ubFrameIdx << MAP_TILE_SIZE,
 				g_pWorldMainBfr->pBuffer,
 				pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,

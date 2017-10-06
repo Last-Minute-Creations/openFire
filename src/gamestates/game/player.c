@@ -29,15 +29,15 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
 	for(i = 0; i != ubPlayerLimit; ++i) {
 		g_pPlayers[i].sVehicle.pBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_GREEN].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_GREEN].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_BLUE].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_BLUE].pMask,
 			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
 
 		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_GREEN].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_GREEN].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_BLUE].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_BLUE].pMask,
 			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
@@ -212,8 +212,8 @@ void playerSimVehicle(tPlayer *pPlayer) {
 			playerDamageVehicle(pPlayer, 200);
 		}
 		else if(
-			(pPlayer->ubTeam == TEAM_GREEN && ubTileType == MAP_LOGIC_SPAWN1) ||
-			(pPlayer->ubTeam == TEAM_BROWN && ubTileType == MAP_LOGIC_SPAWN2)
+			(pPlayer->ubTeam == TEAM_BLUE && ubTileType == MAP_LOGIC_SPAWN1) ||
+			(pPlayer->ubTeam == TEAM_RED && ubTileType == MAP_LOGIC_SPAWN2)
 		) {
 			// Standing on own, unoccupied silo
 			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
@@ -243,7 +243,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 			ABS(uwVTileX - g_pControlPoints[i].fubTileX) <= 2 &&
 			ABS(uwVTileY - g_pControlPoints[i].fubTileY) <= 2
 		) {
-			if(pPlayer->ubTeam == TEAM_GREEN)
+			if(pPlayer->ubTeam == TEAM_BLUE)
 				++g_pControlPoints[i].fubGreenCount;
 			else
 				++g_pControlPoints[i].fubBrownCount;

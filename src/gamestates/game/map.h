@@ -12,6 +12,7 @@
 #define MAP_LOGIC_DIRT    ' '
 #define MAP_LOGIC_ROAD    '#'
 #define MAP_LOGIC_WALL    '-'
+#define MAP_LOGIC_WALL_VERTICAL '|' /* Convenience */
 #define MAP_LOGIC_SPAWN0  '0'
 #define MAP_LOGIC_SPAWN1  '1'
 #define MAP_LOGIC_SPAWN2  '2'
@@ -26,15 +27,15 @@
 #define MAP_LOGIC_CAPTURE1 'c'
 #define MAP_LOGIC_CAPTURE2 'C'
 
-#define MAP_TILE_WATER       0
-#define MAP_TILE_SPAWN_GREEN 1
-#define MAP_TILE_SPAWN_BROWN 2
-#define MAP_TILE_SPAWN_NONE  3
+#define MAP_TILE_WATER      0
+#define MAP_TILE_SPAWN_BLUE 1
+#define MAP_TILE_SPAWN_RED  2
+#define MAP_TILE_SPAWN_NONE 3
 
 // Capture points
-#define MAP_TILE_CAPTURE_GREEN 4
-#define MAP_TILE_CAPTURE_BROWN 5
-#define MAP_TILE_CAPTURE_NONE  6
+#define MAP_TILE_CAPTURE_BLUE 4
+#define MAP_TILE_CAPTURE_RED  5
+#define MAP_TILE_CAPTURE_NONE 6
 
 // Flag buildings - 'live' & destroyed
 #define MAP_TILE_FLAG1L 7

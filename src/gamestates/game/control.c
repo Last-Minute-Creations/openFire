@@ -6,9 +6,9 @@
 #include "gamestates/game/game.h"
 
 #define CONTROL_POINT_LIFE 250 /* 15s */
-#define CONTROL_POINT_LIFE_BROWN   0
+#define CONTROL_POINT_LIFE_RED   0
 #define CONTROL_POINT_LIFE_NEUTRAL (CONTROL_POINT_LIFE)
-#define CONTROL_POINT_LIFE_GREEN   (CONTROL_POINT_LIFE*2)
+#define CONTROL_POINT_LIFE_BLUE   (CONTROL_POINT_LIFE*2)
 
 tControlPoint *g_pControlPoints;
 FUBYTE g_fubControlPointCount;
@@ -206,10 +206,10 @@ void controlAddPoint(
 	else
 		pPoint->fubTeam = TEAM_NONE;
 
-	if(pPoint->fubTeam == TEAM_GREEN)
-		pPoint->fuwLife = CONTROL_POINT_LIFE_GREEN;
-	else if(pPoint->fubTeam == TEAM_BROWN)
-		pPoint->fuwLife = CONTROL_POINT_LIFE_BROWN;
+	if(pPoint->fubTeam == TEAM_BLUE)
+		pPoint->fuwLife = CONTROL_POINT_LIFE_BLUE;
+	else if(pPoint->fubTeam == TEAM_RED)
+		pPoint->fuwLife = CONTROL_POINT_LIFE_RED;
 	else
 		pPoint->fuwLife = CONTROL_POINT_LIFE_NEUTRAL;
 
@@ -261,7 +261,7 @@ void controlSim(void) {
 			if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL)
 				pPoint->fubDestTeam = TEAM_NONE;
 			else
-				pPoint->fubDestTeam = TEAM_BROWN;
+				pPoint->fubDestTeam = TEAM_RED;
 		}
 		else {
 			// Green taking over brown
@@ -269,19 +269,19 @@ void controlSim(void) {
 			if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL)
 				pPoint->fubDestTeam = TEAM_NONE;
 			else
-				pPoint->fubDestTeam = TEAM_GREEN;
+				pPoint->fubDestTeam = TEAM_BLUE;
 		}
 
 		// Process takeover
 		pPoint->fuwLife = CLAMP(
 			pPoint->fuwLife+fbCaptureDir,
-			CONTROL_POINT_LIFE_BROWN,	CONTROL_POINT_LIFE_GREEN
+			CONTROL_POINT_LIFE_RED,	CONTROL_POINT_LIFE_BLUE
 		);
 
-		if(pPoint->fuwLife == CONTROL_POINT_LIFE_BROWN)
-			controlCapturePoint(pPoint, TEAM_BROWN);
-		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_GREEN)
-			controlCapturePoint(pPoint, TEAM_GREEN);
+		if(pPoint->fuwLife == CONTROL_POINT_LIFE_RED)
+			controlCapturePoint(pPoint, TEAM_RED);
+		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_BLUE)
+			controlCapturePoint(pPoint, TEAM_BLUE);
 		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL)
 			controlCapturePoint(pPoint, TEAM_NONE);
 
@@ -297,10 +297,6 @@ void controlRedrawPoints(void) {
 		// TODO could be drawn only on fubTileLife change
 		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
 		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
-		// N -> B: 250..0
-		// N -> G: 250..500
-		// B -> N: 0..250
-		// G -> N: 500..250
 		FUWORD fuwTileProgress = ABS(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
 		if(pPoint->fubDestTeam == TEAM_NONE)
 			fuwTileProgress = CONTROL_POINT_LIFE - fuwTileProgress;
@@ -310,7 +306,7 @@ void controlRedrawPoints(void) {
 		if(fuwTileProgress != MAP_FULL_TILE) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
-				(MAP_TILE_CAPTURE_GREEN + pPoint->fubTeam) << MAP_TILE_SIZE,
+				(MAP_TILE_CAPTURE_BLUE + pPoint->fubTeam) << MAP_TILE_SIZE,
 				g_pWorldMainBfr->pBuffer, uwX, uwY,
 				MAP_FULL_TILE, fuwAntiProgress
 			);
@@ -318,7 +314,7 @@ void controlRedrawPoints(void) {
 		if(fuwTileProgress)
 			blitCopyAligned(
 				g_pMapTileset, 0,
-				((MAP_TILE_CAPTURE_GREEN + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
+				((MAP_TILE_CAPTURE_BLUE + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
 				g_pWorldMainBfr->pBuffer, uwX, uwY + fuwAntiProgress,
 				MAP_FULL_TILE, fuwTileProgress
 			);

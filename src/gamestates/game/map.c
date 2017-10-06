@@ -132,13 +132,15 @@ void mapGenerateLogic(void) {
 					spawnAdd(x, y, TEAM_NONE);
 					break;
 				case MAP_LOGIC_SPAWN1:
-					spawnAdd(x, y, TEAM_GREEN);
+					spawnAdd(x, y, TEAM_BLUE);
 					break;
 				case MAP_LOGIC_SPAWN2:
-					spawnAdd(x, y, TEAM_BROWN);
+					spawnAdd(x, y, TEAM_RED);
 					break;
 				case MAP_LOGIC_ROAD:
 					break;
+				case MAP_LOGIC_WALL_VERTICAL:
+					g_pMap[x][y].ubIdx = MAP_LOGIC_WALL;
 				case MAP_LOGIC_WALL:
 					g_pMap[x][y].ubData = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
 					break;
@@ -147,7 +149,7 @@ void mapGenerateLogic(void) {
 					g_pMap[x][y].ubData = buildingAdd(
 						x, y,
 						BUILDING_TYPE_FLAG,
-						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_GREEN : TEAM_BROWN
+						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_BLUE : TEAM_RED
 					);
 					break;
 				case MAP_LOGIC_SENTRY0:
@@ -160,8 +162,8 @@ void mapGenerateLogic(void) {
 						x, y,
 						BUILDING_TYPE_TURRET,
 						ubTileIdx == MAP_LOGIC_SENTRY0? TEAM_NONE
-							:MAP_LOGIC_SENTRY1? TEAM_GREEN
-							:TEAM_BROWN
+							:MAP_LOGIC_SENTRY1? TEAM_BLUE
+							:TEAM_RED
 					);
 					break;
 				case MAP_LOGIC_DIRT:
@@ -201,9 +203,9 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 		case MAP_LOGIC_SPAWN0:
 			return MAP_TILE_SPAWN_NONE;
 		case MAP_LOGIC_SPAWN1:
-			return MAP_TILE_SPAWN_GREEN;
+			return MAP_TILE_SPAWN_BLUE;
 		case MAP_LOGIC_SPAWN2:
-			return MAP_TILE_SPAWN_BROWN;
+			return MAP_TILE_SPAWN_RED;
 		case MAP_LOGIC_ROAD:
 			return MAP_TILE_ROAD + mapCheckNeighbours(fubTileX, fubTileY, mapIsRoadFriend);
 		case MAP_LOGIC_WALL:
@@ -219,9 +221,9 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 		case MAP_LOGIC_CAPTURE0:
 			return MAP_TILE_CAPTURE_NONE;
 		case MAP_LOGIC_CAPTURE1:
-			return MAP_TILE_CAPTURE_GREEN;
+			return MAP_TILE_CAPTURE_BLUE;
 		case MAP_LOGIC_CAPTURE2:
-			return MAP_TILE_CAPTURE_BROWN;
+			return MAP_TILE_CAPTURE_RED;
 		case MAP_LOGIC_DIRT:
 		default:
 			return MAP_TILE_DIRT + mapCheckNeighbours(fubTileX, fubTileY, mapIsWater);

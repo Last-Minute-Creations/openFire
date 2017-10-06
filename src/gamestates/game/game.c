@@ -159,14 +159,14 @@ void gsGameCreate(void) {
 	// Add players
 	teamsInit();
 	playerListCreate(8);
-	g_pLocalPlayer = playerAdd("player", TEAM_GREEN);
+	g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
 	for(FUBYTE i = 0; i != 7; ++i) {
 		char szName[10];
 		sprintf(szName, "player%hhu", i);
-		playerAdd(szName, TEAM_GREEN);
+		playerAdd(szName, TEAM_BLUE);
 	}
 
-	mapCreate("data/maps/snafu.json");
+	mapCreate("data/maps/fubar.json");
 	// Create viewports
 	s_pWorldMainVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, g_pWorldView,
@@ -189,8 +189,8 @@ void gsGameCreate(void) {
 	}
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
-	paletteLoad("data/softiron.plt", s_pWorldMainVPort->pPalette, 16);
-	paletteLoad("data/softiron.plt", &s_pWorldMainVPort->pPalette[16], 16);
+	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
+	paletteLoad("data/game.plt", &s_pWorldMainVPort->pPalette[16], 16);
 	hudCreate();
 
 	// Enabling sprite DMA

@@ -35,11 +35,11 @@ void workerMain(void) {
 
 	// Turret stuff
 	logWrite("Loading brown turret frames...\n");
-	vehicleTypeBobSourceLoad("turret_brown", &g_sTurretSource[TEAM_GREEN], 0);
+	vehicleTypeBobSourceLoad("turret", &g_sTurretSource[TEAM_BLUE], 0);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("turret_green", &g_sTurretSource[TEAM_BROWN], 0);
+	vehicleTypeBobSourceLoad("turret", &g_sTurretSource[TEAM_RED], 0);
 	g_ubWorkerStep += 5;
-	vehicleTypeBobSourceLoad("turret_none", &g_sTurretSource[TEAM_NONE], 0);
+	vehicleTypeBobSourceLoad("turret", &g_sTurretSource[TEAM_NONE], 0);
 	g_ubWorkerStep += 5;
 
 	// Generate math table
@@ -87,7 +87,7 @@ void workerCleanup(void) {
 	vehicleTypesDestroy();
 
 	// Cleanup after turrets
-	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_GREEN]);
-	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_BROWN]);
+	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_BLUE]);
+	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_RED]);
 	vehicleTypeBobSourceUnload(&g_sTurretSource[TEAM_NONE]);
 }
