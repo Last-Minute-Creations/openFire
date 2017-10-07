@@ -12,6 +12,7 @@
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/control.h"
+#include "gamestates/game/console.h"
 
 // Steer requests
 #define OF_KEY_FORWARD      KEY_W
@@ -73,6 +74,12 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
 		logWrite("Player %s joined team %hu, player idx: %hu\n", szName, ubTeam, i);
+		char szMessage[35];
+		if(ubTeam == TEAM_BLUE)
+			sprintf(szMessage, "%s joined BLUE", szName);
+		else
+			sprintf(szMessage, "%s joined RED", szName);
+		consoleWrite(szMessage, 1);
 		return pPlayer;
 	}
 	logWrite("Can't add player %s - no more slots\n", szName);

@@ -5,10 +5,11 @@
 #include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/player.h"
+#include "gamestates/game/console.h"
 #include "vehicletypes.h"
 
 static tVPort *s_pHudVPort;
-static tSimpleBufferManager *s_pHudBfr;
+tSimpleBufferManager *g_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
 static UBYTE s_ubHudState;
 
@@ -19,7 +20,7 @@ void hudCreate(void) {
 		TAG_VPORT_OFFSET_TOP, 1,
 		TAG_DONE
 	);
-	s_pHudBfr = simpleBufferCreate(0,
+	g_pHudBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pHudVPort,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPHUD_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
@@ -53,9 +54,11 @@ void hudCreate(void) {
 	);
 
 	// Initial draw on buffer
-	bitmapLoadFromFile(s_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
+	bitmapLoadFromFile(g_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
 	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
 	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
+
+	consoleCreate();
 }
 
 void hudChangeState(UBYTE ubState) {
@@ -65,9 +68,8 @@ void hudChangeState(UBYTE ubState) {
 	pHudPanels[HUD_STATE_SELECTING] = s_pHudSelecting;
 
 	blitCopy(
-		pHudPanels[ubState], 0, 0, s_pHudBfr->pBuffer, 2, 2,
-		bitmapGetByteWidth(s_pHudDriving) << 3,
-		s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
+		pHudPanels[ubState], 0, 0, g_pHudBfr->pBuffer, 2, 2,
+		104, s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
 	);
 
 	UWORD uwDmaCon;
@@ -104,14 +106,14 @@ void drawHudBar(
 	// Black part of bar
 	if(uwCurrBarWidth != uwMaxBarWidth)
 		blitRect(
-			s_pHudBfr->pBuffer,	uwBarX + uwCurrBarWidth, uwBarY,
+			g_pHudBfr->pBuffer,	uwBarX + uwCurrBarWidth, uwBarY,
 			uwMaxBarWidth - uwCurrBarWidth, uwBarHeight, 0
 		);
 
 	// Colored part of bar
 	if(uwCurrBarWidth)
 		blitRect(
-			s_pHudBfr->pBuffer, uwBarX, uwBarY,
+			g_pHudBfr->pBuffer, uwBarX, uwBarY,
 			uwCurrBarWidth, uwBarHeight, ubColor
 		);
 }
@@ -133,6 +135,8 @@ void hudUpdate(void) {
 }
 
 void hudDestroy(void) {
+	consoleDestroy();
+
 	bitmapDestroy(s_pHudDriving);
 	bitmapDestroy(s_pHudSelecting);
 	// VPort & simpleBuffer are destroyed by g_pGameView

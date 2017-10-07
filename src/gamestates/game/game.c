@@ -20,6 +20,7 @@
 #include "gamestates/game/turret.h"
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/control.h"
+#include "gamestates/game/console.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -139,7 +140,6 @@ void worldUndraw(void) {
 }
 
 void gsGameCreate(void) {
-
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
 
@@ -156,15 +156,7 @@ void gsGameCreate(void) {
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
 	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
 
-	// Add players
 	teamsInit();
-	playerListCreate(8);
-	g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
-	for(FUBYTE i = 0; i != 7; ++i) {
-		char szName[10];
-		sprintf(szName, "player%hhu", i);
-		playerAdd(szName, TEAM_BLUE);
-	}
 
 	mapCreate("data/maps/fubar.json");
 	// Create viewports
@@ -224,6 +216,15 @@ void gsGameCreate(void) {
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
+	// Add players
+	playerListCreate(8);
+	g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+	for(FUBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player%hhu", i);
+		playerAdd(szName, TEAM_BLUE);
+	}
+
 	// Now that world buffer is created, do the first draw
 	mapRedraw();
 	displayPrepareLimbo(SPAWN_INVALID);
@@ -256,6 +257,10 @@ void gsGameLoop(void) {
 		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
+	if(keyUse(KEY_T))
+		consoleWrite("Test T", 1);
+	if(keyUse(KEY_Y))
+		consoleWrite("Test Y", 2);
 
 	hudUpdate();
 
