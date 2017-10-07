@@ -27,7 +27,7 @@ ACE_PARENT = $(ACE_DIR)$(SL)..
 
 # Compiler stuff
 CC = vc
-CC_FLAGS = +kick13 -c99 -I$(SRC_DIR) -I$(ACE_PARENT)
+CC_FLAGS = +kick13 -c99 -O1 -I$(SRC_DIR) -I$(ACE_PARENT)
 
 # File list
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
