@@ -164,11 +164,11 @@ void turretSim(void) {
 				continue;
 
 			// Calculate distance between turret & player
-			wDx = fix16_to_int(pPlayer->sVehicle.fX) - pTurret->uwX;
-			wDy = fix16_to_int(pPlayer->sVehicle.fY) - pTurret->uwY;
+			wDx = ABS(fix16_to_int(pPlayer->sVehicle.fX) - pTurret->uwX);
+			wDy = ABS(fix16_to_int(pPlayer->sVehicle.fY) - pTurret->uwY);
 			if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
 				continue; // If too far, don't do costly multiplications
-			uwDist = wDx*wDx + wDy*wDy; // No need for sqrt at that point
+			uwDist = wDx*wDx + wDy*wDy;
 			if(uwDist <= uwClosestDist) {
 				pClosestPlayer = pPlayer;
 				uwClosestDist = uwDist;
@@ -178,7 +178,6 @@ void turretSim(void) {
 		// Anything in range?
 		if(!pClosestPlayer)
 			continue;
-		// uwClosestDist = fix16_to_int(fix16_sqrt(fix16_from_int(uwClosestDist)));
 
 		// Determine destination angle
 		ubDestAngle = getAngleBetweenPoints(

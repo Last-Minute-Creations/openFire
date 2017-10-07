@@ -5,10 +5,10 @@
 #include <gamestates/game/bob.h>
 #include <gamestates/game/projectile.h>
 
-#define TURRET_INVALID 0xFFFF
-#define TURRET_SPRITE_SIZE 16
-#define TURRET_MIN_DISTANCE 96
-#define TURRET_COOLDOWN 25
+#define TURRET_INVALID      0xFFFF
+#define TURRET_SPRITE_SIZE  16
+#define TURRET_MIN_DISTANCE (PROJECTILE_RANGE+32)
+#define TURRET_COOLDOWN     PROJECTILE_FRAME_LIFE
 
 /**
  *  Turret struct.

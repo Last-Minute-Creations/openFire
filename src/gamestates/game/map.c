@@ -162,7 +162,7 @@ void mapGenerateLogic(void) {
 						x, y,
 						BUILDING_TYPE_TURRET,
 						ubTileIdx == MAP_LOGIC_SENTRY0? TEAM_NONE
-							:MAP_LOGIC_SENTRY1? TEAM_BLUE
+							: ubTileIdx == MAP_LOGIC_SENTRY1? TEAM_BLUE
 							:TEAM_RED
 					);
 					break;

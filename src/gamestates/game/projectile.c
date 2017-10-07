@@ -7,9 +7,6 @@
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
 
-#define PROJECTILE_SPEED      (fix16_one*2)
-#define PROJECTILE_FRAME_LIFE fix16_to_int(fix16_div(fix16_from_int((320-32)/4), PROJECTILE_SPEED))
-
 #define PROJECTILE_BULLET_HEIGHT 2
 
 tProjectile *s_pProjectiles;
@@ -95,6 +92,9 @@ tProjectile *projectileCreate(
 	else {
 		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwX);
 		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwY);
+		ubAngle = uOwner.pTurret->ubAngle;
+		fSin = csin(ubAngle);
+		fCos = ccos(ubAngle);
 	}
 
 	// Movement deltas

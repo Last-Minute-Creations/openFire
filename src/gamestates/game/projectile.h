@@ -6,6 +6,11 @@
 #include "gamestates/game/turret.h"
 #include "gamestates/game/bob.h"
 
+#define PROJECTILE_RANGE      ((320-32)/4)
+#define PROJECTILE_SPEED      (fix16_one*2)
+#define PROJECTILE_FRAME_LIFE fix16_to_int(fix16_div(fix16_from_int(PROJECTILE_RANGE), PROJECTILE_SPEED))
+
+
 // Projectile types.
 #define PROJECTILE_TYPE_OFF    0
 #define PROJECTILE_TYPE_BULLET 1
