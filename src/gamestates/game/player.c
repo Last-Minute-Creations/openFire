@@ -152,13 +152,24 @@ void playerLocalProcessInput(void) {
 		case PLAYER_STATE_DRIVING: {
 			// Receive player's steer request
 			tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
-			pReq->ubForward     = keyCheck(OF_KEY_FORWARD);
-			pReq->ubBackward    = keyCheck(OF_KEY_BACKWARD);
-			pReq->ubLeft        = keyCheck(OF_KEY_LEFT);
-			pReq->ubRight       = keyCheck(OF_KEY_RIGHT);
+			if(g_isChatting) {
+				if(keyUse(g_sKeyManager.ubLastKey))
+					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+				pReq->ubForward     = 0;
+				pReq->ubBackward    = 0;
+				pReq->ubLeft        = 0;
+				pReq->ubRight       = 0;
+				pReq->ubAction3     = 0;
+			}
+			else {
+				pReq->ubForward     = keyCheck(OF_KEY_FORWARD);
+				pReq->ubBackward    = keyCheck(OF_KEY_BACKWARD);
+				pReq->ubLeft        = keyCheck(OF_KEY_LEFT);
+				pReq->ubRight       = keyCheck(OF_KEY_RIGHT);
+				pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
+			}
 			pReq->ubAction1     = mouseCheck(MOUSE_LMB);
 			pReq->ubAction2     = mouseCheck(MOUSE_RMB);
-			pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				fix16_to_int(g_pLocalPlayer->sVehicle.fX),
@@ -168,7 +179,11 @@ void playerLocalProcessInput(void) {
 			);
 		} break;
 		case PLAYER_STATE_LIMBO: {
-			if(mouseUse(MOUSE_LMB)) {
+			if(g_isChatting) {
+				if(keyUse(g_sKeyManager.ubLastKey))
+					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+			}
+			else if(mouseUse(MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
 				tUwRect sTankRect = {
 					.uwX = 2 + 5, .uwY = uwHudOffs + 5, .uwWidth = 28, .uwHeight = 20

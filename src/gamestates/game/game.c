@@ -258,9 +258,7 @@ void gsGameLoop(void) {
 	if(keyUse(KEY_L))
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 	if(keyUse(KEY_T))
-		consoleWrite("Test T", 1);
-	if(keyUse(KEY_Y))
-		consoleWrite("Test Y", 2);
+		consoleChatBegin();
 
 	hudUpdate();
 
