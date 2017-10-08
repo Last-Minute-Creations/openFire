@@ -180,10 +180,12 @@ void projectileSim(void) {
 		ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
 		ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
-			if(pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
+			if(
+				pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
 				&& g_pMap[ubMapX][ubMapY].ubIdx == MAP_LOGIC_WALL
-			)
+			) {
 				continue;
+			}
 			if(buildingDamage(ubBuildingIdx, ubDamage) == BUILDING_DESTROYED) {
 				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
 				g_pMap[ubMapX][ubMapY].ubData = 0;

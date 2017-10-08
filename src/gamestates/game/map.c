@@ -184,11 +184,10 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 }
 
 void mapRedraw(void) {
-	FUBYTE x, y;
 	UBYTE ubTileIdx, ubOutTile;
 
-	for(x = 0; x != g_fubMapTileWidth; ++x) {
-		for(y = 0; y != g_fubMapTileHeight; ++y) {
+	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x) {
+		for(FUBYTE y = 0; y != g_fubMapTileHeight; ++y) {
 			ubTileIdx = g_pMap[x][y].ubIdx;
 			mapDrawTile(x, y, mapTileFromLogic(x, y));
 		}
@@ -246,6 +245,8 @@ void mapDestroy(void) {
 }
 
 void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
+	// TODO omit if not visible
+	// TODO when scrolling trick: omit if not yet drawn on redraw margin
 	++g_ubPendingTileCount;
 	g_pTilesToRedraw[g_ubPendingTileCount].ubX = ubTileX;
 	g_pTilesToRedraw[g_ubPendingTileCount].ubY = ubTileY;
