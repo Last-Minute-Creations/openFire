@@ -14,9 +14,10 @@ UBYTE s_ubProjectileCount;
 tBitMap *s_pBulletBitmap;
 tBitmapMask *s_pBulletMask;
 
-void projectileListCreate(UBYTE ubProjectileCount) {
-	UBYTE i;
+fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
+fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
 
+void projectileListCreate(UBYTE ubProjectileCount) {
 	logBlockBegin("projectileListCreate(ubProjectileCount: %hhu)", ubProjectileCount);
 
 	// Load gfx
@@ -26,7 +27,7 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	// Create projectiles
 	s_ubProjectileCount = ubProjectileCount;
 	s_pProjectiles = memAllocFast(ubProjectileCount * sizeof(tProjectile));
-	for(i = 0; i != ubProjectileCount; ++i) {
+	for(FUBYTE i = 0; i != ubProjectileCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
 		s_pProjectiles[i].pBob = bobCreate(
 			s_pBulletBitmap, s_pBulletMask,
@@ -36,6 +37,12 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	}
 
 	logBlockEnd("projectileListCreate()");
+
+	// Prepare projectile speeds
+	for(FUBYTE i = 0; i != VEHICLE_TURRET_ANGLE_COUNT; ++i) {
+		s_pProjectileDx[i] = fix16_mul(ccos(i), PROJECTILE_SPEED);
+		s_pProjectileDy[i] = fix16_mul(csin(i), PROJECTILE_SPEED);
+	}
 }
 
 void projectileListDestroy() {
@@ -61,7 +68,7 @@ tProjectile *projectileCreate(
 ) {
 	tProjectile *pProjectile;
 	fix16_t fSin, fCos;
-	UBYTE i, ubAngle;
+	UBYTE i;
 
 	// Find free projectile
 	pProjectile = 0;
@@ -81,25 +88,19 @@ tProjectile *projectileCreate(
 	// Initial projectile position & angle
 	if(ubOwnerType == PROJECTILE_OWNER_TYPE_VEHICLE) {
 		if(uOwner.pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
-			ubAngle = uOwner.pVehicle->ubTurretAngle;
+			pProjectile->ubAngle = uOwner.pVehicle->ubTurretAngle;
 		else
-			ubAngle = uOwner.pVehicle->ubBodyAngle;
-		fSin = csin(ubAngle);
-		fCos = ccos(ubAngle);
+			pProjectile->ubAngle = uOwner.pVehicle->ubBodyAngle;
+		fSin = csin(pProjectile->ubAngle);
+		fCos = ccos(pProjectile->ubAngle);
 		pProjectile->fX = fix16_add(uOwner.pVehicle->fX, (VEHICLE_BODY_WIDTH/2) * fCos);
 		pProjectile->fY = fix16_add(uOwner.pVehicle->fY, (VEHICLE_BODY_HEIGHT/2) * fSin);
 	}
 	else {
 		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwX);
 		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwY);
-		ubAngle = uOwner.pTurret->ubAngle;
-		fSin = csin(ubAngle);
-		fCos = ccos(ubAngle);
+		pProjectile->ubAngle = uOwner.pTurret->ubAngle;
 	}
-
-	// Movement deltas
-	pProjectile->fDx = fix16_mul(fCos, PROJECTILE_SPEED);
-	pProjectile->fDy = fix16_mul(fSin, PROJECTILE_SPEED);
 
 	// Frame life
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
@@ -165,8 +166,8 @@ void projectileSim(void) {
 		--pProjectile->uwFrameLife;
 
 		// Increment position
-		pProjectile->fX = fix16_add(pProjectile->fX, pProjectile->fDx);
-		pProjectile->fY = fix16_add(pProjectile->fY, pProjectile->fDy);
+		pProjectile->fX = fix16_add(pProjectile->fX, s_pProjectileDx[pProjectile->ubAngle]);
+		pProjectile->fY = fix16_add(pProjectile->fY, s_pProjectileDy[pProjectile->ubAngle]);
 
 		// Check collision with vehicles
 		if(projectileHasCollidedWithAnyPlayer(pProjectile)) {

@@ -34,8 +34,7 @@ typedef struct _tProjectile {
 	tBob *pBob;                ///< Bob for projectile display
 	fix16_t fX;                ///< X-coord of current position.
 	fix16_t fY;                ///< Ditto, Y-coord.
-	fix16_t fDx;               ///< Delta X per frame.
-	fix16_t fDy;               ///< Ditto, delta Y.
+	UBYTE ubAngle;             ///< For determining dx/dy
 	UWORD uwFrameLife;         ///< Projectile life, in remaining frame count.
 	UBYTE ubType;              ///< See PROJECTILE_TYPE_* defines.
 	UBYTE ubOwnerType;         ///< See PROJECTILE_OWNER_TYPE_* defines.
