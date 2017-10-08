@@ -28,8 +28,6 @@ tBob *bobCreate(tBitMap *pBitmap, tBitmapMask *pMask, UWORD uwFrameHeight, UWORD
 		pBitmap->Depth,	bitmapIsInterleaved(pBitmap) ? BMF_INTERLEAVED : 0
 	);
 
-	// TODO init bg buf, so first draw won't corrupt dest
-
 	logBlockEnd("bobCreate()");
 	return pBob;
 }

@@ -272,11 +272,9 @@ void gsGameLoop(void) {
 		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
 	}
 	else {
-		cameraMoveBy(
-			g_pWorldCamera,
-			2 * SGN(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX),
-			2 * SGN(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY)
-		);
+		WORD wDx = CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
+		WORD wDy = CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
+		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 	worldDraw();
 
