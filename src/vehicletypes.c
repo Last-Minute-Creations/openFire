@@ -99,7 +99,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 
 		if(isWithMask) {
 			// Add mask bit to chunky pixels
-			// TODO x loop
+			// TODO add x-coord loop so that it won't be hardcoded to 16/32px
 			uwMaskChunk = pMask->pData[y * (pBitmap->BytesPerRow>>1)];
 			for(x = 0; x != 16; ++x) {
 				if(uwMaskChunk & (1 << 15))

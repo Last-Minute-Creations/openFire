@@ -85,23 +85,17 @@ UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
 void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType) {
 	tSpawn *pSpawn = &g_pSpawns[fubSpawnIdx];
 	pSpawn->ubBusy = fubBusyType;
-	if(fubBusyType == SPAWN_BUSY_BUNKERING || fubBusyType == SPAWN_BUSY_SURFACING) {
-		pSpawn->ubFrame = 0;
-		pSpawn->ubVehicleType = fubVehicleType;
-	}
-	// TODO capturing
+	pSpawn->ubFrame = 0;
+	pSpawn->ubVehicleType = fubVehicleType;
 }
 
 void spawnSim(void) {
 	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
-		if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
-			if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN)
-				++pSpawn->ubFrame;
-			else
-				pSpawn->ubBusy = SPAWN_BUSY_NOT;
-		}
-		// TODO capturing
+		if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN)
+			++pSpawn->ubFrame;
+		else
+			pSpawn->ubBusy = SPAWN_BUSY_NOT;
 	}
 }
 
@@ -110,21 +104,18 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 	UBYTE ubFrameIdx;
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
-	if(pSpawn->ubBusy == SPAWN_BUSY_BUNKERING || pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
-		if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
-			mapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
-		else {
-			UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
-			if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
-				ubFrameIdx = 5 - ubFrameIdx;
-			blitCopyAligned(
-				pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
-				0, ubFrameIdx << MAP_TILE_SIZE,
-				g_pWorldMainBfr->pBuffer,
-				pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,
-				MAP_FULL_TILE, MAP_FULL_TILE
-			);
-		}
+	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
+		mapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
+	else {
+		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
+		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
+			ubFrameIdx = 5 - ubFrameIdx;
+		blitCopyAligned(
+			pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
+			0, ubFrameIdx << MAP_TILE_SIZE,
+			g_pWorldMainBfr->pBuffer,
+			pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,
+			MAP_FULL_TILE, MAP_FULL_TILE
+		);
 	}
-	// TODO capturing
 }

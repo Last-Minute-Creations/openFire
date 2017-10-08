@@ -40,8 +40,7 @@ void gsInitLoadingLoop(void) {
 		case INITLOADING_STATE_DONE:
 			// Stop worker
 			workerDestroy();
-			// Fadeout
-			// TODO
+			// TODO Fadeout
 			menuDestroy();
 			// Move to proper gamestate
 			gamePushState(gsGameCreate, gsGameLoop, gsGameDestroy);
