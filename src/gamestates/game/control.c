@@ -4,6 +4,7 @@
 #include "gamestates/game/map.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/game.h"
+#include "gamestates/game/console.h"
 
 #define CONTROL_POINT_LIFE 250 /* 15s */
 #define CONTROL_POINT_LIFE_RED   0
@@ -234,6 +235,22 @@ void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 		"Control point at %hu,%hu captured by team %u\n",
 		pPoint->fubTileX, pPoint->fubTileY, fubTeam
 	);
+	char szLog[50];
+	FUBYTE fubColor;
+	if(fubTeam == TEAM_BLUE) {
+		sprintf(szLog, "Control point %s is now BLUE", pPoint->szName);
+		fubColor = CONSOLE_COLOR_BLUE;
+	}
+	else if(fubTeam == TEAM_RED) {
+		sprintf(szLog, "Control point %s is now RED", pPoint->szName);
+		fubColor = CONSOLE_COLOR_RED;
+	}
+	else {
+		sprintf(szLog, "Control point %s is now NEUTRAL", pPoint->szName);
+		fubColor = CONSOLE_COLOR_GENERAL;
+	}
+	consoleWrite(szLog, fubColor);
+
 	pPoint->fubTeam = fubTeam;
 	for(FUBYTE i = 0; i != pPoint->fubSpawnCount; ++i)
 		spawnCapture(pPoint->pSpawns[i], fubTeam);

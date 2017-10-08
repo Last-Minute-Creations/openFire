@@ -8,10 +8,6 @@
 #define CONSOLE_MESSAGE_MAX 35
 #define CHAT_MAX (192/6)
 
-#define CONSOLE_COLOR_GENERAL 1
-#define CONSOLE_COLOR_BLUE    2
-#define CONSOLE_COLOR_RED     3
-
 tFont *s_pConsoleFont;
 char s_pChatBfr[CHAT_MAX] = "say: ";
 FUBYTE g_isChatting;
