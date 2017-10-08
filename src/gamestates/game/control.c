@@ -294,6 +294,13 @@ void controlSim(void) {
 void controlRedrawPoints(void) {
 	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
+		// Omit drawing if not visible
+		if(!simpleBufferIsRectVisible(
+			g_pWorldMainBfr,
+			pPoint->fubTileX << MAP_TILE_SIZE, pPoint->fubTileY << MAP_TILE_SIZE,
+			MAP_FULL_TILE, MAP_FULL_TILE
+		))
+			continue;
 		// TODO could be drawn only on fubTileLife change
 		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
 		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
