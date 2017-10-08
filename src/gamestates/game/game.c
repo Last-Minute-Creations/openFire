@@ -182,7 +182,7 @@ void gsGameCreate(void) {
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
-	paletteLoad("data/game.plt", &s_pWorldMainVPort->pPalette[16], 16);
+	paletteLoad("data/openfire_sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 	hudCreate();
 
 	// Enabling sprite DMA

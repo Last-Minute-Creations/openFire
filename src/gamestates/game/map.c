@@ -42,18 +42,18 @@ UBYTE mapIsWall(UBYTE ubMapTile) {
 UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_ROAD     ||
-		ubMapTile == MAP_LOGIC_SPAWN0   ||
-		ubMapTile == MAP_LOGIC_SPAWN1   ||
-		ubMapTile == MAP_LOGIC_SPAWN2   ||
-		ubMapTile == MAP_LOGIC_CAPTURE0 ||
-		ubMapTile == MAP_LOGIC_CAPTURE1 ||
-		ubMapTile == MAP_LOGIC_CAPTURE2 ||
-		ubMapTile == MAP_LOGIC_SPAWN2   ||
-		ubMapTile == MAP_LOGIC_SPAWN2   ||
-		ubMapTile == MAP_LOGIC_GATE1    ||
-		ubMapTile == MAP_LOGIC_GATE2    ||
-		ubMapTile == MAP_LOGIC_FLAG1    ||
-		ubMapTile == MAP_LOGIC_FLAG2    ||
+		// ubMapTile == MAP_LOGIC_SPAWN0   ||
+		// ubMapTile == MAP_LOGIC_SPAWN1   ||
+		// ubMapTile == MAP_LOGIC_SPAWN2   ||
+		// ubMapTile == MAP_LOGIC_CAPTURE0 ||
+		// ubMapTile == MAP_LOGIC_CAPTURE1 ||
+		// ubMapTile == MAP_LOGIC_CAPTURE2 ||
+		// ubMapTile == MAP_LOGIC_SPAWN2   ||
+		// ubMapTile == MAP_LOGIC_SPAWN2   ||
+		// ubMapTile == MAP_LOGIC_GATE1    ||
+		// ubMapTile == MAP_LOGIC_GATE2    ||
+		// ubMapTile == MAP_LOGIC_FLAG1    ||
+		// ubMapTile == MAP_LOGIC_FLAG2    ||
 		0
 	);
 }

@@ -23,7 +23,7 @@ typedef struct _tTurret {
 	UBYTE ubCooldown;
 } tTurret;
 
-extern tBobSource g_sTurretSource[TEAM_COUNT+1];
+extern tBobSource g_sTurretSource;
 extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
 

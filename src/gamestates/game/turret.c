@@ -18,7 +18,7 @@
 
 UWORD g_uwTurretCount;
 tTurret *g_pTurrets; // 20x25: 1100*7 ~ 8KiB
-tBobSource g_sTurretSource[TEAM_COUNT+1];
+tBobSource g_sTurretSource;
 
 static UWORD s_uwMaxTurrets;
 static UWORD **s_pTurretTiles; // 20x25: +2KiB
@@ -42,9 +42,9 @@ void turretListCreate(void) {
 
 	// Attach sprites
 	// TODO vehicle/turret jitter could be fixed by setting lsbit in ctl
-	// accordingly. Could be easily done in static copperlists.
+	// accordingly.
 	tCopCmd *pCopInit = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS];
-	copSetMove(&pCopInit[0].sMove, &custom.spr[1].ctl, (1<<7) | 1);
+	copSetMove(&pCopInit[0].sMove, &custom.spr[1].ctl, 1);
 	copSetMove(&pCopInit[1].sMove, &custom.spr[0].ctl, 1);
 	// Same in front bfr
 	CopyMemQuick(
@@ -68,7 +68,7 @@ void turretListCreate(void) {
 	// Force blank last line of turret gfx
 	for(UWORD uwFrame = 0; uwFrame != VEHICLE_BODY_ANGLE_COUNT; ++uwFrame) {
 		blitRect(
-			g_sTurretSource[TEAM_RED].pBitmap,
+			g_sTurretSource.pBitmap,
 			0, TURRET_SPRITE_SIZE*uwFrame + TURRET_SPRITE_SIZE-1,
 			16, 1, 0
 		);
@@ -237,7 +237,7 @@ void turretUpdateSprites(void) {
 	custom.dmacon = BITSET | DMAF_BLITHOG;
 	tTurret *pTurret;
 	UWORD uwSpriteLine;
-	const UWORD uwCopperInsCount = 8;
+	const UWORD uwCopperInsCount = 6;
 	WORD wCopVPos, wCopHPos;
 
 	// Tiles range to process
@@ -301,7 +301,7 @@ void turretUpdateSprites(void) {
 		uwTurretsInRow = 0;
 		uwRowStartCopOffs = uwCopOffs;
 		wCopVPos = WORLD_VPORT_BEGIN_Y + wSpriteBeginOnScreenY;
-		const UWORD uwWordsPerRow = (g_sTurretSource[TEAM_RED].pBitmap->BytesPerRow >> 1);
+		const UWORD uwWordsPerRow = (g_sTurretSource.pBitmap->BytesPerRow >> 1);
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
 			// Get turret from tile, skip if there is none
 			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
@@ -315,8 +315,9 @@ void turretUpdateSprites(void) {
 
 			// Get turret gfx
 			uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_SIZE + uwFirstVisibleSpriteLine)* uwWordsPerRow;
-			UWORD *pSpriteBpls = &((UWORD**)g_sTurretSource[TEAM_RED].pBitmap->Planes)[0][uwSpriteLine];
+			UWORD *pSpriteBpls = &((UWORD**)g_sTurretSource.pBitmap->Planes)[0][uwSpriteLine];
 			pRowSpriteBpls[uwTurretsInRow] = pSpriteBpls;
+			const UWORD pTeamColors[TEAM_COUNT+1] = {0x69C, 0xB21, 0xAAA};
 
 			// Do a WAIT
 			// TODO: copWait VPOS could be ignored here and only set on 1st line later
@@ -325,16 +326,14 @@ void turretUpdateSprites(void) {
 
 			// Add MOVEs - no need setting sprite VPos 'cuz WAIT ensures same line
 			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1);
-			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.spr[0].pos, uwSpritePos);
-			copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.spr[1].pos, uwSpritePos);
-			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[1].datab, pSpriteBpls[3]);
-			copSetMove(&pCmdList[uwCopOffs+4].sMove, &custom.spr[1].dataa, pSpriteBpls[2]);
-			copSetMove(&pCmdList[uwCopOffs+5].sMove, &custom.spr[0].datab, pSpriteBpls[1]);
-			copSetMove(&pCmdList[uwCopOffs+6].sMove, &custom.spr[0].dataa, pSpriteBpls[0]);
+			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.color[16+3], pTeamColors[pTurret->ubTeam]);
+			copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.spr[0].pos, uwSpritePos);
+			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[0].datab, pSpriteBpls[1]);
+			copSetMove(&pCmdList[uwCopOffs+4].sMove, &custom.spr[0].dataa, pSpriteBpls[0]);
 			++uwTurretsInRow;
 			// Force 1 empty tile
 			++uwTileX;
-			uwCopOffs += 7;
+			uwCopOffs += 5;
 		}
 		if(!uwTurretsInRow)
 			continue;
@@ -359,12 +358,10 @@ void turretUpdateSprites(void) {
 				pRowSpriteBpls[i] += uwWordsPerRow;
 				UWORD *pRow = pRowSpriteBpls[i];
 
-				pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos;           // WAIT Y
-				pCmdList[uwCopOffs+3].sMove.bfValue = pRow[3]; // spr1datb
-				pCmdList[uwCopOffs+4].sMove.bfValue = pRow[2]; // spr1data
-				pCmdList[uwCopOffs+5].sMove.bfValue = pRow[1]; // spr0datb
-				pCmdList[uwCopOffs+6].sMove.bfValue = pRow[0]; // spr0data
-				uwCopOffs += 7;
+				pCmdList[uwCopOffs+0].sWait.bfWaitY = wCopVPos; // WAIT Y
+				pCmdList[uwCopOffs+3].sMove.bfValue = pRow[1];  // spr0datb
+				pCmdList[uwCopOffs+4].sMove.bfValue = pRow[0];  // spr0data
+				uwCopOffs += 5;
 			}
 		}
 	}
