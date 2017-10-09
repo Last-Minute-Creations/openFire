@@ -4,7 +4,7 @@
 #include <ace/libfixmath/fix16.h>
 #include "gamestates/game/bob.h"
 #include "gamestates/game/gamemath.h"
-#include "gamestates/initloading/worker.h"
+#include "gamestates/precalc/precalc.h"
 
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
@@ -215,12 +215,11 @@ void vehicleTypeSetBlankBobSource(tBobSource *pSource) {
  *  @todo Chopper
  *  @todo ASV
  */
-void vehicleTypesCreate(BYTE *pProgress) {
+void vehicleTypesCreate(void) {
 	tVehicleType *pType;
 	UBYTE i;
 
 	logBlockBegin("vehicleTypesCreate");
-	g_ubWorkerStep += 5;
 
 	// Tank
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_TANK];
@@ -232,17 +231,21 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxSuperAmmo = 0;
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
+
+	precalcIncreaseProgress(5, "Generating blue tank frames");
 	vehicleTypeBobSourceLoad("blue/tank", &pType->sMainSource[TEAM_BLUE], 1);
-	g_ubWorkerStep += 5;
+
+	precalcIncreaseProgress(5, "Generating blue tank turret frames");
 	vehicleTypeBobSourceLoad("blue/tank_turret", &pType->sAuxSource[TEAM_BLUE], 1);
-	g_ubWorkerStep += 5;
+
+	precalcIncreaseProgress(5, "Generating red tank turret frames");
 	vehicleTypeBobSourceLoad("red/tank", &pType->sMainSource[TEAM_RED], 1);
-	g_ubWorkerStep += 5;
+
+	precalcIncreaseProgress(5, "Generating red tank turret frames");
 	vehicleTypeBobSourceLoad("red/tank_turret", &pType->sAuxSource[TEAM_RED], 1);
-	g_ubWorkerStep += 5;
 
 	// Tank collision coords
-	logWrite("Generating tank coords...\n");
+	precalcIncreaseProgress(5, "Calculating tank collision coords");
 	pType->pCollisionPts[0][0].bX = 2;  pType->pCollisionPts[0][0].bY = 6;
 	pType->pCollisionPts[0][1].bX = 15; pType->pCollisionPts[0][1].bY = 6;
 	pType->pCollisionPts[0][2].bX = 29; pType->pCollisionPts[0][2].bY = 6;
@@ -252,7 +255,6 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->pCollisionPts[0][6].bX = 15; pType->pCollisionPts[0][6].bY = 25;
 	pType->pCollisionPts[0][7].bX = 29; pType->pCollisionPts[0][7].bY = 25;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	g_ubWorkerStep += 5;
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -265,15 +267,16 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
 
+	precalcIncreaseProgress(5, "Generating blue jeep frames");
 	vehicleTypeBobSourceLoad("blue/jeep", &pType->sMainSource[TEAM_BLUE], 1);
 	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_BLUE]);
-	g_ubWorkerStep += 5;
+
+	precalcIncreaseProgress(5, "Generating red jeep frames");
 	vehicleTypeBobSourceLoad("red/jeep", &pType->sMainSource[TEAM_RED], 1);
 	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_RED]);
-	g_ubWorkerStep += 5;
 
 	// Jeep collision coords
-	logWrite("Generating jeep coords...\n");
+	precalcIncreaseProgress(5, "Calculating jeep collision coords");
 	pType->pCollisionPts[0][0].bX = 8;  pType->pCollisionPts[0][0].bY = 11;
 	pType->pCollisionPts[0][1].bX = 16; pType->pCollisionPts[0][1].bY = 11;
 	pType->pCollisionPts[0][2].bX = 25; pType->pCollisionPts[0][2].bY = 11;
@@ -283,7 +286,6 @@ void vehicleTypesCreate(BYTE *pProgress) {
 	pType->pCollisionPts[0][6].bX = 16; pType->pCollisionPts[0][6].bY = 20;
 	pType->pCollisionPts[0][7].bX = 25; pType->pCollisionPts[0][7].bY = 20;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	g_ubWorkerStep += 5;
 
 	logBlockEnd("vehicleTypesCreate");
 }

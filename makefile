@@ -36,14 +36,17 @@ OF_MAIN_OBJS = $(addprefix $(TMP_DIR)$(SL), $(notdir $(OF_MAIN_FILES:.c=.o)))
 OF_GS_GAME_FILES = $(wildcard $(SRC_DIR)/gamestates/game/*.c)
 OF_GS_GAME_OBJS = $(addprefix $(TMP_DIR)$(SL)gsgame_, $(notdir $(OF_GS_GAME_FILES:.c=.o)))
 
-OF_GS_INIT_FILES = $(wildcard $(SRC_DIR)/gamestates/initloading/*.c)
-OF_GS_INIT_OBJS = $(addprefix $(TMP_DIR)$(SL)gsinit_, $(notdir $(OF_GS_INIT_FILES:.c=.o)))
+OF_GS_MENU_FILES = $(wildcard $(SRC_DIR)/gamestates/menu/*.c)
+OF_GS_MENU_OBJS = $(addprefix $(TMP_DIR)$(SL)gsmenu_, $(notdir $(OF_GS_MENU_FILES:.c=.o)))
 
-OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_INIT_FILES)
-OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_INIT_OBJS)
+OF_GS_PRECALC_FILES = $(wildcard $(SRC_DIR)/gamestates/precalc/*.c)
+OF_GS_PRECALC_OBJS = $(addprefix $(TMP_DIR)$(SL)gsprecalc_, $(notdir $(OF_GS_PRECALC_FILES:.c=.o)))
+
+OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
+OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
 ACE_OBJS = $(wildcard $(ACE_DIR)/tmp/*.o)
 
-# 
+#
 ace: $(ACE_OBJS)
 	make -C $(ACE_DIR) all
 	@echo.
@@ -59,15 +62,19 @@ of: $(OF_OBJS)
 # Main files
 $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c
 	$(CC) $(CC_FLAGS) -c -o $@ $<
-	
+
 # Game
 $(TMP_DIR)$(SL)gsgame_%.o: $(SRC_DIR)/gamestates/game/%.c
 	$(CC) $(CC_FLAGS) -c -o $@ $<
-	
-# InitLoading
-$(TMP_DIR)$(SL)gsinit_%.o: $(SRC_DIR)/gamestates/initloading/%.c
+
+# Menu
+$(TMP_DIR)$(SL)gsmenu_%.o: $(SRC_DIR)/gamestates/menu/%.c
 	$(CC) $(CC_FLAGS) -c -o $@ $<
-	
+
+# Precalc
+$(TMP_DIR)$(SL)gsprecalc_%.o: $(SRC_DIR)/gamestates/precalc/%.c
+	$(CC) $(CC_FLAGS) -c -o $@ $<
+
 all: clear ace of
 
 clear:

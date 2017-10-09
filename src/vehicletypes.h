@@ -32,9 +32,7 @@ typedef struct {
 	tBCoordYX pCollisionPts[VEHICLE_BODY_ANGLE_COUNT][8]; ///< Collision points
 } tVehicleType;
 
-void vehicleTypesCreate(
-	OUT BYTE *pProgress
-);
+void vehicleTypesCreate(void);
 
 void vehicleTypesDestroy(void);
 

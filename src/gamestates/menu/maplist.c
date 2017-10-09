@@ -1,4 +1,4 @@
-#include "gamestates/initloading/maplist.h"
+#include "gamestates/menu/maplist.h"
 #include <string.h>
 #include <dos/dos.h>
 #include <clib/dos_protos.h>

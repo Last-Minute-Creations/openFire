@@ -10,29 +10,29 @@
 
 #include "config.h"
 #include "input.h"
-#include "gamestates/initloading/initloading.h"
+#include "gamestates/precalc/precalc.h"
 
 int main(void) {
 	memCreate();
 	logOpen();
 	timerCreate();
-	
+
 	windowCreate();
 	blitManagerCreate(0,0);
 	copCreate();
-	
+
 	inputOpen();
-	
-	gameCreate(gsInitLoadingCreate, gsInitLoadingLoop, gsInitLoadingDestroy);
+
+	gameCreate(precalcCreate, precalcLoop, precalcDestroy);
 	while (gameIsRunning()) {
 		timerProcess();
 		inputProcess();
 		gameProcess();
 	}
 	gameDestroy();
-	
+
 	inputClose();
-	
+
 	copDestroy();
 	blitManagerDestroy();
 	windowDestroy();

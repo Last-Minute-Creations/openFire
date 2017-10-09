@@ -1,11 +1,12 @@
-#include "gamestates/initloading/menu.h"
+#include "gamestates/menu/menu.h"
 #include <clib/dos_protos.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/blit.h>
+#include <ace/managers/key.h>
+#include <ace/managers/game.h>
 #include "config.h"
-#include "gamestates/initloading/worker.h"
 #include "gamestates/game/turret.h"
 
 #define LOADINGSCREEN_PROGRESS_WIDTH 256
@@ -19,7 +20,6 @@
 static tView *s_pView;
 static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
-BYTE g_pLoadProgress[LOADINGSCREEN_BOBSOURCE_COUNT] = {-1};
 
 void menuCreate(void) {
 	// Create View & VPort
@@ -81,40 +81,12 @@ void menuDrawButton(UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight, char *s
 	// TODO text
 }
 
-void menuDrawProgress(UWORD uwProgress) {
-	// BG + outline
-	blitRect(
-		s_pBuffer->pBuffer,
-		60 - 1,
-		208 - 1,
-		200 + 2,
-		16 + 2,
-		LOADINGSCREEN_COLOR_PROGRESS_OUTLINE
-	);
-
-	// Progress
-	blitRect(
-		s_pBuffer->pBuffer,
-		60,
-		208,
-		(uwProgress*200)/100,
-		16,
-		LOADINGSCREEN_COLOR_PROGRESS_FILL
-	);
-
-	// TODO text
-}
-
 void menuDestroy(void) {
 	viewLoad(0);
 	viewDestroy(s_pView);
 }
 
-UBYTE s_ubPrevWorkerStep = -1;
-
 void menuLoop() {
-	if(s_ubPrevWorkerStep != g_ubWorkerStep) {
-		menuDrawProgress(g_ubWorkerStep);
-		s_ubPrevWorkerStep = g_ubWorkerStep;
-	}
+	if(keyUse(KEY_ESCAPE))
+		gamePopState();
 }
