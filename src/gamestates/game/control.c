@@ -231,10 +231,6 @@ void controlAddPoint(
 void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 	if(pPoint->fubTeam == fubTeam)
 		return;
-	logWrite(
-		"Control point at %hu,%hu captured by team %u\n",
-		pPoint->fubTileX, pPoint->fubTileY, fubTeam
-	);
 	char szLog[50];
 	FUBYTE fubColor;
 	if(fubTeam == TEAM_BLUE) {

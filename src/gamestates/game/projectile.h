@@ -30,14 +30,14 @@ typedef union _tProjectileOwner {
 } tProjectileOwner;
 
 typedef struct _tProjectile {
-	tProjectileOwner uOwner;  ///< Owner for scoring kills
-	tBob *pBob;                ///< Bob for projectile display
-	fix16_t fX;                ///< X-coord of current position.
-	fix16_t fY;                ///< Ditto, Y-coord.
-	UBYTE ubAngle;             ///< For determining dx/dy
-	UWORD uwFrameLife;         ///< Projectile life, in remaining frame count.
-	UBYTE ubType;              ///< See PROJECTILE_TYPE_* defines.
-	UBYTE ubOwnerType;         ///< See PROJECTILE_OWNER_TYPE_* defines.
+	tProjectileOwner uOwner; ///< Owner for scoring kills
+	tBob *pBob;              ///< Bob for projectile display
+	fix16_t fX;              ///< X-coord of current position.
+	fix16_t fY;              ///< Ditto, Y-coord.
+	UBYTE ubAngle;           ///< For determining dx/dy
+	UWORD uwFrameLife;       ///< Projectile life, in remaining frame count.
+	UBYTE ubType;            ///< See PROJECTILE_TYPE_* defines.
+	UBYTE ubOwnerType;       ///< See PROJECTILE_OWNER_TYPE_* defines.
 } tProjectile;
 
 void projectileListCreate(

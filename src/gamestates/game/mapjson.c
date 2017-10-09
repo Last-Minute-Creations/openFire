@@ -177,8 +177,13 @@ void mapJsonReadControlPoints(tJson *pJson) {
 			++i;
 			FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
 			if(!memcmp(pJson->szData + pJson->pTokens[i].start, "name", fuwWidth)) {
-				memcpy(szControlName, pJson->szData + pJson->pTokens[++i].start, MIN(pJson->pTokens[i].end - pJson->pTokens[i].start, CONTROL_NAME_MAX-1));
-				szControlName[MIN(pJson->pTokens[i].end - pJson->pTokens[i].start, CONTROL_NAME_MAX-1)] = '\0';
+				++i;
+				FUBYTE fubNameLength = MIN(pJson->pTokens[i].end - pJson->pTokens[i].start, CONTROL_NAME_MAX-1);
+				memcpy(
+					szControlName, pJson->szData + pJson->pTokens[i].start,
+					fubNameLength
+				);
+				szControlName[fubNameLength] = '\0';
 			}
 			else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "capture", fuwWidth)) {
 				// Capture point
