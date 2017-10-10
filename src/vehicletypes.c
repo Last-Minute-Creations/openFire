@@ -5,6 +5,7 @@
 #include "gamestates/game/bob.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/precalc/precalc.h"
+#include "adler32.h"
 
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
@@ -19,7 +20,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask) {
 	UBYTE *pChunkySrc;
 	UBYTE *pChunkyRotated;
-	char szBitmapFileName[50], szMaskFileName[50];
+	char szBitmapFileName[50], szMaskFileName[50], szChecksumFileName[50];
 	UBYTE ubFrame;
 	UWORD x,y;
 	tBitMap *pBitmap;
@@ -31,29 +32,49 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		szName, pBobSource, isWithMask
 	);
 
+	// Calc source frame checksum
+	sprintf(szBitmapFileName, "data/vehicles/%s.bm", szName);
+	ULONG ulAdlerBm = adler32file(szBitmapFileName);
+	ULONG ulAdlerMask = 0;
+	if(isWithMask) {
+		sprintf(szMaskFileName, "data/vehicles/%s.bm", szName);
+		ulAdlerMask = adler32file(szMaskFileName);
+	}
+
 	// Check for precalc
+	sprintf(szChecksumFileName, "precalc/%s.adl", szName);
 	sprintf(szBitmapFileName, "precalc/%s.bm", szName);
 	sprintf(szMaskFileName, "precalc/%s.msk", szName);
 	FILE *pBitmapFile = fopen(szBitmapFileName, "rb");
 	FILE *pMaskFile = 0;
 	if(isWithMask)
 		pMaskFile = fopen(szMaskFileName, "rb");
-	if(pBitmapFile && (!isWithMask || pMaskFile)) {
-		logWrite("Loading from cache...\n");
+	FILE *pChecksumFile = fopen(szChecksumFileName, "rb");
+	if(pChecksumFile && pBitmapFile && (!isWithMask || pMaskFile)) {
+		ULONG ulPrevAdlerBm, ulPrevAdlerMask;
+		fread(&ulPrevAdlerBm, sizeof(ULONG), 1, pChecksumFile);
+		fread(&ulPrevAdlerMask, sizeof(ULONG), 1, pChecksumFile);
+		fclose(pChecksumFile);
 		fclose(pBitmapFile);
-		pBobSource->pBitmap = bitmapCreateFromFile(szBitmapFileName);
-		if(isWithMask) {
+		if(isWithMask)
 			fclose(pMaskFile);
-			pBobSource->pMask = bitmapMaskCreateFromFile(szMaskFileName);
+		// Check if adler is same
+		if(ulAdlerBm == ulPrevAdlerBm && ulAdlerMask == ulPrevAdlerMask) {
+			logWrite("Loading from cache...\n");
+			pBobSource->pBitmap = bitmapCreateFromFile(szBitmapFileName);
+			if(isWithMask) {
+				pBobSource->pMask = bitmapMaskCreateFromFile(szMaskFileName);
+			}
+			else
+				pBobSource->pMask = 0;
+			logBlockEnd("vehicleTypeBobSourceLoad()");
+			return 1;
 		}
-		else
-			pBobSource->pMask = 0;
-		logBlockEnd("vehicleTypeBobSourceLoad()");
-		return 1;
 	}
 	else {
 		if(pBitmapFile) fclose(pBitmapFile);
 		if(pMaskFile) fclose(pMaskFile);
+		if(pChecksumFile) fclose(pChecksumFile);
 	}
 
 	// Load first frame to determine sizes
@@ -191,6 +212,10 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		sprintf(szMaskFileName, "precalc/%s.msk", szName);
 		bitmapMaskSave(pBobSource->pMask, szMaskFileName);
 	}
+	pChecksumFile = fopen(szChecksumFileName, "wb");
+	fwrite(&ulAdlerBm, sizeof(ULONG), 1, pChecksumFile);
+	fwrite(&ulAdlerMask, sizeof(ULONG), 1, pChecksumFile);
+	fclose(pChecksumFile);
 	logBlockEnd("vehicleTypeBobSourceLoad()");
 	return 1;
 fail:
