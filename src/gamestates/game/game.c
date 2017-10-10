@@ -16,7 +16,7 @@
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/data.h"
 #include "gamestates/game/hud.h"
-#include "gamestates/game/cursor.h"
+#include "cursor.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/control.h"
@@ -196,7 +196,7 @@ void gsGameCreate(void) {
 	copRawDisableSprites(g_pWorldView->pCopList, 251, WORLD_COP_SPRITEEN_POS+1);
 
 	// Crosshair stuff
-	cursorCreate();
+	cursorCreate(g_pWorldView, 2, "data/crosshair.bm", WORLD_COP_CROSS_POS);
 
 	// Explosions
 	explosionsCreate();

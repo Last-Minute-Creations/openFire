@@ -1,8 +1,7 @@
-#include "gamestates/game/cursor.h"
+#include "cursor.h"
 #include <ace/macros.h>
 #include <ace/managers/mouse.h>
 #include <ace/utils/bitmap.h>
-#include "gamestates/game/game.h"
 
 UWORD g_uwMouseX, g_uwMouseY;
 static tBitMap *s_pCrosshair;
@@ -33,21 +32,30 @@ void cursorUpdate(void) {
 		| (g_uwMouseX & 1);
 }
 
-void cursorCreate(void) {
+void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCopPos) {
 	cursorSetConstraints(0, 0, 320, 255);
-	s_pCrosshair = bitmapCreateFromFile("data/crosshair.bm");
+	s_pCrosshair = bitmapCreateFromFile(szPath);
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	tCopCmd *pCrossList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS];
 	cursorUpdate();
-	copSetMove(&pCrossList[0].sMove, &pSprPtrs[2].uwHi, (ULONG)((UBYTE*)pSpriteBfr) >> 16);
-	copSetMove(&pCrossList[1].sMove, &pSprPtrs[2].uwLo, (ULONG)((UBYTE*)pSpriteBfr) & 0xFFFF);
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CROSS_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CROSS_POS],
-		2*sizeof(tCopCmd)
-	);
+	ULONG ulSprAddr = (ULONG)((UBYTE*)pSpriteBfr);
+	if(pView->pCopList->ubMode == COPPER_MODE_RAW) {
+		tCopCmd *pCrossList = &pView->pCopList->pBackBfr->pList[uwRawCopPos];
+		copSetMove(&pCrossList[0].sMove, &pSprPtrs[fubSpriteIdx].uwHi, ulSprAddr >> 16);
+		copSetMove(&pCrossList[1].sMove, &pSprPtrs[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
+		CopyMemQuick(
+			&pView->pCopList->pBackBfr->pList[uwRawCopPos],
+			&pView->pCopList->pFrontBfr->pList[uwRawCopPos],
+			2*sizeof(tCopCmd)
+		);
+	}
+	else {
+		tCopBlock *pBlock = copBlockCreate(pView->pCopList, 2, 0, 0);
+		copMove(pView->pCopList, pBlock, &pSprPtrs[fubSpriteIdx].uwHi, ulSprAddr >> 16);
+		copMove(pView->pCopList, pBlock, &pSprPtrs[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
+	}
 }
 
 void cursorDestroy(void) {
 	bitmapDestroy(s_pCrosshair);
+	// CopBlock will be freed with whole copperlist
 }

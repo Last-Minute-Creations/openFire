@@ -12,8 +12,8 @@
 
 #define PRECALC_BPP 4
 // Colors
-#define PRECALC_COLOR_TEXT             1
-#define PRECALC_COLOR_PROGRESS_OUTLINE 2
+#define PRECALC_COLOR_TEXT             13
+#define PRECALC_COLOR_PROGRESS_OUTLINE 7
 #define PRECALC_COLOR_PROGRESS_FILL    3
 
 static tView *s_pView;
@@ -52,20 +52,20 @@ void precalcCreate(void) {
 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4,
 		"Precalcing...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 	);
-	if(s_isHdd) {
-		fontDrawStr(
-			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
-			"This will take a long time only once",
-			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
-		);
-	}
-	else {
-		fontDrawStr(
-			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
-			"For better load times put this game on HDD",
-			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
-		);
-	}
+	// if(s_isHdd) {
+	// 	fontDrawStr(
+	// 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+	// 		"This will take a long time only once",
+	// 		PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+	// 	);
+	// }
+	// else {
+	// 	fontDrawStr(
+	// 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+	// 		"For better load times put this game on HDD",
+	// 		PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+	// 	);
+	// }
 
 	s_fubProgress = 0;
 
@@ -82,7 +82,6 @@ void precalcLoop(void) {
 	}
 	logBlockBegin("precalcLoop()");
 
-	logWrite("Working on vehicles...\n");
 	precalcIncreaseProgress(5, "INIT");
 	vehicleTypesCreate();
 
@@ -125,6 +124,8 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	const UWORD uwProgressY = 208;
 	const UWORD uwProgressWidth = 200;
 	const UWORD uwProgressHeight = 16;
+
+	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", szText);
 	// BG + outline
 	blitRect(
 		s_pBuffer->pBuffer,

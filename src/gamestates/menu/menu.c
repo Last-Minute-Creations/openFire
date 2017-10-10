@@ -2,11 +2,13 @@
 #include <clib/dos_protos.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/font.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include "config.h"
+#include "cursor.h"
 #include "gamestates/game/turret.h"
 
 #define LOADINGSCREEN_PROGRESS_WIDTH 256
@@ -20,6 +22,7 @@
 static tView *s_pView;
 static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
+static tFont *s_pFont;
 
 void menuCreate(void) {
 	// Create View & VPort
@@ -37,8 +40,10 @@ void menuCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
 		TAG_DONE
 	);
-	copBlockDisableSprites(s_pView->pCopList, 0xFF);
+	copBlockDisableSprites(s_pView->pCopList, 0xFE);
+	cursorCreate(s_pView, 0, "data/crosshair.bm", 0);
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
+	s_pFont = fontCreate("data/silkscreen5.fnt");
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 
 	menuDrawButton(64, 96, 320-128, 32, "PLAY GAME", 0);
@@ -49,9 +54,10 @@ void menuCreate(void) {
 
 void menuDrawButton(UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight, char *szText, UBYTE isSelected) {
 	// Draw border
-	const UBYTE ubColorLight = 1;
-	const UBYTE ubColorDark = 14;
-	const UBYTE ubColorFill = 11;
+	const UBYTE ubColorLight = 12;
+	const UBYTE ubColorDark = 3;
+	const UBYTE ubColorFill = 7;
+	const UBYTE ubColorText = 13;
 
 	blitRect(
 		s_pBuffer->pBuffer, uwX, uwY,
@@ -78,15 +84,27 @@ void menuDrawButton(UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight, char *s
 		1, uwHeight - 2, ubColorDark
 	);
 
-	// TODO text
+	// Text
+	fontDrawStr(
+		s_pBuffer->pBuffer, s_pFont, uwX + uwWidth/2, uwY + uwHeight/2,
+		szText, ubColorText, FONT_CENTER | FONT_SHADOW | FONT_COOKIE
+	);
 }
 
 void menuDestroy(void) {
 	viewLoad(0);
+	cursorDestroy();
+	fontDestroy(s_pFont);
 	viewDestroy(s_pView);
 }
 
 void menuLoop() {
-	if(keyUse(KEY_ESCAPE))
+	if(keyUse(KEY_ESCAPE)) {
 		gamePopState();
+		return;
+	}
+	cursorUpdate();
+
+	viewProcessManagers(s_pView);
+	copProcessBlocks();
 }
