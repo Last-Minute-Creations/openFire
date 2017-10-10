@@ -133,10 +133,11 @@ void projectileDraw(void) {
 
 	pProjectile = &s_pProjectiles[0];
 	for(i = s_ubProjectileCount; i--;) {
-		const fix16_t fHalf = fix16_div(fix16_one, fix16_from_int(2));
+		if(!pProjectile->uwFrameLife)
+			continue;
 		WORD wProjectileX, wProjectileY;
-		wProjectileX = fix16_to_int(fix16_add(pProjectile->fX, fHalf))-PROJECTILE_BULLET_HEIGHT/2;
-		wProjectileY = fix16_to_int(fix16_add(pProjectile->fY, fHalf))-PROJECTILE_BULLET_HEIGHT/2;
+		wProjectileX = fix16_to_int(pProjectile->fX)-PROJECTILE_BULLET_HEIGHT/2;
+		wProjectileY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
 		bobDraw(
 			pProjectile->pBob, g_pWorldMainBfr,
 			wProjectileX, wProjectileY
