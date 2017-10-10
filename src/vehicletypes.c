@@ -19,9 +19,8 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask) {
 	UBYTE *pChunkySrc;
 	UBYTE *pChunkyRotated;
-	char szFullFileName[50];
+	char szBitmapFileName[50], szMaskFileName[50];
 	UBYTE ubFrame;
-	FILE *pMaskFile;
 	UWORD x,y;
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;
@@ -32,9 +31,34 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		szName, pBobSource, isWithMask
 	);
 
+	// Check for precalc
+	sprintf(szBitmapFileName, "precalc/%s.bm", szName);
+	sprintf(szMaskFileName, "precalc/%s.msk", szName);
+	FILE *pBitmapFile = fopen(szBitmapFileName, "rb");
+	FILE *pMaskFile = 0;
+	if(isWithMask)
+		pMaskFile = fopen(szMaskFileName, "rb");
+	if(pBitmapFile && (!isWithMask || pMaskFile)) {
+		logWrite("Loading from cache...\n");
+		fclose(pBitmapFile);
+		pBobSource->pBitmap = bitmapCreateFromFile(szBitmapFileName);
+		if(isWithMask) {
+			fclose(pMaskFile);
+			pBobSource->pMask = bitmapMaskCreateFromFile(szMaskFileName);
+		}
+		else
+			pBobSource->pMask = 0;
+		logBlockEnd("vehicleTypeBobSourceLoad()");
+		return 1;
+	}
+	else {
+		if(pBitmapFile) fclose(pBitmapFile);
+		if(pMaskFile) fclose(pMaskFile);
+	}
+
 	// Load first frame to determine sizes
-	sprintf(szFullFileName, "data/vehicles/%s.bm", szName);
-	tBitMap *pFirstFrame = bitmapCreateFromFile(szFullFileName);
+	sprintf(szBitmapFileName, "data/vehicles/%s.bm", szName);
+	tBitMap *pFirstFrame = bitmapCreateFromFile(szBitmapFileName);
 	logWrite("Read first frame\n");
 	uwFrameWidth = bitmapGetByteWidth(pFirstFrame)*8;
 
@@ -62,7 +86,7 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 	if(isWithMask) {
 		// Create huge-ass mask
 		pMask = bitmapMaskCreate(
-			uwFrameWidth, pBitmap->BytesPerRow * 8 * VEHICLE_BODY_ANGLE_COUNT
+			uwFrameWidth, uwFrameWidth * pBitmap->Depth * VEHICLE_BODY_ANGLE_COUNT
 		);
 		if(!pMask) {
 			logWrite("ERR: Couldn't allocate vehicle mask\n");
@@ -71,10 +95,10 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		pBobSource->pMask = pMask;
 
 		// Load first frame's mask
-		sprintf(szFullFileName, "data/vehicles/%s.msk", szName);
-		pMaskFile = fopen(szFullFileName, "rb");
+		sprintf(szMaskFileName, "data/vehicles/%s.msk", szName);
+		pMaskFile = fopen(szMaskFileName, "rb");
 		if(!pMaskFile) {
-			logWrite("ERR: Couldn't open mask file %s\n", szFullFileName);
+			logWrite("ERR: Couldn't open mask file %s\n", szMaskFileName);
 			goto fail;
 		}
 		fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
@@ -161,6 +185,12 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
+	sprintf(szBitmapFileName, "precalc/%s.bm", szName);
+	bitmapSave(pBobSource->pBitmap, szBitmapFileName);
+	if(isWithMask) {
+		sprintf(szMaskFileName, "precalc/%s.msk", szName);
+		bitmapMaskSave(pBobSource->pMask, szMaskFileName);
+	}
 	logBlockEnd("vehicleTypeBobSourceLoad()");
 	return 1;
 fail:

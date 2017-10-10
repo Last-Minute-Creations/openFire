@@ -4,7 +4,6 @@
 #include <ace/utils/palette.h>
 #include <ace/utils/font.h>
 #include <ace/managers/viewport/simplebuffer.h>
-#include <ace/managers/blit.h>
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>

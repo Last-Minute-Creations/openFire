@@ -52,20 +52,20 @@ void precalcCreate(void) {
 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4,
 		"Precalcing...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 	);
-	// if(s_isHdd) {
-	// 	fontDrawStr(
-	// 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
-	// 		"This will take a long time only once",
-	// 		PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
-	// 	);
-	// }
-	// else {
-	// 	fontDrawStr(
-	// 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
-	// 		"For better load times put this game on HDD",
-	// 		PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
-	// 	);
-	// }
+	if(s_isHdd) {
+		fontDrawStr(
+			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+			"This will take a long time only once",
+			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+		);
+	}
+	else {
+		fontDrawStr(
+			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+			"For better load times put this game on HDD",
+			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+		);
+	}
 
 	s_fubProgress = 0;
 
@@ -125,7 +125,9 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	const UWORD uwProgressWidth = 200;
 	const UWORD uwProgressHeight = 16;
 
-	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", szText);
+	s_fubProgress = MIN(100, s_fubProgress+fubAmountToAdd);
+	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", s_fubProgress, szText);
+
 	// BG + outline
 	blitRect(
 		s_pBuffer->pBuffer,
@@ -135,7 +137,6 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	);
 
 	// Progress
-	s_fubProgress = MIN(100, s_fubProgress+fubAmountToAdd);
 	UWORD uwFillWidth = (s_fubProgress*uwProgressWidth)/100;
 	blitRect(
 		s_pBuffer->pBuffer,
@@ -148,6 +149,7 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 		uwProgressWidth - uwFillWidth, uwProgressHeight, 0
 	);
 
+	// Text
 	fontDrawStr(
 		s_pBuffer->pBuffer, s_pFont,
 		uwProgressX + uwProgressWidth/2, uwProgressY + uwProgressHeight/2,
