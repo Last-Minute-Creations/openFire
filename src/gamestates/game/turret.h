@@ -16,11 +16,11 @@
  *  if they are valid.
  */
 typedef struct _tTurret {
-	UWORD uwY;
-	UWORD uwX;
-	UBYTE ubTeam;
+	UWORD uwY;        ///< X position, in pixels.
+	UWORD uwX;        ///< Ditto, Y.
+	UBYTE ubTeam;     ///< See TEAM_* defines.
 	UBYTE ubAngle;
-	UBYTE ubCooldown;
+	UBYTE ubCooldown; ///< Cooldown between shots.
 } tTurret;
 
 extern tBobSource g_sTurretSource;

@@ -144,9 +144,20 @@ void turretSim(void) {
 	UBYTE ubDestAngle;
 	tTurret *pTurret;
 
+
+	const tUwRect sRectProcess = {
+		// uwY, uwX, uwWidth, uwHeight
+		MAX(0, fix16_to_int(g_pLocalPlayer->sVehicle.fX) - WORLD_VPORT_HEIGHT/2 - PROJECTILE_RANGE),
+		MAX(0, fix16_to_int(g_pLocalPlayer->sVehicle.fX) - WORLD_VPORT_WIDTH/2 - PROJECTILE_RANGE),
+		WORLD_VPORT_WIDTH + 2*PROJECTILE_RANGE,
+		WORLD_VPORT_HEIGHT + 2*PROJECTILE_RANGE
+	};
+
 	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
 		pTurret = &g_pTurrets[uwTurretIdx];
 		if(!pTurret->uwX || pTurret->ubTeam == TEAM_NONE)
+			continue;
+		if(!inRect(pTurret->uwX, pTurret->uwY, sRectProcess))
 			continue;
 
 		// Process cooldown

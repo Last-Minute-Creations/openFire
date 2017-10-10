@@ -45,6 +45,15 @@ tAvg *s_pDrawAvgVehicles;
 tAvg *s_pUndrawAvgExplosions;
 tAvg *s_pUndrawAvgProjectiles;
 tAvg *s_pUndrawAvgVehicles;
+tAvg *s_pProcessAvgCursor;
+tAvg *s_pProcessAvgDataRecv;
+tAvg *s_pProcessAvgInput;
+tAvg *s_pProcessAvgSpawn;
+tAvg *s_pProcessAvgPlayer;
+tAvg *s_pProcessAvgControl;
+tAvg *s_pProcessAvgTurret;
+tAvg *s_pProcessAvgProjectile;
+tAvg *s_pProcessAvgDataSend;
 
 UWORD uwLimboX;
 UWORD uwLimboY;
@@ -209,6 +218,16 @@ void gsGameCreate(void) {
 	s_pUndrawAvgExplosions = logAvgCreate("undraw explosions", 50);
 	s_pUndrawAvgProjectiles = logAvgCreate("undraw projectiles", 50);
 	s_pUndrawAvgVehicles = logAvgCreate("undraw vehicles", 50);
+
+	s_pProcessAvgCursor = logAvgCreate("cursor", 50);
+	s_pProcessAvgDataRecv = logAvgCreate("data recv", 50);
+	s_pProcessAvgInput = logAvgCreate("input", 50);
+	s_pProcessAvgSpawn = logAvgCreate("spawn", 50);
+	s_pProcessAvgPlayer = logAvgCreate("player", 50);
+	s_pProcessAvgControl = logAvgCreate("control", 50);
+	s_pProcessAvgTurret = logAvgCreate("turret", 50);
+	s_pProcessAvgProjectile = logAvgCreate("projectile", 50);
+	s_pProcessAvgDataSend = logAvgCreate("data send", 50);
 	#endif
 
 	// Initial values
@@ -242,15 +261,41 @@ void gsGameLoop(void) {
 		return;
 	}
 
+	logAvgBegin(s_pProcessAvgCursor);
 	cursorUpdate();
+	logAvgEnd(s_pProcessAvgCursor);
+
+	logAvgBegin(s_pProcessAvgDataRecv);
 	dataRecv();                // Receives positions of other players from server
+	logAvgEnd(s_pProcessAvgDataRecv);
+
+	logAvgBegin(s_pProcessAvgInput);
 	playerLocalProcessInput(); // Steer requests & limbo
+	logAvgEnd(s_pProcessAvgInput);
+
+	logAvgBegin(s_pProcessAvgSpawn);
 	spawnSim();
+	logAvgEnd(s_pProcessAvgSpawn);
+
+	logAvgBegin(s_pProcessAvgPlayer);
 	playerSim();               // Players: vehicle positions, death states, etc.
+	logAvgEnd(s_pProcessAvgPlayer);
+
+	logAvgBegin(s_pProcessAvgControl);
 	controlSim();
+	logAvgEnd(s_pProcessAvgControl);
+
+	logAvgBegin(s_pProcessAvgTurret);
 	turretSim();               // Turrets: targeting, rotation & projectile spawn
+	logAvgEnd(s_pProcessAvgTurret);
+
+	logAvgBegin(s_pProcessAvgProjectile);
 	projectileSim();           // Projectiles: new positions, damage
+	logAvgEnd(s_pProcessAvgProjectile);
+
+	logAvgBegin(s_pProcessAvgDataSend);
 	dataSend();                // Sends data to server
+	logAvgEnd(s_pProcessAvgDataSend);
 
 	// Steering-irrelevant player input
 	if(keyUse(KEY_C))
@@ -302,6 +347,15 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pDrawAvgVehicles);
 	logAvgDestroy(s_pDrawAvgProjectiles);
 	logAvgDestroy(s_pDrawAvgExplosions);
+	logAvgDestroy(s_pProcessAvgCursor);
+	logAvgDestroy(s_pProcessAvgDataRecv);
+	logAvgDestroy(s_pProcessAvgInput);
+	logAvgDestroy(s_pProcessAvgSpawn);
+	logAvgDestroy(s_pProcessAvgPlayer);
+	logAvgDestroy(s_pProcessAvgControl);
+	logAvgDestroy(s_pProcessAvgTurret);
+	logAvgDestroy(s_pProcessAvgProjectile);
+	logAvgDestroy(s_pProcessAvgDataSend);
 	#endif
 
 	mapDestroy();
