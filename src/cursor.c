@@ -5,7 +5,6 @@
 
 UWORD g_uwMouseX, g_uwMouseY;
 static tBitMap *s_pCrosshair;
-
 static s_uwXLo, s_uwYLo, s_uwXHi, s_uwYHi;
 
 void cursorSetConstraints(UWORD uwXLo, UWORD uwYLo, UWORD uwXHi, UWORD uwYHi) {
