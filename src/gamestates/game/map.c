@@ -58,6 +58,33 @@ UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
 	);
 }
 
+UBYTE mapCheckWater(UBYTE ubX, UBYTE ubY) {
+	UBYTE ubOut;
+	if(ubX && g_pMap[ubX-1][ubY].ubIdx == MAP_LOGIC_WATER) {
+		if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+			ubOut = 1;
+		else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+			ubOut = 2;
+		else
+			ubOut = 5 + (ubY & 1);
+	}
+	else if(ubX < g_fubMapTileWidth-1 && g_pMap[ubX+1][ubY].ubIdx == MAP_LOGIC_WATER) {
+		if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+			ubOut = 3;
+		else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+			ubOut = 4;
+		else
+			ubOut = 7 + (ubY & 1);
+	}
+	else if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+		ubOut = 9 + (ubX & 1);
+	else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+		ubOut = 11 + (ubX & 1);
+	else
+		ubOut = 0;
+	return ubOut;
+}
+
 UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	UBYTE ubTileType;
 	UBYTE ubOut;
@@ -225,7 +252,7 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 			return MAP_TILE_CAPTURE_RED;
 		case MAP_LOGIC_DIRT:
 		default:
-			return MAP_TILE_DIRT + mapCheckNeighbours(fubTileX, fubTileY, mapIsWater);
+			return MAP_TILE_DIRT + mapCheckWater(fubTileX, fubTileY);
 	}
 }
 
