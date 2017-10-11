@@ -7,9 +7,10 @@
 #include "vehicletypes.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/gamemath.h"
+#include "gamestates/game/projectile.h"
 
 /// Vehicle-specific constants
-#define VEHICLE_TANK_COOLDOWN 25
+#define VEHICLE_TANK_COOLDOWN PROJECTILE_FRAME_LIFE
 
 typedef struct _tSteerRequest {
 	UBYTE ubForward;
