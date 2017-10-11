@@ -20,6 +20,9 @@ typedef struct _tTurret {
 	UWORD uwX;        ///< Ditto, Y.
 	UBYTE ubTeam;     ///< See TEAM_* defines.
 	UBYTE ubAngle;
+	UBYTE ubDestAngle;
+	UBYTE isTargeting;
+	FUBYTE fubSeq;
 	UBYTE ubCooldown; ///< Cooldown between shots.
 } tTurret;
 

@@ -104,7 +104,10 @@ UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->uwY = (uwTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->ubTeam = ubTeam;
 	pTurret->ubAngle = ANGLE_90;
+	pTurret->ubDestAngle = ANGLE_90;
+	pTurret->isTargeting = 0;
 	pTurret->ubCooldown = 0;
+	pTurret->fubSeq = (uwTileX & 3) |	((uwTileY & 3) << 2);
 
 	// Add to tile-based list
 	s_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;
@@ -135,14 +138,46 @@ void turretDestroy(UWORD uwIdx) {
 	pTurret->uwX = 0;
 }
 
+void turretUpdateTarget(tTurret *pTurret) {
+	// Scan nearby enemies
+	UWORD uwClosestDist = TURRET_MIN_DISTANCE*TURRET_MIN_DISTANCE;
+	tPlayer *pClosestPlayer = 0;
+	for(FUBYTE fubPlayerIdx = g_ubPlayerCount; fubPlayerIdx--;) {
+		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
+
+		// Ignore players of same team or not on map
+		if(pPlayer->ubTeam == pTurret->ubTeam || pPlayer->ubState != PLAYER_STATE_DRIVING)
+			continue;
+
+		// Calculate distance between turret & player
+		WORD wDx = ABS(fix16_to_int(pPlayer->sVehicle.fX) - pTurret->uwX);
+		WORD wDy = ABS(fix16_to_int(pPlayer->sVehicle.fY) - pTurret->uwY);
+		if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
+			continue; // If too far, don't do costly multiplications
+		UWORD uwDist = wDx*wDx + wDy*wDy;
+		if(uwDist <= uwClosestDist) {
+			pClosestPlayer = pPlayer;
+			uwClosestDist = uwDist;
+		}
+	}
+
+	// Anything in range?
+	if(pClosestPlayer) {
+		pTurret->isTargeting = 1;
+		// Determine destination angle
+		pTurret->ubDestAngle = getAngleBetweenPoints(
+			pTurret->uwX, pTurret->uwY,
+			fix16_to_int(pClosestPlayer->sVehicle.fX),
+			fix16_to_int(pClosestPlayer->sVehicle.fY)
+		);
+	}
+}
+
 void turretSim(void) {
-	UBYTE ubPlayerIdx;
 	UWORD uwTurretIdx;
-	tPlayer *pPlayer, *pClosestPlayer;
-	UWORD uwClosestDist, uwDist;
-	WORD wDx, wDy;
-	UBYTE ubDestAngle;
 	tTurret *pTurret;
+
+	FUBYTE fubSeq = g_ulGameFrame & 15;
 
 	const tUwRect sRectProcess = {
 		// uwY, uwX, uwWidth, uwHeight
@@ -158,51 +193,22 @@ void turretSim(void) {
 		if(!inRect(pTurret->uwX, pTurret->uwY, sRectProcess))
 			continue;
 
+		if(pTurret->fubSeq == fubSeq) {
+			turretUpdateTarget(pTurret);
+		}
+
 		// Process cooldown
 		if(pTurret->ubCooldown)
 			--pTurret->ubCooldown;
 
-		// Scan nearby enemies
-		uwClosestDist = TURRET_MIN_DISTANCE*TURRET_MIN_DISTANCE;
-		pClosestPlayer = 0;
-		for(ubPlayerIdx = 0; ubPlayerIdx != g_ubPlayerCount; ++ubPlayerIdx) {
-			pPlayer = &g_pPlayers[ubPlayerIdx];
-
-			// Ignore players of same team or not on map
-			if(pPlayer->ubTeam == pTurret->ubTeam || pPlayer->ubState != PLAYER_STATE_DRIVING)
-				continue;
-
-			// Calculate distance between turret & player
-			wDx = ABS(fix16_to_int(pPlayer->sVehicle.fX) - pTurret->uwX);
-			wDy = ABS(fix16_to_int(pPlayer->sVehicle.fY) - pTurret->uwY);
-			if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
-				continue; // If too far, don't do costly multiplications
-			uwDist = wDx*wDx + wDy*wDy;
-			if(uwDist <= uwClosestDist) {
-				pClosestPlayer = pPlayer;
-				uwClosestDist = uwDist;
-			}
-		}
-
-		// Anything in range?
-		if(!pClosestPlayer)
-			continue;
-
-		// Determine destination angle
-		ubDestAngle = getAngleBetweenPoints(
-			pTurret->uwX, pTurret->uwY,
-			fix16_to_int(pClosestPlayer->sVehicle.fX),
-			fix16_to_int(pClosestPlayer->sVehicle.fY)
-		);
-
-		if(pTurret->ubAngle != ubDestAngle) {
+		if(pTurret->ubAngle != pTurret->ubDestAngle) {
 			pTurret->ubAngle += ANGLE_360 + getDeltaAngleDirection(
-				pTurret->ubAngle, ubDestAngle, 2
+				pTurret->ubAngle, pTurret->ubDestAngle, 2
 			);
 			if(pTurret->ubAngle >= ANGLE_360)
 				pTurret->ubAngle -= ANGLE_360;
 		}
-		else if(!pTurret->ubCooldown) {
+		else if(pTurret->isTargeting && !pTurret->ubCooldown) {
 			tProjectileOwner uOwner;
 			uOwner.pTurret = pTurret;
 			projectileCreate(PROJECTILE_OWNER_TYPE_TURRET, uOwner, PROJECTILE_TYPE_BULLET);
