@@ -234,14 +234,16 @@ void turretSim(void) {
  */
  void copyWithBlitter(UBYTE *pSrc, UBYTE *pDst, UWORD uwRowWidth, UWORD uwRowCnt) {
 	// Modulo: 0, 'cuz 2nd line will go from 1st, 3rd from 2nd etc.
-	g_sBlitManager.pBlitterSetFn(
-		USEA|USED|MINTERM_A, 0,      // bltconX
-		0xFFFF, 0xFFFF,              // bltaXwm
-		0, 0, 0, 0,                  // bltXmod
-		pSrc, 0, 0, pDst,            // bltxpt
-		0, 0, 0,                     // bltXdat
-		(uwRowCnt << 6) | uwRowWidth // bltsize
-	);
+	WaitBlit();
+	custom.bltcon0 = USEA|USED|MINTERM_A;
+	custom.bltcon1 = 0;
+	custom.bltafwm = 0xFFFF;
+	custom.bltalwm = 0xFFFF;
+	custom.bltamod = 0;
+	custom.bltdmod = 0;
+	custom.bltapt = pSrc;
+	custom.bltdpt = pDst;
+	custom.bltsize = (uwRowCnt << 6) | uwRowWidth;
 }
 
 // Screen is 320x256, tiles are 32x32, hud 64px, so 10x6 tiles on screen

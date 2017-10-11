@@ -18,7 +18,7 @@ int main(void) {
 	timerCreate();
 
 	windowCreate();
-	blitManagerCreate(0,0);
+	blitManagerCreate();
 	copCreate();
 
 	inputOpen();
