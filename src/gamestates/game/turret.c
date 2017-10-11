@@ -144,11 +144,9 @@ void turretSim(void) {
 	UBYTE ubDestAngle;
 	tTurret *pTurret;
 
-
 	const tUwRect sRectProcess = {
 		// uwY, uwX, uwWidth, uwHeight
-		MAX(0, fix16_to_int(g_pLocalPlayer->sVehicle.fX) - WORLD_VPORT_HEIGHT/2 - PROJECTILE_RANGE),
-		MAX(0, fix16_to_int(g_pLocalPlayer->sVehicle.fX) - WORLD_VPORT_WIDTH/2 - PROJECTILE_RANGE),
+		g_pWorldCamera->uPos.sUwCoord.uwY, g_pWorldCamera->uPos.sUwCoord.uwX,
 		WORLD_VPORT_WIDTH + 2*PROJECTILE_RANGE,
 		WORLD_VPORT_HEIGHT + 2*PROJECTILE_RANGE
 	};
