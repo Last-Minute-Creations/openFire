@@ -89,12 +89,13 @@ void worldDraw(void) {
 	controlRedrawPoints();
 
 	// Silo highlight
-	if(g_ubDoSiloHighlight)
+	if(g_ubDoSiloHighlight) {
 		bobDraw(
 			s_pSiloHighlight, g_pWorldMainBfr,
 			g_uwSiloHighlightTileX << MAP_TILE_SIZE,
 			g_uwSiloHighlightTileY << MAP_TILE_SIZE
 		);
+	}
 
 	// Vehicles
 	logAvgBegin(s_pDrawAvgVehicles);
@@ -142,10 +143,11 @@ void worldUndraw(void) {
 	logAvgEnd(s_pUndrawAvgVehicles);
 
 	// Silo highlight
-	if(s_ubWasSiloHighlighted)
+	if(s_ubWasSiloHighlighted) {
 		bobUndraw(
 			s_pSiloHighlight, g_pWorldMainBfr
 		);
+	}
 }
 
 void gsGameCreate(void) {

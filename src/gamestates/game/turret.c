@@ -9,19 +9,16 @@
 #include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
-#include "gamestates/game/game.h"
 #include "gamestates/game/team.h"
 
 #define TURRET_SPRITE_OFFS    (MAP_FULL_TILE - TURRET_SPRITE_SIZE)
-
-#define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
 UWORD g_uwTurretCount;
 tTurret *g_pTurrets; // 20x25: 1100*7 ~ 8KiB
 tBobSource g_sTurretSource;
 
 static UWORD s_uwMaxTurrets;
-static UWORD **s_pTurretTiles; // 20x25: +2KiB
+UWORD **g_pTurretTiles; // 20x25: +2KiB
 
 static tAvg *s_pAvg;
 
@@ -34,10 +31,10 @@ void turretListCreate(void) {
 	g_pTurrets = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	s_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_fubMapTileWidth);
+	g_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_fubMapTileWidth);
 	for(i = 0; i != g_fubMapTileWidth; ++i) {
-		s_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_fubMapTileHeight);
-		memset(s_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_fubMapTileHeight);
+		g_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_fubMapTileHeight);
+		memset(g_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_fubMapTileHeight);
 	}
 
 	// Attach sprites
@@ -84,8 +81,8 @@ void turretListDestroy(void) {
 
 	// Tile-based turret list
 	for(int i = 0; i != g_fubMapTileWidth; ++i)
-		memFree(s_pTurretTiles[i], sizeof(UWORD) * g_fubMapTileHeight);
-	memFree(s_pTurretTiles, sizeof(UWORD*) * g_fubMapTileWidth);
+		memFree(g_pTurretTiles[i], sizeof(UWORD) * g_fubMapTileHeight);
+	memFree(g_pTurretTiles, sizeof(UWORD*) * g_fubMapTileWidth);
 
 	logAvgDestroy(s_pAvg);
 
@@ -110,7 +107,7 @@ UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->fubSeq = (uwTileX & 3) |	((uwTileY & 3) << 2);
 
 	// Add to tile-based list
-	s_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;
+	g_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;
 
 	logBlockEnd("turretAdd()");
 	return g_uwTurretCount++;
@@ -127,7 +124,7 @@ void turretDestroy(UWORD uwIdx) {
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
 	UWORD uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
-	s_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
+	g_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
 
 	// Add explosion
 	explosionsAdd(
@@ -321,9 +318,9 @@ void turretUpdateSprites(void) {
 		const UWORD uwWordsPerRow = (g_sTurretSource.pBitmap->BytesPerRow >> 1);
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
 			// Get turret from tile, skip if there is none
-			if(s_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
+			if(g_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
 			continue;
-			pTurret = &g_pTurrets[s_pTurretTiles[uwTileX][uwTileY]];
+			pTurret = &g_pTurrets[g_pTurretTiles[uwTileX][uwTileY]];
 
 			// Get proper turret sprite data
 			// 0 < wCopHPos < 0xE2 always 'cuz only 8px after 0xE2

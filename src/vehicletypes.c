@@ -301,15 +301,20 @@ void vehicleTypesCreate(void) {
 
 	// Tank collision coords
 	precalcIncreaseProgress(5, "Calculating tank collision coords");
-	pType->pCollisionPts[0][0].bX = 2;  pType->pCollisionPts[0][0].bY = 6;
-	pType->pCollisionPts[0][1].bX = 15; pType->pCollisionPts[0][1].bY = 6;
-	pType->pCollisionPts[0][2].bX = 29; pType->pCollisionPts[0][2].bY = 6;
-	pType->pCollisionPts[0][3].bX = 2;  pType->pCollisionPts[0][3].bY = 15;
-	pType->pCollisionPts[0][4].bX = 29; pType->pCollisionPts[0][4].bY = 15;
-	pType->pCollisionPts[0][5].bX = 2;  pType->pCollisionPts[0][5].bY = 25;
-	pType->pCollisionPts[0][6].bX = 15; pType->pCollisionPts[0][6].bY = 25;
-	pType->pCollisionPts[0][7].bX = 29; pType->pCollisionPts[0][7].bY = 25;
+	pType->pCollisionPts[0][0].bX = 6;  pType->pCollisionPts[0][0].bY = 8;
+	pType->pCollisionPts[0][1].bX = 17; pType->pCollisionPts[0][1].bY = 8;
+	pType->pCollisionPts[0][2].bX = 29; pType->pCollisionPts[0][2].bY = 8;
+	pType->pCollisionPts[0][3].bX = 6;  pType->pCollisionPts[0][3].bY = 16;
+	pType->pCollisionPts[0][4].bX = 29; pType->pCollisionPts[0][4].bY = 16;
+	pType->pCollisionPts[0][5].bX = 6;  pType->pCollisionPts[0][5].bY = 24;
+	pType->pCollisionPts[0][6].bX = 17; pType->pCollisionPts[0][6].bY = 24;
+	pType->pCollisionPts[0][7].bX = 29; pType->pCollisionPts[0][7].bY = 24;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
+	for(FUBYTE fr = 0; fr != 64; ++fr)
+		for(FUBYTE i = 0; i != 8; ++i) {
+			pType->pCollisionPts[fr][i].bX -= VEHICLE_BODY_WIDTH/2;
+			pType->pCollisionPts[fr][i].bY -= VEHICLE_BODY_HEIGHT/2;
+		}
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -341,6 +346,11 @@ void vehicleTypesCreate(void) {
 	pType->pCollisionPts[0][6].bX = 16; pType->pCollisionPts[0][6].bY = 20;
 	pType->pCollisionPts[0][7].bX = 25; pType->pCollisionPts[0][7].bY = 20;
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
+	for(FUBYTE fr = 0; fr != 64; ++fr)
+		for(FUBYTE i = 0; i != 8; ++i) {
+			pType->pCollisionPts[fr][i].bX -= VEHICLE_BODY_WIDTH/2;
+			pType->pCollisionPts[fr][i].bY -= VEHICLE_BODY_HEIGHT/2;
+		}
 
 	logBlockEnd("vehicleTypesCreate");
 }

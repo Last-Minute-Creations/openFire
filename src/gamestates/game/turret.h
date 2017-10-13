@@ -2,13 +2,15 @@
 #define GUARD_OF_GAMESTATES_GAME_TURRET_H
 
 #include <ace/config.h>
-#include <gamestates/game/bob.h>
-#include <gamestates/game/projectile.h>
+#include "gamestates/game/bob.h"
+#include "gamestates/game/projectile.h"
+#include "gamestates/game/game.h"
 
 #define TURRET_INVALID      0xFFFF
 #define TURRET_SPRITE_SIZE  16
 #define TURRET_MIN_DISTANCE (PROJECTILE_RANGE+32)
 #define TURRET_COOLDOWN     PROJECTILE_FRAME_LIFE
+#define TURRET_MAX_PROCESS_RANGE_Y ((WORLD_VPORT_HEIGHT>>MAP_TILE_SIZE) + 1)
 
 /**
  *  Turret struct.
@@ -29,6 +31,7 @@ typedef struct _tTurret {
 extern tBobSource g_sTurretSource;
 extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
+extern UWORD **g_pTurretTiles;
 
 void turretListCreate(void);
 void turretListDestroy(void);
