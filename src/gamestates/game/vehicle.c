@@ -1,4 +1,5 @@
 #include "gamestates/game/vehicle.h"
+#include <ace/macros.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
@@ -7,6 +8,7 @@
 #include "gamestates/game/map.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/spawn.h"
+#include "gamestates/game/player.h"
 #include "vehicletypes.h"
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
@@ -55,15 +57,61 @@ void vehicleUnset(tVehicle *pVehicle) {
 	pVehicle->pAuxBob->ubFlags = BOB_FLAG_STOP_DRAWING;
 }
 
-// TODO accept UWORD instead of fix16_t? Conversion may then be counted only once.
-UBYTE vehicleCollides(fix16_t fX, fix16_t fY, tBCoordYX *pCollisionPoints) {
+UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
+	// Transform player's vehicle position so that it's plain rectangle
+	UWORD uwRotdX = fix16_to_int(fix16_sub(
+		fix16_mul(pVehicle->fX, ccos(ubAngle)),
+		fix16_mul(pVehicle->fY, csin(ubAngle))
+	));
+	UWORD uwRotdY = fix16_to_int(fix16_add(
+		fix16_mul(pVehicle->fX, csin(ubAngle)),
+		fix16_mul(pVehicle->fY, ccos(ubAngle))
+	));
+	tUwRect sRect;
+	sRect.uwX = uwRotdX + pVehicle->pType->pCollisionPts[0][0].bX;
+	sRect.uwY = uwRotdY + pVehicle->pType->pCollisionPts[0][0].bY;
+	sRect.uwWidth = pVehicle->pType->pCollisionPts[0][7].bX - pVehicle->pType->pCollisionPts[0][0].bX;
+	sRect.uwHeight = pVehicle->pType->pCollisionPts[0][7].bY - pVehicle->pType->pCollisionPts[0][0].bX;
+	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
+		tPlayer *pChkPlayer = &g_pPlayers[i];
+		if(pChkPlayer->ubState != PLAYER_STATE_DRIVING || &pChkPlayer->sVehicle == pVehicle)
+			continue;
+
+		// Check if player is nearby
+		UWORD uwChkX = fix16_to_int(pChkPlayer->sVehicle.fX);
+		UWORD uwChkY = fix16_to_int(pChkPlayer->sVehicle.fY);
+		if(ABS(uwX - uwChkX) > VEHICLE_BODY_WIDTH || ABS(uwY - uwChkY) > VEHICLE_BODY_WIDTH)
+			continue;
+
+		// Transform other player's vehicle pos to same axes
+		UWORD uwChkRotdX = fix16_to_int(fix16_sub(
+			fix16_mul(pChkPlayer->sVehicle.fX, ccos(ubAngle)),
+			fix16_mul(pChkPlayer->sVehicle.fY, csin(ubAngle))
+		));
+		UWORD uwChkRotdY = fix16_to_int(fix16_add(
+			fix16_mul(pChkPlayer->sVehicle.fX, csin(ubAngle)),
+			fix16_mul(pChkPlayer->sVehicle.fY, ccos(ubAngle))
+		));
+
+		UBYTE ubChkAngle = ANGLE_360 + pChkPlayer->sVehicle.ubBodyAngle - ubAngle;
+		if(ubChkAngle >= ANGLE_360)
+			ubChkAngle -= ANGLE_360;
+		tBCoordYX *pChkPoints = pChkPlayer->sVehicle.pType->pCollisionPts[ubChkAngle >> 1];
+		for(FUBYTE i = 0; i != 8; ++i)
+			if(inRect(uwChkRotdX + pChkPoints[i].bX, uwChkRotdY + pChkPoints[i].bY, sRect))
+				return 1;
+	}
+
+	return 0;
+}
+
+UBYTE vehicleCollidesWithWall(UWORD uwX, fix16_t uwY, tBCoordYX *pCollisionPoints) {
 	UBYTE p;
 	UBYTE ubLogicTile;
 	UWORD uwPX, uwPY;
-	UWORD uwX = fix16_to_int(fX), uwY = fix16_to_int(fY);
 	for(p = 0; p != 9; ++p) {
-		uwPX = uwX - VEHICLE_BODY_WIDTH/2 + pCollisionPoints[p].bX;
-		uwPY = uwY - VEHICLE_BODY_HEIGHT/2 + pCollisionPoints[p].bY;
+		uwPX = uwX + pCollisionPoints[p].bX;
+		uwPY = uwY + pCollisionPoints[p].bY;
 		ubLogicTile = g_pMap[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
@@ -94,6 +142,8 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosX = fix16_sub(fNewPosX, ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
 		fNewPosY = fix16_sub(fNewPosY, csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
 	}
+	UWORD uwNewPosX = fix16_to_int(fNewPosX);
+	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 
 	// Body rotation: left/right
 	ubNewAngle = pVehicle->ubBodyAngle;
@@ -132,7 +182,10 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	}
 
 	// Check collision
-	if(!vehicleCollides(fNewPosX, fNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1])) {
+	if(
+		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
+		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
 		pVehicle->ubBodyAngle = ubNewAngle;
@@ -202,8 +255,13 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosX = fix16_add(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed);
 		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubBwSpeed);
 	}
+	UWORD uwNewPosX = fix16_to_int(fNewPosX);
+	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 
-	if(!vehicleCollides(fNewPosX, fNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1])) {
+	if(
+		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
+		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
 		pVehicle->ubBodyAngle = ubNewAngle;
