@@ -132,3 +132,13 @@ UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
 		pBob->ubFlags = BOB_FLAG_DRAW;
 	return 1;
 }
+
+void bobEnable(tBob *pBob) {
+	if(pBob->ubFlags < BOB_FLAG_START_DRAWING)
+		pBob->ubFlags = BOB_FLAG_START_DRAWING;
+}
+
+void bobDisable(tBob *pBob) {
+	if(pBob->ubFlags > BOB_FLAG_STOP_DRAWING)
+		pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+}

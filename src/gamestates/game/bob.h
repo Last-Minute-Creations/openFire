@@ -74,4 +74,12 @@ UWORD bobDraw(
 	IN UWORD uwY
 );
 
+void bobEnable(
+	IN tBob *pBob
+);
+
+void bobDisable(
+	IN tBob *pBob
+);
+
 #endif // GUARD_OF_GAMESTATES_GAME_BOB_H
