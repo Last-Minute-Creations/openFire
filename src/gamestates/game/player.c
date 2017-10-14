@@ -308,15 +308,18 @@ void playerSim(void) {
 					else
 						pPlayer->sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
 				}
+				spawnAnimate(pPlayer->ubSpawnIdx);
 				continue;
 			case PLAYER_STATE_BUNKERING:
 				if(pPlayer->uwCooldown)
 					--pPlayer->uwCooldown;
 				else
 					pPlayer->ubState = PLAYER_STATE_LIMBO;
+				spawnAnimate(pPlayer->ubSpawnIdx);
 				continue;
 			case PLAYER_STATE_DRIVING:
 				playerSimVehicle(pPlayer);
+				vehicleDraw(&pPlayer->sVehicle);
 				continue;
 		}
 	}
