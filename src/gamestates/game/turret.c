@@ -147,8 +147,8 @@ void turretUpdateTarget(tTurret *pTurret) {
 			continue;
 
 		// Calculate distance between turret & player
-		WORD wDx = ABS(fix16_to_int(pPlayer->sVehicle.fX) - pTurret->uwX);
-		WORD wDy = ABS(fix16_to_int(pPlayer->sVehicle.fY) - pTurret->uwY);
+		WORD wDx = ABS(pPlayer->sVehicle.uwX - pTurret->uwX);
+		WORD wDy = ABS(pPlayer->sVehicle.uwY - pTurret->uwY);
 		if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
 			continue; // If too far, don't do costly multiplications
 		UWORD uwDist = wDx*wDx + wDy*wDy;
@@ -164,8 +164,8 @@ void turretUpdateTarget(tTurret *pTurret) {
 		// Determine destination angle
 		pTurret->ubDestAngle = getAngleBetweenPoints(
 			pTurret->uwX, pTurret->uwY,
-			fix16_to_int(pClosestPlayer->sVehicle.fX),
-			fix16_to_int(pClosestPlayer->sVehicle.fY)
+			pClosestPlayer->sVehicle.uwX,
+			pClosestPlayer->sVehicle.uwY
 		);
 	}
 }

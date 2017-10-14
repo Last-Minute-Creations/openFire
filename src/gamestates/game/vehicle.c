@@ -22,6 +22,8 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
 	pVehicle->fX = fix16_from_int((g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE);
 	pVehicle->fY = fix16_from_int((g_pSpawns[ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE);
+	pVehicle->uwX = fix16_to_int(pVehicle->fX);
+	pVehicle->uwY = fix16_to_int(pVehicle->fY);
 	pVehicle->ubBodyAngle = ANGLE_90;
 	pVehicle->ubTurretAngle = ANGLE_90;
 	pVehicle->ubBaseAmmo = pVehicle->pType->ubMaxBaseAmmo;
@@ -60,46 +62,64 @@ void vehicleUnset(tVehicle *pVehicle) {
 UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
 	// Transform player's vehicle position so that it's plain rectangle
 	UWORD uwRotdX = fix16_to_int(fix16_sub(
-		fix16_mul(pVehicle->fX, ccos(ubAngle)),
-		fix16_mul(pVehicle->fY, csin(ubAngle))
+		pVehicle->uwX * ccos(ubAngle),
+		pVehicle->uwY * csin(ubAngle)
 	));
 	UWORD uwRotdY = fix16_to_int(fix16_add(
 		fix16_mul(pVehicle->fX, csin(ubAngle)),
 		fix16_mul(pVehicle->fY, ccos(ubAngle))
 	));
-	tUwRect sRect;
-	sRect.uwX = uwRotdX + pVehicle->pType->pCollisionPts[0][0].bX;
-	sRect.uwY = uwRotdY + pVehicle->pType->pCollisionPts[0][0].bY;
-	sRect.uwWidth = pVehicle->pType->pCollisionPts[0][7].bX - pVehicle->pType->pCollisionPts[0][0].bX;
-	sRect.uwHeight = pVehicle->pType->pCollisionPts[0][7].bY - pVehicle->pType->pCollisionPts[0][0].bX;
-	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
-		tPlayer *pChkPlayer = &g_pPlayers[i];
+	tUwAbsRect sRect;
+	sRect.uwX1 = uwRotdX + pVehicle->pType->pCollisionPts[0][0].bX-1;
+	sRect.uwY1 = uwRotdY + pVehicle->pType->pCollisionPts[0][0].bY-1;
+	sRect.uwX2 = uwRotdX + pVehicle->pType->pCollisionPts[0][7].bX+1;
+	sRect.uwY2 = uwRotdY + pVehicle->pType->pCollisionPts[0][7].bY+1;
+	tPlayer *pChkPlayer;
+	FUBYTE i;
+	for(i = 0, pChkPlayer = &g_pPlayers[0]; i != g_ubPlayerCount; ++i, ++pChkPlayer) {
 		if(pChkPlayer->ubState != PLAYER_STATE_DRIVING || &pChkPlayer->sVehicle == pVehicle)
 			continue;
 
 		// Check if player is nearby
-		UWORD uwChkX = fix16_to_int(pChkPlayer->sVehicle.fX);
-		UWORD uwChkY = fix16_to_int(pChkPlayer->sVehicle.fY);
-		if(ABS(uwX - uwChkX) > VEHICLE_BODY_WIDTH || ABS(uwY - uwChkY) > VEHICLE_BODY_WIDTH)
+		if(
+			ABS(uwX - pChkPlayer->sVehicle.uwX) > VEHICLE_BODY_WIDTH ||
+			ABS(uwY - pChkPlayer->sVehicle.uwY) > VEHICLE_BODY_WIDTH
+		) {
 			continue;
+		}
 
 		// Transform other player's vehicle pos to same axes
 		UWORD uwChkRotdX = fix16_to_int(fix16_sub(
-			fix16_mul(pChkPlayer->sVehicle.fX, ccos(ubAngle)),
-			fix16_mul(pChkPlayer->sVehicle.fY, csin(ubAngle))
+			pChkPlayer->sVehicle.uwX * ccos(ubAngle),
+			pChkPlayer->sVehicle.uwY * csin(ubAngle)
 		));
 		UWORD uwChkRotdY = fix16_to_int(fix16_add(
-			fix16_mul(pChkPlayer->sVehicle.fX, csin(ubAngle)),
-			fix16_mul(pChkPlayer->sVehicle.fY, ccos(ubAngle))
+			pChkPlayer->sVehicle.uwX * csin(ubAngle),
+			pChkPlayer->sVehicle.uwY * ccos(ubAngle)
 		));
 
 		UBYTE ubChkAngle = ANGLE_360 + pChkPlayer->sVehicle.ubBodyAngle - ubAngle;
 		if(ubChkAngle >= ANGLE_360)
 			ubChkAngle -= ANGLE_360;
 		tBCoordYX *pChkPoints = pChkPlayer->sVehicle.pType->pCollisionPts[ubChkAngle >> 1];
-		for(FUBYTE i = 0; i != 8; ++i)
-			if(inRect(uwChkRotdX + pChkPoints[i].bX, uwChkRotdY + pChkPoints[i].bY, sRect))
-				return 1;
+
+
+		UWORD uwEdgeL, uwEdgeR, uwEdgeT, uwEdgeB;
+		uwEdgeL = uwChkRotdX + MIN(pChkPoints[0].bX, MIN(pChkPoints[2].bX, MIN(pChkPoints[5].bX, pChkPoints[7].bX)));
+		uwEdgeR = uwChkRotdX + MAX(pChkPoints[0].bX, MAX(pChkPoints[2].bX, MAX(pChkPoints[5].bX, pChkPoints[7].bX)));
+		uwEdgeT = uwChkRotdY + MIN(pChkPoints[0].bY, MIN(pChkPoints[2].bY, MIN(pChkPoints[5].bY, pChkPoints[7].bY)));
+		uwEdgeB = uwChkRotdY + MAX(pChkPoints[0].bY, MAX(pChkPoints[2].bY, MAX(pChkPoints[5].bY, pChkPoints[7].bY)));
+		if(
+			(
+				(uwEdgeT <= sRect.uwY1 && uwEdgeB >= sRect.uwY1) ||
+				(uwEdgeT <= sRect.uwY2 && uwEdgeB >= sRect.uwY2)
+			) && (
+				(uwEdgeL <= sRect.uwX1 && uwEdgeR >= sRect.uwX1) ||
+				(uwEdgeL <= sRect.uwX2 && uwEdgeR >= sRect.uwX2)
+			)
+		) {
+			return 1;
+		}
 	}
 
 	return 0;
@@ -184,10 +204,15 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	// Check collision
 	if(
 		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
-		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+		(
+			pVehicle == &g_pLocalPlayer->sVehicle &&
+			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+		)
 	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
+		pVehicle->uwX = fix16_to_int(fNewPosX);
+		pVehicle->uwY = fix16_to_int(fNewPosY);
 		pVehicle->ubBodyAngle = ubNewAngle;
 		pVehicle->ubTurretAngle = ubNewTurretAngle;
 	}
@@ -260,17 +285,22 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 
 	if(
 		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
-		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+		(
+			pVehicle == &g_pLocalPlayer->sVehicle &&
+			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
+		)
 	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
+		pVehicle->uwX = fix16_to_int(fNewPosX);
+		pVehicle->uwY = fix16_to_int(fNewPosY);
 		pVehicle->ubBodyAngle = ubNewAngle;
 	}
 }
 
 void vehicleDraw(tVehicle *pVehicle) {
-	UWORD uwX = fix16_to_int(pVehicle->fX) - VEHICLE_BODY_WIDTH/2;
-	UWORD uwY = fix16_to_int(pVehicle->fY) - VEHICLE_BODY_HEIGHT/2;
+	UWORD uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+	UWORD uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
 	if(
 		bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY)
 		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]

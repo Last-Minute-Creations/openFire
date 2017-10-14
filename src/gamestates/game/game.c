@@ -66,8 +66,8 @@ void displayPrepareLimbo(FUBYTE fubSpawnIdx) {
 
 	if(fubSpawnIdx == SPAWN_INVALID)
 		g_pLocalPlayer->ubSpawnIdx = spawnGetNearest(
-			fix16_to_int(g_pLocalPlayer->sVehicle.fX) >> MAP_TILE_SIZE,
-			fix16_to_int(g_pLocalPlayer->sVehicle.fY) >> MAP_TILE_SIZE,
+			g_pLocalPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
+			g_pLocalPlayer->sVehicle.uwY >> MAP_TILE_SIZE,
 			g_pLocalPlayer->ubTeam
 		);
 	else
@@ -314,9 +314,10 @@ void gsGameLoop(void) {
 	worldUndraw();
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		UWORD uwLocalX, uwLocalY;
-		uwLocalX = fix16_to_int(g_pLocalPlayer->sVehicle.fX);
-		uwLocalY = fix16_to_int(g_pLocalPlayer->sVehicle.fY);
-		cameraCenterAt(g_pWorldCamera, uwLocalX & 0xFFFE, uwLocalY);
+		cameraCenterAt(
+			g_pWorldCamera,
+			g_pLocalPlayer->sVehicle.uwX & 0xFFFE, g_pLocalPlayer->sVehicle.uwY
+		);
 	}
 	else {
 		WORD wDx = CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);

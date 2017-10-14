@@ -64,6 +64,8 @@ void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
 		// Driving, surfacing or bunkering
 		pPlayer->sVehicle.fX = pState->fX;
 		pPlayer->sVehicle.fY = pState->fY;
+		pPlayer->sVehicle.uwX = fix16_to_int(pState->fX);
+		pPlayer->sVehicle.uwY = fix16_to_int(pState->fY);
 		pPlayer->sVehicle.ubBodyAngle = pState->ubBodyAngle;
 		pPlayer->sVehicle.ubTurretAngle = pState->ubTurretAngle;
 		// TODO: destination angle

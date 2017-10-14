@@ -29,6 +29,8 @@ typedef struct _tVehicle {
 	tBob *pAuxBob;       ///< Tank - turret, chopper - takeoff anim
 	fix16_t fX;          ///< Vehicle X-position relative to center of gfx.
 	fix16_t fY;          ///< Ditto, vehicle Y.
+	UWORD uwX;           ///< Same as fX, but converted to UWORD. Read-only.
+	UWORD uwY;           ///< Ditto.
 	UBYTE ubBodyAngle;   ///< Measured clockwise, +90deg is to bottom.
 	UBYTE ubTurretAngle; ///< NOT relative to body angle, measured as above.
 	UBYTE ubBaseAmmo;
