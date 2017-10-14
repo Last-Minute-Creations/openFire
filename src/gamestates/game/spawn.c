@@ -92,7 +92,7 @@ void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType)
 void spawnSim(void) {
 	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
-		if(pSpawn->ubFrame <= PLAYER_SURFACING_COOLDOWN)
+		if(pSpawn->ubFrame < PLAYER_SURFACING_COOLDOWN)
 			++pSpawn->ubFrame;
 		else
 			pSpawn->ubBusy = SPAWN_BUSY_NOT;
