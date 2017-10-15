@@ -5,7 +5,6 @@
 
 // 210x59
 #define CONSOLE_MAX_ENTRIES 8
-#define CONSOLE_MESSAGE_MAX 35
 #define CHAT_MAX (192/6)
 
 tFont *s_pConsoleFont;
@@ -14,13 +13,12 @@ FUBYTE g_isChatting;
 FUBYTE s_fubChatLineLength;
 
 
-void consoleCreate(void) {
-	s_pConsoleFont = fontCreate("data/silkscreen5.fnt");
+void consoleCreate(tFont *pFont) {
+	s_pConsoleFont = pFont;
 	g_isChatting = 0;
 }
 
 void consoleDestroy(void) {
-	fontDestroy(s_pConsoleFont);
 }
 
 void consoleWrite(char *szMsg, UBYTE ubColor) {

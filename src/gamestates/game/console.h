@@ -2,13 +2,15 @@
 #define GUARD_OF_GAMESTATES_GAME_CONSOLE_H
 
 #include <ace/types.h>
+#include <ace/utils/font.h>
 
 #define CONSOLE_COLOR_GENERAL 4
 #define CONSOLE_COLOR_SAY     13
 #define CONSOLE_COLOR_BLUE    12
 #define CONSOLE_COLOR_RED     10
+#define CONSOLE_MESSAGE_MAX 35
 
-void consoleCreate(void);
+void consoleCreate(tFont *pFont);
 
 void consoleDestroy(void);
 

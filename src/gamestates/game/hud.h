@@ -10,7 +10,7 @@
 #define HUD_STATE_DRIVING 1
 
 void hudChangeState(
-	IN UBYTE ubState
+	IN FUBYTE fubState
 );
 
 void hudCreate(void);

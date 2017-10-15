@@ -6,6 +6,7 @@
 #include "gamestates/game/building.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
+#include "gamestates/game/console.h"
 
 #define PROJECTILE_BULLET_HEIGHT 2
 
@@ -203,7 +204,7 @@ UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile) {
 	const UBYTE ubDamage = 10;
 
 	for(UBYTE i = 0; i != g_ubPlayerLimit; ++i) {
-		if(!g_pPlayers[i].szName[0])
+		if(!g_pPlayers[i].szName[0] || g_pPlayers[i].ubState != PLAYER_STATE_DRIVING)
 			continue;
 		tVehicle *pVehicle = &g_pPlayers[i].sVehicle;
 		const fix16_t fQuarterWidth = fix16_from_int(VEHICLE_BODY_WIDTH/4);
@@ -213,7 +214,17 @@ UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile) {
 			pProjectile->fY > fix16_sub(pVehicle->fY, fQuarterWidth) &&
 			pProjectile->fY < fix16_add(pVehicle->fY, fQuarterWidth)
 		) {
-			playerDamageVehicle(&g_pPlayers[i], ubDamage);
+			if(playerDamageVehicle(&g_pPlayers[i], ubDamage)) {
+				char szBfr[CONSOLE_MESSAGE_MAX];
+				if(pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET)
+					sprintf(szBfr, "%s was killed by turret", g_pPlayers[i].szName);
+				else
+					sprintf(
+						szBfr, "%s was killed by %s",g_pPlayers[i].szName,
+						playerGetByVehicle(pProjectile->uOwner.pVehicle)->szName
+					);
+				consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
+			}
 			projectileDestroy(pProjectile);
 			return 1;
 		}

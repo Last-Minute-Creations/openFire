@@ -64,7 +64,7 @@ void playerHideInBunker(
 	IN FUBYTE fubSpawnIdx
 );
 
-void playerDamageVehicle(
+FUBYTE playerDamageVehicle(
 	IN tPlayer *pPlayer,
 	IN UBYTE ubDamage
 );
@@ -84,6 +84,15 @@ void playerSim(void);
 void playerSimVehicle(
 	IN tPlayer *pPlayer
 );
+
+inline tPlayer *playerGetByVehicle(
+	IN tVehicle *pVehicle
+) {
+	UBYTE *pVehicleByteAddr = (UBYTE*)pVehicle;
+	tPlayer sPlayer;
+	UBYTE ubDist = ((UBYTE*)&sPlayer.sVehicle) - ((UBYTE*)&sPlayer);
+	return (tPlayer*)(pVehicleByteAddr - ubDist);
+}
 
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;

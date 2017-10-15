@@ -123,20 +123,24 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 		displayPrepareLimbo(fubSpawnIdx);
 }
 
-void playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
+FUBYTE playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
 		explosionsAdd(
 			pPlayer->sVehicle.uwX - (VEHICLE_BODY_HEIGHT >> 1),
 			pPlayer->sVehicle.uwY - (VEHICLE_BODY_WIDTH >> 1)
 		);
 		playerLoseVehicle(pPlayer);
+		return 1;
 	}
 	else
 		pPlayer->sVehicle.ubLife -= ubDamage;
+	return 0;
 }
 
 void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
+	if(g_pTeams[pPlayer->ubTeam].uwTicketsLeft)
+		--g_pTeams[pPlayer->ubTeam].uwTicketsLeft;
 	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
@@ -217,6 +221,9 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	// Drowning
 	if(ubTileType == MAP_LOGIC_WATER) {
 		playerLoseVehicle(pPlayer);
+		char szBfr[CONSOLE_MESSAGE_MAX];
+		sprintf(szBfr, "%s has drowned", pPlayer->szName);
+		consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
 		return;
 	}
 

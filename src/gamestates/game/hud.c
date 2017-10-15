@@ -3,15 +3,23 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
+#include <ace/utils/font.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/console.h"
 #include "vehicletypes.h"
 
+#define HUD_COLOR_RED 10
+#define HUD_COLOR_BLUE 12
+
 static tVPort *s_pHudVPort;
 tSimpleBufferManager *g_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
-static UBYTE s_ubHudState;
+static FUBYTE s_fubHudState, s_fubHudPrevState;
+static tFont *s_pHudFont;
+
+static UWORD s_uwPrevTicketsRed = 0;
+static UWORD s_uwPrevTicketsBlue = 0;
 
 void hudCreate(void) {
 	s_pHudVPort = vPortCreate(0,
@@ -26,6 +34,7 @@ void hudCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
 		TAG_DONE
 	);
+	s_pHudFont = fontCreate("data/silkscreen5.fnt");
 
 	tCopCmd *pCopList = g_pWorldView->pCopList->pBackBfr->pList;
 	copSetWait(
@@ -58,17 +67,18 @@ void hudCreate(void) {
 	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
 	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
 
-	consoleCreate();
+	s_fubHudPrevState = 0xFF;
+	consoleCreate(s_pHudFont);
 }
 
-void hudChangeState(UBYTE ubState) {
-	s_ubHudState = ubState;
+void hudChangeState(FUBYTE fubState) {
 	tBitMap *pHudPanels[2];
 	pHudPanels[HUD_STATE_DRIVING] = s_pHudDriving;
 	pHudPanels[HUD_STATE_SELECTING] = s_pHudSelecting;
 
+	s_fubHudState = fubState;
 	blitCopy(
-		pHudPanels[ubState], 0, 0, g_pHudBfr->pBuffer, 2, 2,
+		pHudPanels[fubState], 0, 0, g_pHudBfr->pBuffer, 2, 2,
 		104, s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
 	);
 
@@ -76,7 +86,7 @@ void hudChangeState(UBYTE ubState) {
 	void *pCrossCtl;
 	tCopCmd *pFrontList = g_pWorldView->pCopList->pFrontBfr->pList;
 	tCopCmd *pBackList = g_pWorldView->pCopList->pBackBfr->pList;
-	if(ubState == HUD_STATE_DRIVING) {
+	if(fubState == HUD_STATE_DRIVING) {
 		pCrossCtl = &custom.spr[2].ctl;
 		uwDmaCon = BITCLR | DMAF_RASTER | DMAF_SPRITE;
 	}
@@ -119,7 +129,7 @@ void drawHudBar(
 }
 
 void hudUpdate(void) {
-	if(s_ubHudState == HUD_STATE_DRIVING) {
+	if(s_fubHudState == HUD_STATE_DRIVING) {
 		// TODO one thing per frame, HP - always
 		tVehicle *pVehicle = &g_pLocalPlayer->sVehicle;
 		tVehicleType *pType = &g_pVehicleTypes[g_pLocalPlayer->ubCurrentVehicleType];
@@ -132,10 +142,35 @@ void hudUpdate(void) {
 		drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
 		drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
 	}
+
+	// Update ticket cound
+	const UWORD uwTicketX = 2+72+2;
+	const UWORD uwTicketBlueY = 2+35+3;
+	const UWORD uwTicketRedY = uwTicketBlueY + 5 + 4;
+	char szSpawnBfr[6];
+	if(s_fubHudPrevState != s_fubHudState || s_uwPrevTicketsBlue != g_pTeams[TEAM_BLUE].uwTicketsLeft) {
+		sprintf(szSpawnBfr, "%5hu", g_pTeams[TEAM_BLUE].uwTicketsLeft);
+		fontDrawStr(
+			g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketBlueY, szSpawnBfr,
+			HUD_COLOR_BLUE, FONT_COOKIE | FONT_LAZY
+		);
+		s_uwPrevTicketsBlue = g_pTeams[TEAM_BLUE].uwTicketsLeft;
+	}
+	if(s_fubHudPrevState != s_fubHudState || s_uwPrevTicketsRed != g_pTeams[TEAM_RED].uwTicketsLeft) {
+		sprintf(szSpawnBfr, "%5hu", g_pTeams[TEAM_RED].uwTicketsLeft);
+		fontDrawStr(
+			g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketRedY, szSpawnBfr,
+			HUD_COLOR_RED, FONT_COOKIE | FONT_LAZY
+		);
+		s_uwPrevTicketsRed = g_pTeams[TEAM_RED].uwTicketsLeft;
+	}
+
+	s_fubHudPrevState = s_fubHudState;
 }
 
 void hudDestroy(void) {
 	consoleDestroy();
+	fontDestroy(s_pHudFont);
 
 	bitmapDestroy(s_pHudDriving);
 	bitmapDestroy(s_pHudSelecting);
