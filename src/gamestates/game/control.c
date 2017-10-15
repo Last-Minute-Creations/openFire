@@ -14,6 +14,7 @@
 tControlPoint *g_pControlPoints;
 FUBYTE g_fubControlPointCount;
 FUBYTE s_fubControlPointMaxCount;
+static UWORD s_uwFrameCounter;
 
 void controlManagerCreate(FUBYTE fubPointCount) {
 	logBlockBegin(
@@ -22,6 +23,7 @@ void controlManagerCreate(FUBYTE fubPointCount) {
 	s_fubControlPointMaxCount = fubPointCount;
 	g_pControlPoints = memAllocFastClear(sizeof(tControlPoint) * fubPointCount);
 	g_fubControlPointCount = 0;
+	s_uwFrameCounter = 0;
 	logBlockEnd("controlManagerCreate()");
 }
 
@@ -254,7 +256,14 @@ void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 		turretCapture(pPoint->pTurrets[i], fubTeam);
 }
 
+// 50 spawns per team
+// ticket drop each 5s, so 250s of game (4min)
+// max drop speed: each
+// 5 control points in total
+// starting: 2xR, 2xB, 1xN - no loss
 void controlSim(void) {
+	FUBYTE fubControlledByRed = 0;
+	FUBYTE fubControlledByBlue = 0;
 	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
 		FBYTE fbCaptureDir;
@@ -265,8 +274,16 @@ void controlSim(void) {
 				// Abandoned neutral point
 				fbCaptureDir = SGN(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
 			}
-			else
+			else {
+				if(pPoint->fubTeam == TEAM_BLUE)
+					++fubControlledByBlue;
+				else if(pPoint->fubTeam == TEAM_RED)
+					++fubControlledByRed;
+				// Reset for next counting during player process
+				pPoint->fubBrownCount = 0;
+				pPoint->fubGreenCount = 0;
 				continue;
+			}
 		}
 		else if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
 			// Brown taking over green
@@ -298,10 +315,24 @@ void controlSim(void) {
 		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL)
 			controlCapturePoint(pPoint, TEAM_NONE);
 
+		if(pPoint->fubTeam == TEAM_BLUE)
+			++fubControlledByBlue;
+		else if(pPoint->fubTeam == TEAM_RED)
+			++fubControlledByRed;
 		// Reset for next counting during player process
 		pPoint->fubBrownCount = 0;
 		pPoint->fubGreenCount = 0;
 	}
+	if(s_uwFrameCounter >= 50*5) {
+		s_uwFrameCounter -= 50*5;
+		FUBYTE fubDelta = (ABS(fubControlledByRed - fubControlledByBlue)+1) >> 1;
+		if(fubControlledByRed > fubControlledByBlue)
+			g_pTeams[TEAM_BLUE].uwTicketsLeft = MAX(0, g_pTeams[TEAM_BLUE].uwTicketsLeft - fubDelta);
+		else if(fubControlledByRed < fubControlledByBlue)
+			g_pTeams[TEAM_RED].uwTicketsLeft = MAX(0, g_pTeams[TEAM_RED].uwTicketsLeft - fubDelta);
+	}
+	else
+		++s_uwFrameCounter;
 }
 
 void controlRedrawPoints(void) {

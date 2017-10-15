@@ -149,6 +149,7 @@ void hudUpdate(void) {
 	const UWORD uwTicketRedY = uwTicketBlueY + 5 + 4;
 	char szSpawnBfr[6];
 	if(s_fubHudPrevState != s_fubHudState || s_uwPrevTicketsBlue != g_pTeams[TEAM_BLUE].uwTicketsLeft) {
+		blitRect(g_pHudBfr->pBuffer, uwTicketX, uwTicketBlueY, 26, 5, 0);
 		sprintf(szSpawnBfr, "%5hu", g_pTeams[TEAM_BLUE].uwTicketsLeft);
 		fontDrawStr(
 			g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketBlueY, szSpawnBfr,
@@ -157,6 +158,7 @@ void hudUpdate(void) {
 		s_uwPrevTicketsBlue = g_pTeams[TEAM_BLUE].uwTicketsLeft;
 	}
 	if(s_fubHudPrevState != s_fubHudState || s_uwPrevTicketsRed != g_pTeams[TEAM_RED].uwTicketsLeft) {
+		blitRect(g_pHudBfr->pBuffer, uwTicketX, uwTicketRedY, 26, 5, 0);
 		sprintf(szSpawnBfr, "%5hu", g_pTeams[TEAM_RED].uwTicketsLeft);
 		fontDrawStr(
 			g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketRedY, szSpawnBfr,
