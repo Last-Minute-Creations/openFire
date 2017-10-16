@@ -191,15 +191,19 @@ void controlAddPoint(
 	s_ubAllocSpawnCount = 0;
 	pPoint->fubSpawnCount = 0;
 	controlMaskIterateSpawns(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, increaseSpawnCount);
-	pPoint->pSpawns = memAllocFast(s_ubAllocSpawnCount * sizeof(FUBYTE));
-	controlMaskIterateSpawns(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addSpawn);
+	if(s_ubAllocSpawnCount) {
+		pPoint->pSpawns = memAllocFast(s_ubAllocSpawnCount * sizeof(FUBYTE));
+		controlMaskIterateSpawns(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addSpawn);
+	}
 
 	// Count & add turrets
 	s_ubAllocTurretCount = 0;
 	pPoint->fubTurretCount = 0;
 	controlMaskIterateTurrets(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, increaseTurretCount);
-	pPoint->pTurrets = memAllocFast(s_ubAllocTurretCount * sizeof(UWORD));
-	controlMaskIterateTurrets(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addTurret);
+	if(s_ubAllocTurretCount) {
+		pPoint->pTurrets = memAllocFast(s_ubAllocTurretCount * sizeof(UWORD));
+		controlMaskIterateTurrets(pMask, pPoint, fubPolyX1, fubPolyY1, fubPolyX2, fubPolyY2, addTurret);
+	}
 
 	// Determine team
 	if(pPoint->fubSpawnCount)
