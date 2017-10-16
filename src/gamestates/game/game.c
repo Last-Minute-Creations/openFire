@@ -21,6 +21,7 @@
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
+#include "gamestates/game/ai.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -203,6 +204,9 @@ void gsGameCreate(void) {
 	// Add players
 	playerListCreate(8);
 	g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+
+	// AI
+	aiManagerCreate();
 	for(FUBYTE i = 0; i != 7; ++i) {
 		char szName[10];
 		sprintf(szName, "player%hhu", i);
@@ -330,6 +334,8 @@ void gsGameDestroy(void) {
 	// Return DMA to correct state
 	custom.dmacon = BITSET | DMAF_DISK;
 	logBlockBegin("gsGameDestroy()");
+
+	aiManagerDestroy();
 
 	cursorDestroy();
 	hudDestroy();

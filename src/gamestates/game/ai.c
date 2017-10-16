@@ -6,12 +6,174 @@
 #define TURRET_COST 5
 #define WALL_COST 5
 
-UBYTE **ubCosts;
+#define AI_MAX_NODES 50
+#define AI_MAX_CAPTURE_NODES 10
+
+#define AI_NODE_TYPE_ROAD 0
+#define AI_NODE_TYPE_CAPTURE 1
+#define AI_NODE_TYPE_SPAWN 2
+
+typedef struct _tAiNode {
+	FUBYTE fubY;
+	FUBYTE fubX;
+	FUBYTE fubType;
+} tAiNode;
+
+// Costs
+static UWORD **s_pNodeConnectionCosts;
+static UBYTE **s_pTileCosts;
+
+// Nodes
+static tAiNode s_pNodes[AI_MAX_NODES];
+static tAiNode *s_pCaptureNodes[AI_MAX_CAPTURE_NODES];
+static FUBYTE s_fubNodeCount;
+static FUBYTE s_fubCaptureNodeCount;
+
+void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
+	// Check for overflow
+	if(s_fubNodeCount >= AI_MAX_NODES) {
+		logWrite("ERR: No more room for nodes\n");
+		return;
+	}
+
+	// Check for doubles
+	for(FUBYTE i = 0; i != s_fubNodeCount; ++i)
+		if(s_pNodes[i].fubX == fubX && s_pNodes[i].fubY == fubY)
+			return;
+
+	// Add node
+	s_pNodes[s_fubNodeCount].fubY = fubY;
+	s_pNodes[s_fubNodeCount].fubX = fubX;
+	s_pNodes[s_fubNodeCount].fubType = fubNodeType;
+
+	// Add to capture list?
+	if(fubNodeType == AI_NODE_TYPE_CAPTURE) {
+		if(s_fubCaptureNodeCount >= AI_MAX_CAPTURE_NODES)
+			logWrite("ERR: No more room for capture nodes\n");
+		else {
+			s_pCaptureNodes[s_fubCaptureNodeCount] = &s_pNodes[s_fubNodeCount];
+			++s_fubCaptureNodeCount;
+		}
+	}
+	++s_fubNodeCount;
+}
+
+void aiGraphCreate(void) {
+	logBlockBegin("aiGraphCreate()");
+	// Get all nodes on map
+	for(FUBYTE x = 0; x < g_fubMapTileWidth; ++x) {
+		for(FUBYTE y = 0; y < g_fubMapTileHeight; ++y) {
+			if(
+				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE0 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE1 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE2
+			) {
+				// Capture points
+				aiGraphAddNode(x,y, AI_NODE_TYPE_CAPTURE);
+			}
+			else if(
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
+				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN2
+			) {
+				// Spawn points
+				aiGraphAddNode(x,y, AI_NODE_TYPE_SPAWN);
+			}
+			else if(
+				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
+				g_pMap[x-1][y].ubIdx == MAP_LOGIC_WALL &&
+				g_pMap[x+1][y].ubIdx == MAP_LOGIC_WALL
+			) {
+				// Gate with horizontal walls
+				if(g_pMap[x-1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y-1].ubIdx != MAP_LOGIC_WALL)
+					aiGraphAddNode(x,y-1, AI_NODE_TYPE_ROAD);
+				if(g_pMap[x-1][y+1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y+1].ubIdx != MAP_LOGIC_WALL)
+					aiGraphAddNode(x,y+1, AI_NODE_TYPE_ROAD);
+			}
+			else if(
+				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
+				g_pMap[x][y-1].ubIdx == MAP_LOGIC_WALL &&
+				g_pMap[x][y+1].ubIdx == MAP_LOGIC_WALL
+			) {
+				// Gate with vertical walls
+				if(g_pMap[x-1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x-1][y+1].ubIdx != MAP_LOGIC_WALL)
+					aiGraphAddNode(x-1,y, AI_NODE_TYPE_ROAD);
+				if(g_pMap[x+1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y+1].ubIdx != MAP_LOGIC_WALL)
+					aiGraphAddNode(x+1,y, AI_NODE_TYPE_ROAD);
+			}
+			// TODO this won't work if e.g. horizontal gate is adjacent to vertical wall
+		}
+	}
+	logWrite(
+		"Created %"PRI_FUBYTE" nodes (capture pts: %"PRI_FUBYTE")\n",
+		s_fubNodeCount, s_fubCaptureNodeCount
+	);
+
+	// Create array for connections & calculate costs between nodes
+	if(!s_fubNodeCount) {
+		logWrite("WARN: No AI nodes on map!\n");
+	}
+	else {
+		s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * s_fubNodeCount);
+		for(FUBYTE fubFrom = s_fubNodeCount; fubFrom--;) {
+			s_pNodeConnectionCosts[fubFrom] = memAllocFast(sizeof(UWORD) * s_fubNodeCount);
+			for(FUBYTE fubTo = s_fubNodeCount; fubTo--;) {
+				s_pNodeConnectionCosts[fubFrom][fubTo] = 0;
+				tAiNode *pFrom = &s_pNodes[fubFrom];
+				tAiNode *pTo = &s_pNodes[fubTo];
+				BYTE bDeltaX = pTo->fubX - pFrom->fubX;
+				BYTE bDeltaY = pTo->fubY - pFrom->fubY;
+				if(ABS(bDeltaX) > ABS(bDeltaY)) {
+					BYTE bDirX = SGN(bDeltaX);
+					for(FUBYTE x = pFrom->fubX; x != pTo->fubX; x += bDirX) {
+						FUBYTE y = pFrom->fubY + ((bDeltaY * (x - pFrom->fubX)) / bDeltaX);
+						s_pNodeConnectionCosts[fubFrom][fubTo] += s_pTileCosts[x][y];
+					}
+				}
+				else {
+					BYTE bDirY = SGN(bDeltaY);
+					for(FUBYTE y = pFrom->fubY; y != pTo->fubY; y += bDirY) {
+						FUBYTE x = pFrom->fubX + ((bDeltaX * (y - pFrom->fubY)) / bDeltaY);
+						s_pNodeConnectionCosts[fubFrom][fubTo] += s_pTileCosts[x][y];
+					}
+				}
+			}
+		}
+	}
+	logBlockEnd("aiGraphCreate()");
+}
+
+void aiGraphDestroy(void) {
+	logBlockBegin("aiGraphDestroy()");
+	if(s_fubNodeCount) {
+		for(FUBYTE fubFrom = s_fubNodeCount; fubFrom--;)
+			memFree(s_pNodeConnectionCosts[fubFrom], sizeof(UWORD) * s_fubNodeCount);
+		memFree(s_pNodeConnectionCosts, sizeof(UWORD*) * s_fubNodeCount);
+	}
+	logBlockEnd("aiGraphDestroy()");
+}
 
 void aiManagerCreate(void) {
-	ubCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
+	logBlockBegin("aiManagerCreate()");
+	FUBYTE s_fubNodeCount = 0;
+	FUBYTE s_fubCaptureNodeCount = 0;
+
+	// Calculate tile costs
+	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
 	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		ubCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
+		s_pTileCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
+
+	// Create node network
+	aiGraphCreate();
+	logBlockEnd("aiManagerCreate()");
+}
+
+void aiManagerDestroy(void) {
+	logBlockBegin("aiManagerDestroy()");
+	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
+		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
+	memFree(s_pTileCosts, g_fubMapTileWidth * sizeof(UBYTE*));
+	logBlockEnd("aiManagerDestroy()");
 }
 
 void aiCalculateCosts(void) {
@@ -23,37 +185,21 @@ void aiCalculateCostFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			// check for turret in range of fire
 			FUBYTE fubTileRange = TURRET_MAX_PROCESS_RANGE_Y >> MAP_TILE_SIZE;
-			ubCosts[x][y] = 0;
+			s_pTileCosts[x][y] = 0;
 			for(FUBYTE i = MAX(0, x - fubTileRange); i != MIN(g_fubMapTileWidth, x+fubTileRange); ++i)
 				for(FUBYTE j = MAX(0, y - fubTileRange); j != MIN(g_fubMapTileHeight, y+fubTileRange); ++j)
 					if(g_pTurretTiles[i][j])
-						ubCosts[x][y] += 2;
+					s_pTileCosts[x][y] += 2;
 			// Check for walls
 			if(g_pMap[x][y].ubIdx == MAP_LOGIC_WATER)
-				ubCosts[x][y] = 0xFF;
+				s_pTileCosts[x][y] = 0xFF;
 			else if(g_pMap[x][y].ubIdx == MAP_LOGIC_WALL)
-				ubCosts[x][y] += 5;
+				s_pTileCosts[x][y] += 5;
 		}
 	}
 }
 
-void aiGraphCreate(void) {
-
-}
-
-void aiGraphDestroy(void) {
-
-}
-
-void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY) {
-
-}
-
 void aiGraphRecalcAllConnections(void) {
-
-}
-
-void aiManagerDestroy(void) {
 
 }
 
