@@ -172,23 +172,11 @@ void turretUpdateTarget(tTurret *pTurret) {
 }
 
 void turretSim(void) {
-	UWORD uwTurretIdx;
-	tTurret *pTurret;
-
 	FUBYTE fubSeq = g_ulGameFrame & 15;
 
-	const tUwRect sRectProcess = {
-		// uwY, uwX, uwWidth, uwHeight
-		g_pWorldCamera->uPos.sUwCoord.uwY, g_pWorldCamera->uPos.sUwCoord.uwX,
-		WORLD_VPORT_WIDTH + 2*PROJECTILE_RANGE,
-		WORLD_VPORT_HEIGHT + 2*PROJECTILE_RANGE
-	};
-
-	for(uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
-		pTurret = &g_pTurrets[uwTurretIdx];
+	for(UWORD uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
+		tTurret *pTurret = &g_pTurrets[uwTurretIdx];
 		if(!pTurret->uwX || pTurret->ubTeam == TEAM_NONE)
-			continue;
-		if(!inRect(pTurret->uwX, pTurret->uwY, sRectProcess))
 			continue;
 
 		if(pTurret->fubSeq == fubSeq) {
