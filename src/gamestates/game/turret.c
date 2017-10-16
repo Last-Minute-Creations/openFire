@@ -136,6 +136,7 @@ void turretDestroy(UWORD uwIdx) {
 }
 
 void turretUpdateTarget(tTurret *pTurret) {
+	pTurret->isTargeting = 0;
 	// Scan nearby enemies
 	UWORD uwClosestDist = TURRET_MIN_DISTANCE*TURRET_MIN_DISTANCE;
 	tPlayer *pClosestPlayer = 0;
