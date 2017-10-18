@@ -58,6 +58,10 @@ void spawnAnimate(
 
 void spawnSim(void);
 
+UBYTE spawnIsCoveredByAnyPlayer(
+	IN UBYTE ubSpawnIdx
+);
+
 extern tSpawn *g_pSpawns;
 extern UBYTE g_ubSpawnCount;
 

@@ -5,14 +5,12 @@
 #include "gamestates/game/player.h"
 #include "gamestates/game/team.h"
 
-#define CONTROL_CAPTURE_RANGE 64
 #define CONTROL_NAME_MAX 20
 
 typedef struct _tControlPoint {
 	FUBYTE fubTileX;
 	FUBYTE fubTileY;
-	FUBYTE pCapturerCounts[TEAM_COUNT]; ///< Number of players from given team
-	                                    ///  capturing point at the moment.
+
 	FUBYTE fubTurretCount;
 	FUBYTE fubSpawnCount;
 	FUWORD *pTurrets;
@@ -45,6 +43,11 @@ void controlAddPoint(
 void controlSim(void);
 
 void controlRedrawPoints(void);
+
+tControlPoint *controlPointGetAt(
+	IN FUBYTE fubTileX,
+	IN FUBYTE fubTileY
+);
 
 extern tControlPoint *g_pControlPoints;
 extern FUBYTE g_fubControlPointCount;

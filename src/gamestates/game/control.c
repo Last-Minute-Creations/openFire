@@ -375,3 +375,11 @@ void controlRedrawPoints(void) {
 			);
 	}
 }
+
+tControlPoint *controlPointGetAt(FUBYTE fubTileX, FUBYTE fubTileY) {
+	FUBYTE i; tControlPoint *pPoint;
+	for(i = g_fubControlPointCount, pPoint = &g_pControlPoints[0]; i--; ++pPoint)
+		if(pPoint->fubTileX == fubTileX &&	pPoint->fubTileY == fubTileY)
+			return pPoint;
+	return 0;
+}

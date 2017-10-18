@@ -21,7 +21,7 @@
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
-#include "gamestates/game/ai.h"
+#include "gamestates/game/ai/ai.h"
 
 // Viewport stuff
 tView *g_pWorldView;

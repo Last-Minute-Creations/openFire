@@ -1,61 +1,52 @@
-#include "gamestates/game/ai.h"
+#include "gamestates/game/ai/ai.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/turret.h"
+#include "gamestates/game/player.h"
+#include "gamestates/game/gamemath.h"
+#include "gamestates/game/ai/bot.h"
 
 // Cost is almost wall/turret hp
 #define TURRET_COST 5
 #define WALL_COST 5
-
-#define AI_MAX_NODES 50
-#define AI_MAX_CAPTURE_NODES 10
-
-#define AI_NODE_TYPE_ROAD 0
-#define AI_NODE_TYPE_CAPTURE 1
-#define AI_NODE_TYPE_SPAWN 2
-
-typedef struct _tAiNode {
-	FUBYTE fubY;
-	FUBYTE fubX;
-	FUBYTE fubType;
-} tAiNode;
 
 // Costs
 static UWORD **s_pNodeConnectionCosts;
 static UBYTE **s_pTileCosts;
 
 // Nodes
-static tAiNode s_pNodes[AI_MAX_NODES];
-static tAiNode *s_pCaptureNodes[AI_MAX_CAPTURE_NODES];
-static FUBYTE s_fubNodeCount;
-static FUBYTE s_fubCaptureNodeCount;
+tAiNode g_pNodes[AI_MAX_NODES];
+tAiNode *g_pCaptureNodes[AI_MAX_CAPTURE_NODES];
+FUBYTE g_fubNodeCount;
+FUBYTE g_fubCaptureNodeCount;
 
 void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 	// Check for overflow
-	if(s_fubNodeCount >= AI_MAX_NODES) {
+	if(g_fubNodeCount >= AI_MAX_NODES) {
 		logWrite("ERR: No more room for nodes\n");
 		return;
 	}
 
 	// Check for doubles
-	for(FUBYTE i = 0; i != s_fubNodeCount; ++i)
-		if(s_pNodes[i].fubX == fubX && s_pNodes[i].fubY == fubY)
+	for(FUBYTE i = 0; i != g_fubNodeCount; ++i)
+		if(g_pNodes[i].fubX == fubX && g_pNodes[i].fubY == fubY)
 			return;
 
 	// Add node
-	s_pNodes[s_fubNodeCount].fubY = fubY;
-	s_pNodes[s_fubNodeCount].fubX = fubX;
-	s_pNodes[s_fubNodeCount].fubType = fubNodeType;
+	g_pNodes[g_fubNodeCount].fubY = fubY;
+	g_pNodes[g_fubNodeCount].fubX = fubX;
+	g_pNodes[g_fubNodeCount].fubType = fubNodeType;
 
 	// Add to capture list?
 	if(fubNodeType == AI_NODE_TYPE_CAPTURE) {
-		if(s_fubCaptureNodeCount >= AI_MAX_CAPTURE_NODES)
+		if(g_fubCaptureNodeCount >= AI_MAX_CAPTURE_NODES)
 			logWrite("ERR: No more room for capture nodes\n");
 		else {
-			s_pCaptureNodes[s_fubCaptureNodeCount] = &s_pNodes[s_fubNodeCount];
-			++s_fubCaptureNodeCount;
+			g_pCaptureNodes[g_fubCaptureNodeCount] = &g_pNodes[g_fubNodeCount];
+			g_pNodes[g_fubNodeCount].pControlPoint = controlPointGetAt(fubX, fubY);
+			++g_fubCaptureNodeCount;
 		}
 	}
-	++s_fubNodeCount;
+	++g_fubNodeCount;
 }
 
 void aiGraphCreate(void) {
@@ -106,21 +97,21 @@ void aiGraphCreate(void) {
 	}
 	logWrite(
 		"Created %"PRI_FUBYTE" nodes (capture pts: %"PRI_FUBYTE")\n",
-		s_fubNodeCount, s_fubCaptureNodeCount
+		g_fubNodeCount, g_fubCaptureNodeCount
 	);
 
 	// Create array for connections & calculate costs between nodes
-	if(!s_fubNodeCount) {
+	if(!g_fubNodeCount) {
 		logWrite("WARN: No AI nodes on map!\n");
 	}
 	else {
-		s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * s_fubNodeCount);
-		for(FUBYTE fubFrom = s_fubNodeCount; fubFrom--;) {
-			s_pNodeConnectionCosts[fubFrom] = memAllocFast(sizeof(UWORD) * s_fubNodeCount);
-			for(FUBYTE fubTo = s_fubNodeCount; fubTo--;) {
+		s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
+		for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
+			s_pNodeConnectionCosts[fubFrom] = memAllocFast(sizeof(UWORD) * g_fubNodeCount);
+			for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
 				s_pNodeConnectionCosts[fubFrom][fubTo] = 0;
-				tAiNode *pFrom = &s_pNodes[fubFrom];
-				tAiNode *pTo = &s_pNodes[fubTo];
+				tAiNode *pFrom = &g_pNodes[fubFrom];
+				tAiNode *pTo = &g_pNodes[fubTo];
 				BYTE bDeltaX = pTo->fubX - pFrom->fubX;
 				BYTE bDeltaY = pTo->fubY - pFrom->fubY;
 				if(ABS(bDeltaX) > ABS(bDeltaY)) {
@@ -145,18 +136,19 @@ void aiGraphCreate(void) {
 
 void aiGraphDestroy(void) {
 	logBlockBegin("aiGraphDestroy()");
-	if(s_fubNodeCount) {
-		for(FUBYTE fubFrom = s_fubNodeCount; fubFrom--;)
-			memFree(s_pNodeConnectionCosts[fubFrom], sizeof(UWORD) * s_fubNodeCount);
-		memFree(s_pNodeConnectionCosts, sizeof(UWORD*) * s_fubNodeCount);
+	if(g_fubNodeCount) {
+		for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;)
+			memFree(s_pNodeConnectionCosts[fubFrom], sizeof(UWORD) * g_fubNodeCount);
+		memFree(s_pNodeConnectionCosts, sizeof(UWORD*) * g_fubNodeCount);
 	}
 	logBlockEnd("aiGraphDestroy()");
 }
 
 void aiManagerCreate(void) {
 	logBlockBegin("aiManagerCreate()");
-	FUBYTE s_fubNodeCount = 0;
-	FUBYTE s_fubCaptureNodeCount = 0;
+	g_fubNodeCount = 0;
+	g_fubCaptureNodeCount = 0;
+	botManagerCreate(g_ubPlayerLimit);
 
 	// Calculate tile costs
 	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
@@ -170,6 +162,7 @@ void aiManagerCreate(void) {
 
 void aiManagerDestroy(void) {
 	logBlockBegin("aiManagerDestroy()");
+	botManagerDestroy();
 	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
 		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
 	memFree(s_pTileCosts, g_fubMapTileWidth * sizeof(UBYTE*));
@@ -199,10 +192,16 @@ void aiCalculateCostFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 	}
 }
 
-void aiGraphRecalcAllConnections(void) {
-
-}
-
-void addBot(char *szName, UBYTE ubTeam) {
-
+tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
+	UWORD uwClosestDist = 0xFFFF;
+	tAiNode *pClosest = 0;
+	for(FUBYTE i = 0; i != g_fubNodeCount; ++i) {
+		tAiNode *pNode = &g_pNodes[i];
+		UWORD uwDist = ABS(pNode->fubX - fubTileX) + ABS(pNode->fubY + fubTileY);
+		if(uwDist < uwClosestDist) {
+			uwClosestDist = uwDist;
+			pClosest = pNode;
+		}
+	}
+	return pClosest;
 }

@@ -33,6 +33,9 @@ CC_FLAGS = +kick13 -c99 -O1 -I$(SRC_DIR) -I$(ACE_PARENT) -DAMIGA
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
 OF_MAIN_OBJS = $(addprefix $(TMP_DIR)$(SL), $(notdir $(OF_MAIN_FILES:.c=.o)))
 
+OF_GS_GAME_AI_FILES = $(wildcard $(SRC_DIR)/gamestates/game/ai/*.c)
+OF_GS_GAME_AI_OBJS = $(addprefix $(TMP_DIR)$(SL)gsgame_ai_, $(notdir $(OF_GS_GAME_AI_FILES:.c=.o)))
+
 OF_GS_GAME_FILES = $(wildcard $(SRC_DIR)/gamestates/game/*.c)
 OF_GS_GAME_OBJS = $(addprefix $(TMP_DIR)$(SL)gsgame_, $(notdir $(OF_GS_GAME_FILES:.c=.o)))
 
@@ -42,8 +45,8 @@ OF_GS_MENU_OBJS = $(addprefix $(TMP_DIR)$(SL)gsmenu_, $(notdir $(OF_GS_MENU_FILE
 OF_GS_PRECALC_FILES = $(wildcard $(SRC_DIR)/gamestates/precalc/*.c)
 OF_GS_PRECALC_OBJS = $(addprefix $(TMP_DIR)$(SL)gsprecalc_, $(notdir $(OF_GS_PRECALC_FILES:.c=.o)))
 
-OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
-OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
+OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_GAME_AI_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
+OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_GAME_AI_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
 ACE_OBJS = $(wildcard $(ACE_DIR)/tmp/*.o)
 
 #
@@ -65,6 +68,10 @@ $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c
 
 # Game
 $(TMP_DIR)$(SL)gsgame_%.o: $(SRC_DIR)/gamestates/game/%.c
+	$(CC) $(CC_FLAGS) -c -o $@ $<
+
+# Game AI
+$(TMP_DIR)$(SL)gsgame_ai_%.o: $(SRC_DIR)/gamestates/game/ai/%.c
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
 # Menu

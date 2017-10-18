@@ -204,6 +204,40 @@ void playerLocalProcessInput(void) {
 	}
 }
 
+UBYTE playerCheckDeathFromSpawn(tPlayer *pPlayer) {
+	tBCoordYX *pCollisionPts = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1];
+
+	// Unrolling for best results
+	FUBYTE fubTileX = (pPlayer->sVehicle.uwX + pCollisionPts[0].bX) >> MAP_TILE_SIZE;
+	FUBYTE fubTileY = (pPlayer->sVehicle.uwY + pCollisionPts[0].bY) >> MAP_TILE_SIZE;
+	FUBYTE fubSpawnIdx = spawnGetAt(fubTileX, fubTileY);
+	if(fubSpawnIdx != SPAWN_INVALID && g_pSpawns[fubSpawnIdx].ubBusy != SPAWN_BUSY_NOT)
+		goto kill;
+
+	fubTileX = (pPlayer->sVehicle.uwX + pCollisionPts[2].bX) >> MAP_TILE_SIZE;
+	fubTileY = (pPlayer->sVehicle.uwY + pCollisionPts[2].bY) >> MAP_TILE_SIZE;
+	fubSpawnIdx = spawnGetAt(fubTileX, fubTileY);
+	if(fubSpawnIdx != SPAWN_INVALID && g_pSpawns[fubSpawnIdx].ubBusy != SPAWN_BUSY_NOT)
+		goto kill;
+
+	fubTileX = (pPlayer->sVehicle.uwX + pCollisionPts[5].bX) >> MAP_TILE_SIZE;
+	fubTileY = (pPlayer->sVehicle.uwY + pCollisionPts[5].bY) >> MAP_TILE_SIZE;
+	fubSpawnIdx = spawnGetAt(fubTileX, fubTileY);
+	if(fubSpawnIdx != SPAWN_INVALID && g_pSpawns[fubSpawnIdx].ubBusy != SPAWN_BUSY_NOT)
+		goto kill;
+
+	fubTileX = (pPlayer->sVehicle.uwX + pCollisionPts[7].bX) >> MAP_TILE_SIZE;
+	fubTileY = (pPlayer->sVehicle.uwY + pCollisionPts[7].bY) >> MAP_TILE_SIZE;
+	fubSpawnIdx = spawnGetAt(fubTileX, fubTileY);
+	if(fubSpawnIdx != SPAWN_INVALID && g_pSpawns[fubSpawnIdx].ubBusy != SPAWN_BUSY_NOT)
+		goto kill;
+
+	return 0;
+kill:
+	playerDamageVehicle(pPlayer, 200);
+	return 1;
+}
+
 void playerSimVehicle(tPlayer *pPlayer) {
 	tVehicle *pVehicle;
 	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
@@ -227,24 +261,18 @@ void playerSimVehicle(tPlayer *pPlayer) {
 		return;
 	}
 
-	// Standing on silos
+	// Death from moving spawn
 	g_ubDoSiloHighlight = 0;
+	if(playerCheckDeathFromSpawn(pPlayer)) {
+		return;
+	}
+
+	// Standing on own, unoccupied spawn
 	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
-		UBYTE ubSpawnIdx = spawnGetAt(uwVTileX, uwVTileY);
 		if(
-			ubSpawnIdx != SPAWN_INVALID && (
-				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_BUNKERING ||
-				g_pSpawns[ubSpawnIdx].ubBusy == SPAWN_BUSY_SURFACING
-			)
-		) {
-			// If one of them is standing on moving platform, destroy vehicle
-			playerDamageVehicle(pPlayer, 200);
-		}
-		else if(
 			(pPlayer->ubTeam == TEAM_BLUE && ubTileType == MAP_LOGIC_SPAWN1) ||
 			(pPlayer->ubTeam == TEAM_RED && ubTileType == MAP_LOGIC_SPAWN2)
 		) {
-			// Standing on own, unoccupied silo
 			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
 			uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
 			if(uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18) {
@@ -256,7 +284,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 					g_uwSiloHighlightTileY = uwVTileY;
 					// Hide in bunker
 					if(pPlayer->sSteerRequest.ubAction1) {
-						playerHideInBunker(pPlayer, ubSpawnIdx);
+						playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));
 						return;
 					}
 				}
@@ -330,6 +358,19 @@ void playerSim(void) {
 				continue;
 		}
 	}
+}
+
+UBYTE playerAnyNearPoint(UWORD uwChkX, UWORD uwChkY, UWORD uwDist) {
+	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
+		if(g_pPlayers[i].ubState != PLAYER_STATE_DRIVING)
+			continue;
+		if(
+			ABS(g_pPlayers[i].sVehicle.uwX - uwChkX) < uwDist &&
+			ABS(g_pPlayers[i].sVehicle.uwY - uwChkY) < uwDist
+		)
+			return 1;
+	}
+	return 0;
 }
 
 tPlayer *g_pPlayers;

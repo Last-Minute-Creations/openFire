@@ -94,6 +94,12 @@ inline tPlayer *playerGetByVehicle(
 	return (tPlayer*)(pVehicleByteAddr - ubDist);
 }
 
+UBYTE playerAnyNearPoint(
+	IN UWORD uwChkX,
+	IN UWORD uwChkY,
+	IN UWORD uwDist
+);
+
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
