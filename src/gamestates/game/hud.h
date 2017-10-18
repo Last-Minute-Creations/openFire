@@ -3,8 +3,7 @@
 
 #include <ace/types.h>
 #include <ace/managers/viewport/simplebuffer.h>
-
-#define HUD_HEIGHT 64
+#include <ace/utils/font.h>
 
 #define HUD_STATE_SELECTING 0
 #define HUD_STATE_DRIVING 1
@@ -13,7 +12,9 @@ void hudChangeState(
 	IN FUBYTE fubState
 );
 
-void hudCreate(void);
+void hudCreate(
+	IN tFont *pFont
+);
 void hudDestroy(void);
 void hudUpdate(void);
 

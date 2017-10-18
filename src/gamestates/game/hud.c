@@ -3,7 +3,6 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/font.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/console.h"
@@ -21,7 +20,7 @@ static tFont *s_pHudFont;
 static UWORD s_uwPrevTicketsRed = 0;
 static UWORD s_uwPrevTicketsBlue = 0;
 
-void hudCreate(void) {
+void hudCreate(tFont *pFont) {
 	s_pHudVPort = vPortCreate(0,
 		TAG_VPORT_VIEW,	g_pWorldView,
 		TAG_VPORT_BPP, WORLD_BPP,
@@ -34,7 +33,7 @@ void hudCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
 		TAG_DONE
 	);
-	s_pHudFont = fontCreate("data/silkscreen5.fnt");
+	s_pHudFont = pFont;
 
 	tCopCmd *pCopList = g_pWorldView->pCopList->pBackBfr->pList;
 	copSetWait(
@@ -172,7 +171,6 @@ void hudUpdate(void) {
 
 void hudDestroy(void) {
 	consoleDestroy();
-	fontDestroy(s_pHudFont);
 
 	bitmapDestroy(s_pHudDriving);
 	bitmapDestroy(s_pHudSelecting);

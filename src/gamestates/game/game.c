@@ -22,47 +22,55 @@
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
 #include "gamestates/game/ai/ai.h"
+#include "gamestates/game/scoretable.h"
 
 // Viewport stuff
 tView *g_pWorldView;
-tVPort *s_pWorldMainVPort;
 tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *g_pWorldCamera;
-tBitMap *s_pTiles;
+static tVPort *s_pWorldMainVPort;
+static tBitMap *s_pTiles;
+static UBYTE s_isScoreShown;
 
 // Silo highlight
 // TODO: struct?
-tBob *s_pSiloHighlight;
-UBYTE s_ubWasSiloHighlighted;
 UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightTileY;
 UWORD g_uwSiloHighlightTileX;
+static tBob *s_pSiloHighlight;
+static UBYTE s_ubWasSiloHighlighted;
 
 // Speed logging
-#define SPEED_LOG
-tAvg *s_pDrawAvgExplosions;
-tAvg *s_pDrawAvgProjectiles;
-tAvg *s_pDrawAvgVehicles;
-tAvg *s_pUndrawAvgExplosions;
-tAvg *s_pUndrawAvgProjectiles;
-tAvg *s_pUndrawAvgVehicles;
-tAvg *s_pProcessAvgCursor;
-tAvg *s_pProcessAvgDataRecv;
-tAvg *s_pProcessAvgInput;
-tAvg *s_pProcessAvgSpawn;
-tAvg *s_pProcessAvgPlayer;
-tAvg *s_pProcessAvgControl;
-tAvg *s_pProcessAvgTurret;
-tAvg *s_pProcessAvgProjectile;
-tAvg *s_pProcessAvgDataSend;
-tAvg *s_pAvgRedrawControl;
-tAvg *s_pAvgUpdateSprites;
-tAvg *s_pProcessAvgHud;
+// #ifdef GAME_DEBUG
+#define SPEED_LOG /* Log speed in main loop */
+// #endif
+
+#ifdef SPEED_LOG
+static tAvg *s_pDrawAvgExplosions;
+static tAvg *s_pDrawAvgProjectiles;
+static tAvg *s_pDrawAvgVehicles;
+static tAvg *s_pUndrawAvgExplosions;
+static tAvg *s_pUndrawAvgProjectiles;
+static tAvg *s_pUndrawAvgVehicles;
+static tAvg *s_pProcessAvgCursor;
+static tAvg *s_pProcessAvgDataRecv;
+static tAvg *s_pProcessAvgInput;
+static tAvg *s_pProcessAvgSpawn;
+static tAvg *s_pProcessAvgPlayer;
+static tAvg *s_pProcessAvgControl;
+static tAvg *s_pProcessAvgTurret;
+static tAvg *s_pProcessAvgProjectile;
+static tAvg *s_pProcessAvgDataSend;
+static tAvg *s_pAvgRedrawControl;
+static tAvg *s_pAvgUpdateSprites;
+static tAvg *s_pProcessAvgHud;
+#endif
 
 UWORD uwLimboX;
 UWORD uwLimboY;
 
 ULONG g_ulGameFrame;
+tFont *g_pSmallFont;
 
 void displayPrepareLimbo(FUBYTE fubSpawnIdx) {
 	cursorSetConstraints(0,0, 320, 255);
@@ -155,7 +163,11 @@ void gsGameCreate(void) {
 	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/openfire_sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
-	hudCreate();
+
+	g_pSmallFont = fontCreate("data/silkscreen5.fnt");
+	hudCreate(g_pSmallFont);
+	scoreTableCreate(g_pHudBfr->sCommon.pVPort, g_pSmallFont);
+	s_isScoreShown = 0;
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
@@ -221,10 +233,12 @@ void gsGameCreate(void) {
 	custom.dmacon = BITCLR | DMAF_DISK;
 
 	viewLoad(g_pWorldView);
+	// scoreTableShow();
 	logBlockEnd("gsGameCreate()");
 }
 
 void gsGameLoop(void) {
+	++g_ulGameFrame;
 	// Quit?
 	if(keyCheck(KEY_ESCAPE)) {
 		gamePopState(); // Pop to precalc so it may free stuff and quit
@@ -237,8 +251,17 @@ void gsGameLoop(void) {
 		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
 	if(keyUse(KEY_T))
 		consoleChatBegin();
+	if(keyUse(KEY_TAB)) {
+		s_isScoreShown = 1;
+		scoreTableShow();
+	}
+	else if(s_isScoreShown) {
+		if(keyCheck(KEY_TAB) == KEY_NACTIVE) {
+			s_isScoreShown = 0;
+			viewLoad(g_pWorldView);
+		}
+	}
 
-	++g_ulGameFrame;
 	logAvgBegin(s_pProcessAvgDataRecv);
 	dataRecv(); // Receives positions of other players from server
 	logAvgEnd(s_pProcessAvgDataRecv);
@@ -307,9 +330,11 @@ void gsGameLoop(void) {
 	explosionsDraw(g_pWorldMainBfr);
 	logAvgEnd(s_pDrawAvgExplosions);
 
-	logAvgBegin(s_pAvgUpdateSprites);
-	turretUpdateSprites();
-	logAvgEnd(s_pAvgUpdateSprites);
+	if(!s_isScoreShown) {
+		logAvgBegin(s_pAvgUpdateSprites);
+		turretUpdateSprites();
+		logAvgEnd(s_pAvgUpdateSprites);
+	}
 
 	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
 
@@ -338,7 +363,9 @@ void gsGameDestroy(void) {
 	aiManagerDestroy();
 
 	cursorDestroy();
+	scoreTableDestroy();
 	hudDestroy();
+	fontDestroy(g_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);

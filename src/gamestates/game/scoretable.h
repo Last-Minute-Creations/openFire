@@ -1,0 +1,19 @@
+#ifndef GUARD_OF_GAMESTATES_GAME_SCORETABLE_H
+#define GUARD_OF_GAMESTATES_GAME_SCORETABLE_H
+
+#include <ace/types.h>
+#include <ace/utils/extview.h>
+#include <ace/utils/font.h>
+
+void scoreTableCreate(
+	IN tVPort *pHudVPort,
+	IN tFont *pFont
+);
+
+void scoreTableDestroy(void);
+
+void scoreTableUpdate(void);
+
+void scoreTableShow(void);
+
+#endif // GUARD_OF_GAMESTATES_GAME_SCORETABLE_H

@@ -43,12 +43,12 @@
 
 	"controlPoints": [
 		{
-			"name": "Blue hangars",
+			"name": "Blue west",
 			"capture": [8, 11],
 			"polygon": [[2,9], [18,9], [18,14], [2,14]]
 		},
 		{
-			"name": "Blue helipad",
+			"name": "Blue east",
 			"capture": [23,12],
 			"polygon": [[20,9], [30,9], [30,14], [20,14]]
 		},
@@ -58,12 +58,12 @@
 			"polygon": [[2,15], [30,15], [30,18], [2,18]]
 		},
 		{
-			"name": "Red helipad",
+			"name": "Red west",
 			"capture": [9,21],
 			"polygon": [[2,19],[12,19],[12,24],[2,24]]
 		},
 		{
-			"name": "Red hangars",
+			"name": "Red east",
 			"capture": [24,22],
 			"polygon": [[14,19],[30,19],[30,24],[14,24]]
 		}
