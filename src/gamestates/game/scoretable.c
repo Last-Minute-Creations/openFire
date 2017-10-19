@@ -83,6 +83,27 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	blitRect(s_pBfr->pBuffer, 0, 191, 320, 1, 9);
 	blitRect(s_pBfr->pBuffer, 319, 0, 1, 192, 9);
 
+	const FUBYTE fubColorHeader = 13;
+	fontDrawStr(
+		s_pBfr->pBuffer, s_pFont, 32, 4, "Name", fubColorHeader,
+		FONT_TOP | FONT_LEFT | FONT_COOKIE
+	);
+
+	fontDrawStr(
+		s_pBfr->pBuffer, s_pFont, 96, 4, "Deaths", fubColorHeader,
+		FONT_TOP | FONT_LEFT | FONT_COOKIE
+	);
+
+	fontDrawStr(
+		s_pBfr->pBuffer, s_pFont, 160, 4, "Kills", fubColorHeader,
+		FONT_TOP | FONT_LEFT | FONT_COOKIE
+	);
+
+	fontDrawStr(
+		s_pBfr->pBuffer, s_pFont, 224, 4, "Capture points", fubColorHeader,
+		FONT_TOP | FONT_LEFT | FONT_COOKIE
+	);
+
 	logBlockEnd("scoreTableCreate()");
 }
 
@@ -93,11 +114,19 @@ void scoreTableDestroy(void) {
 void scoreTableUpdate(void) {
 	const FUBYTE fubColorBlue = 12;
 	const FUBYTE fubColorRed  = 10;
+	const FUBYTE fubColorBot = 4;
 	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
+		if(&g_pPlayers[i] != g_pLocalPlayer) {
+			fontDrawStr(
+				s_pBfr->pBuffer, s_pFont,	6, 16 + 7*i,	"[BOT]",
+				fubColorBot,
+				FONT_TOP | FONT_LEFT | FONT_COOKIE
+			);
+		}
 		fontDrawStr(
-			s_pBfr->pBuffer, s_pFont,	16, 16 + 6*i,	g_pPlayers[i].szName,
+			s_pBfr->pBuffer, s_pFont,	32, 16 + 7*i,	g_pPlayers[i].szName,
 			(g_pPlayers[i].ubTeam == TEAM_RED ? fubColorRed : fubColorBlue),
-			FONT_TOP | FONT_LEFT
+			FONT_TOP | FONT_LEFT | FONT_COOKIE
 		);
 	}
 }
