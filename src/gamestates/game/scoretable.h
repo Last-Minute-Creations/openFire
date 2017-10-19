@@ -18,4 +18,6 @@ void scoreTableShow(void);
 
 void scoreTableProcessView(void);
 
+void scoreTableShowSummary(void);
+
 #endif // GUARD_OF_GAMESTATES_GAME_SCORETABLE_H

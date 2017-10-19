@@ -5,6 +5,7 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/key.h>
+#include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
 #include <ace/managers/rand.h>
 #include <ace/utils/extview.h>
@@ -220,11 +221,11 @@ void gsGameCreate(void) {
 
 	// AI
 	aiManagerCreate();
-	for(FUBYTE i = 0; i != 7; ++i) {
-		char szName[10];
-		sprintf(szName, "player%hhu", i);
-		playerAdd(szName, TEAM_BLUE);
-	}
+	// for(FUBYTE i = 0; i != 7; ++i) {
+	// 	char szName[10];
+	// 	sprintf(szName, "player%hhu", i);
+	// 	playerAdd(szName, TEAM_BLUE);
+	// }
 
 	// Now that world buffer is created, do the first draw
 	mapRedraw();
@@ -236,6 +237,14 @@ void gsGameCreate(void) {
 	viewLoad(g_pWorldView);
 	// scoreTableShow();
 	logBlockEnd("gsGameCreate()");
+}
+
+void gameSummaryLoop(void) {
+	if(keyCheck(KEY_ESCAPE) || mouseUse(MOUSE_LMB)) {
+		gameChangeState(menuCreate, menuLoop, menuDestroy);
+		return;
+	}
+	scoreTableProcessView();
 }
 
 void gsGameLoop(void) {
@@ -286,6 +295,11 @@ void gsGameLoop(void) {
 	logAvgBegin(s_pProcessAvgControl);
 	controlSim();
 	logAvgEnd(s_pProcessAvgControl);
+
+	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
+		scoreTableShowSummary();
+		gameChangeLoop(gameSummaryLoop);
+	}
 
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		UWORD uwLocalX, uwLocalY;

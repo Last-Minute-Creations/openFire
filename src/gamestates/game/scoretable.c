@@ -10,6 +10,9 @@ static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBfr;
 static tFont *s_pFont;
 
+static const FUBYTE s_fubColorBlue = 12;
+static const FUBYTE s_fubColorRed  = 10;
+
 void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	logBlockBegin("scoreTableCreate(pHudVPort: %p, pFont: %p)", pHudVPort, pFont);
 	s_pView = viewCreate(0,
@@ -112,8 +115,6 @@ void scoreTableDestroy(void) {
 }
 
 void scoreTableUpdate(void) {
-	const FUBYTE fubColorBlue = 12;
-	const FUBYTE fubColorRed  = 10;
 	const FUBYTE fubColorBot = 4;
 	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
 		if(&g_pPlayers[i] != g_pLocalPlayer) {
@@ -125,10 +126,26 @@ void scoreTableUpdate(void) {
 		}
 		fontDrawStr(
 			s_pBfr->pBuffer, s_pFont,	32, 16 + 7*i,	g_pPlayers[i].szName,
-			(g_pPlayers[i].ubTeam == TEAM_RED ? fubColorRed : fubColorBlue),
+			(g_pPlayers[i].ubTeam == TEAM_RED ? s_fubColorRed : s_fubColorBlue),
 			FONT_TOP | FONT_LEFT | FONT_COOKIE
 		);
 	}
+}
+
+void scoreTableShowSummary(void) {
+	if(!g_pTeams[TEAM_BLUE].uwTicketsLeft) {
+		fontDrawStr(
+			s_pBfr->pBuffer, s_pFont, 160, 160, "Red Wins!",
+			s_fubColorRed, FONT_COOKIE | FONT_CENTER
+		);
+	}
+	else {
+		fontDrawStr(
+			s_pBfr->pBuffer, s_pFont, 160, 160, "Blue Wins!",
+			s_fubColorBlue, FONT_COOKIE | FONT_CENTER
+		);
+	}
+	scoreTableShow();
 }
 
 void scoreTableShow(void) {
