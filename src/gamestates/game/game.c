@@ -9,6 +9,7 @@
 #include <ace/managers/rand.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
+#include "cursor.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/player.h"
@@ -16,13 +17,13 @@
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/data.h"
 #include "gamestates/game/hud.h"
-#include "cursor.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
 #include "gamestates/game/ai/ai.h"
 #include "gamestates/game/scoretable.h"
+#include "gamestates/menu/menu.h"
 
 // Viewport stuff
 tView *g_pWorldView;
@@ -241,7 +242,7 @@ void gsGameLoop(void) {
 	++g_ulGameFrame;
 	// Quit?
 	if(keyCheck(KEY_ESCAPE)) {
-		gamePopState(); // Pop to precalc so it may free stuff and quit
+		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}
 	// Steering-irrelevant player input
