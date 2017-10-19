@@ -56,6 +56,20 @@ void menuCreate(void) {
 
 	buttonDrawAll();
 
+	const UWORD uwColorNotice = 14;
+	fontDrawStr(
+		s_pBuffer->pBuffer, s_pFont, 320/2, 236, "Founded by KaiN, Selur and Softiron",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+	fontDrawStr(
+		s_pBuffer->pBuffer, s_pFont, 320/2, 243, "as a RetroKomp 2017 Gamedev Compo entry.",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+	fontDrawStr(
+		s_pBuffer->pBuffer, s_pFont, 320/2, 250, "Remaining authors are listed on project page.",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+
 	viewLoad(s_pView);
 }
 
