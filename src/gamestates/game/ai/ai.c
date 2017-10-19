@@ -162,6 +162,7 @@ void aiManagerCreate(void) {
 
 void aiManagerDestroy(void) {
 	logBlockBegin("aiManagerDestroy()");
+	aiGraphDestroy();
 	botManagerDestroy();
 	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
 		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
