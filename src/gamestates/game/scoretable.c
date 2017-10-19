@@ -71,6 +71,18 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
 		&custom.copjmp2, 1
 	);
+
+	// Add a border
+	blitRect(s_pBfr->pBuffer, 0, 0, 1, 192, 13);
+	blitRect(s_pBfr->pBuffer, 0, 0, 320, 1, 13);
+	blitRect(s_pBfr->pBuffer, 1, 1, 1, 191, 9);
+	blitRect(s_pBfr->pBuffer, 1, 1, 319, 1, 9);
+
+	blitRect(s_pBfr->pBuffer, 0, 190, 320, 1, 13);
+	blitRect(s_pBfr->pBuffer, 318, 0, 1, 191, 13);
+	blitRect(s_pBfr->pBuffer, 0, 191, 320, 1, 9);
+	blitRect(s_pBfr->pBuffer, 319, 0, 1, 192, 9);
+
 	logBlockEnd("scoreTableCreate()");
 }
 
