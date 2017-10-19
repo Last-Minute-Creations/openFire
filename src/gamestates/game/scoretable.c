@@ -11,9 +11,10 @@ static tSimpleBufferManager *s_pBfr;
 static tFont *s_pFont;
 
 void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
+	logBlockBegin("scoreTableCreate(pHudVPort: %p, pFont: %p)", pHudVPort, pFont);
 	s_pView = viewCreate(0,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
-		TAG_VIEW_COPLIST_RAW_COUNT, (6+2*SCORE_TABLE_BPP), // + 3,
+		TAG_VIEW_COPLIST_RAW_COUNT, 8*2 + (6+2*SCORE_TABLE_BPP) + 3,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_DONE
 	);
@@ -26,7 +27,7 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	s_pBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pVPort,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
-		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 0,
+		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 8*2,
 		TAG_DONE
 	);
 	s_pFont = pFont;
@@ -35,42 +36,42 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 
 	tSimpleBufferManager *pHudBfr = (tSimpleBufferManager*)vPortGetManager(pHudVPort, VPM_SCROLL);
 
-	// copRawDisableSprites(s_pView->pCopList, 0xFF, 0);
+	copRawDisableSprites(s_pView->pCopList, 0xFF, 0);
 
-	// // Jump to HUD - back buffer to back buffer
-	// ULONG ulHudListAddr = (ULONG)((void*)
-	// 	&pHudBfr->sCommon.pVPort->pView->pCopList->pBackBfr->pList[pHudBfr->uwCopperOffset]
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pBackBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-	// 	&pCopLc[1].uwHi, ulHudListAddr >> 16
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pBackBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-	// 	&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pBackBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-	// 	&custom.copjmp2, 1
-	// );
+	// Jump to HUD - back buffer to back buffer
+	ULONG ulHudListAddr = (ULONG)((void*)
+		&pHudBfr->sCommon.pVPort->pView->pCopList->pBackBfr->pList[pHudBfr->uwCopperOffset]
+	);
+	copSetMove(
+		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
+		&pCopLc[1].uwHi, ulHudListAddr >> 16
+	);
+	copSetMove(
+		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
+		&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
+	);
+	copSetMove(
+		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
+		&custom.copjmp2, 1
+	);
 
-	// // Jump to HUD - front buffer to front buffer
-	// ulHudListAddr = (ULONG)((void*)
-	// 	&pHudBfr->sCommon.pVPort->pView->pCopList->pFrontBfr->pList[pHudBfr->uwCopperOffset]
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pFrontBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-	// 	&pCopLc[1].uwHi, ulHudListAddr >> 16
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pFrontBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-	// 	&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
-	// );
-	// copSetMove(
-	// 	&s_pView->pCopList->pFrontBfr->pList[2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-	// 	&custom.copjmp2, 1
-	// );
-
+	// Jump to HUD - front buffer to front buffer
+	ulHudListAddr = (ULONG)((void*)
+		&pHudBfr->sCommon.pVPort->pView->pCopList->pFrontBfr->pList[pHudBfr->uwCopperOffset]
+	);
+	copSetMove(
+		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
+		&pCopLc[1].uwHi, ulHudListAddr >> 16
+	);
+	copSetMove(
+		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
+		&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
+	);
+	copSetMove(
+		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
+		&custom.copjmp2, 1
+	);
+	logBlockEnd("scoreTableCreate()");
 }
 
 void scoreTableDestroy(void) {
@@ -92,4 +93,8 @@ void scoreTableUpdate(void) {
 void scoreTableShow(void) {
 	scoreTableUpdate();
 	viewLoad(s_pView);
+}
+
+void scoreTableProcessView(void) {
+	viewProcessManagers(s_pView);
 }

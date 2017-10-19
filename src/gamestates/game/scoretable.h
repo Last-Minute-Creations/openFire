@@ -16,4 +16,6 @@ void scoreTableUpdate(void);
 
 void scoreTableShow(void);
 
+void scoreTableProcessView(void);
+
 #endif // GUARD_OF_GAMESTATES_GAME_SCORETABLE_H

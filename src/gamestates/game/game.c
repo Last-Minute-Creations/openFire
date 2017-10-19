@@ -339,8 +339,12 @@ void gsGameLoop(void) {
 	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
 
 	// This should be done on vblank interrupt
-	viewProcessManagers(g_pWorldView);
-	copProcessBlocks();
+	if(!s_isScoreShown) {
+		viewProcessManagers(g_pWorldView);
+		copProcessBlocks();
+	}
+	else
+		scoreTableProcessView();
 
 	logAvgBegin(s_pProcessAvgTurret);
 	turretSim();               // Turrets: targeting, rotation & projectile spawn
