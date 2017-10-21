@@ -235,18 +235,16 @@ void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
 	logBlockBegin(
 		"vehicleTypeGenerateRotatedCollisions(pCollisions: %p)", pCollisions
 	);
-	UBYTE p, i;
-	fix16_t fAng;
-	for(i = VEHICLE_BODY_ANGLE_COUNT; i--;) {
-		fAng = fix16_div(i*2*fix16_pi, fix16_from_int(VEHICLE_BODY_ANGLE_COUNT));
-		for(p = 0; p != 8; ++p) {
-			pCollisions[i][p].bX = fix16_to_int(fix16_sub(
-				pCollisions[0][p].bX * fix16_cos(fAng),
-				pCollisions[0][p].bY * fix16_sin(fAng)
+	for(FUBYTE fubFrame = VEHICLE_BODY_ANGLE_COUNT; fubFrame--;) {
+		FUBYTE fubAngle = fubFrame << 1;
+		for(FUBYTE fubPoint = 0; fubPoint != 8; ++fubPoint) {
+			pCollisions[fubFrame][fubPoint].bX = fix16_to_int(fix16_sub(
+				pCollisions[0][fubPoint].bX * ccos(fubAngle),
+				pCollisions[0][fubPoint].bY * csin(fubAngle)
 			));
-			pCollisions[i][p].bY = fix16_to_int(fix16_add(
-				pCollisions[0][p].bX * fix16_sin(fAng),
-				pCollisions[0][p].bY * fix16_cos(fAng)
+			pCollisions[fubFrame][fubPoint].bY = fix16_to_int(fix16_add(
+				pCollisions[0][fubPoint].bX * csin(fubAngle),
+				pCollisions[0][fubPoint].bY * ccos(fubAngle)
 			));
 		}
 	}
