@@ -37,8 +37,8 @@ static UBYTE s_isScoreShown;
 // Silo highlight
 // TODO: struct?
 UBYTE g_ubDoSiloHighlight;
-UWORD g_uwSiloHighlightTileY;
-UWORD g_uwSiloHighlightTileX;
+UWORD g_uwSiloHighlightY;
+UWORD g_uwSiloHighlightX;
 static tBob *s_pSiloHighlight;
 static UBYTE s_ubWasSiloHighlighted;
 
@@ -325,8 +325,7 @@ void gsGameLoop(void) {
 	if(g_ubDoSiloHighlight) {
 		if(bobDraw(
 			s_pSiloHighlight, g_pWorldMainBfr,
-			g_uwSiloHighlightTileX << MAP_TILE_SIZE,
-			g_uwSiloHighlightTileY << MAP_TILE_SIZE
+			g_uwSiloHighlightX, g_uwSiloHighlightY
 		)) {
 			s_ubWasSiloHighlighted = 1;
 		}

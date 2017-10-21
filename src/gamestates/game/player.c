@@ -282,8 +282,8 @@ void playerSimVehicle(tPlayer *pPlayer) {
 				// Standing on bunkerable position
 				// If one of them is local player, save data for highlight draw
 				g_ubDoSiloHighlight = 1;
-				g_uwSiloHighlightTileX = uwVTileX;
-				g_uwSiloHighlightTileY = uwVTileY;
+				g_uwSiloHighlightX = uwVTileX << MAP_TILE_SIZE;
+				g_uwSiloHighlightY = uwVTileY << MAP_TILE_SIZE;
 				// Hide in bunker
 				if(pPlayer->sSteerRequest.ubAction1) {
 					playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));

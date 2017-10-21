@@ -40,8 +40,8 @@ extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;
 
 extern UBYTE g_ubDoSiloHighlight;
-extern UWORD g_uwSiloHighlightTileY;
-extern UWORD g_uwSiloHighlightTileX;
+extern UWORD g_uwSiloHighlightY;
+extern UWORD g_uwSiloHighlightX;
 extern tCameraManager *g_pWorldCamera;
 
 extern UBYTE g_ubActiveState;
