@@ -240,7 +240,7 @@ void gsGameCreate(void) {
 }
 
 void gameSummaryLoop(void) {
-	if(keyCheck(KEY_ESCAPE) || mouseUse(MOUSE_LMB)) {
+	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_LMB)) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}
@@ -250,7 +250,7 @@ void gameSummaryLoop(void) {
 void gsGameLoop(void) {
 	++g_ulGameFrame;
 	// Quit?
-	if(keyCheck(KEY_ESCAPE)) {
+	if(keyUse(KEY_ESCAPE)) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}

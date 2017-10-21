@@ -82,16 +82,16 @@ void precalcLoop(void) {
 	}
 	logBlockBegin("precalcLoop()");
 
-	precalcIncreaseProgress(5, "INIT");
+	// Generate math table
+	precalcIncreaseProgress(5, "Calculating sine table");
+	generateSine();
+
+	precalcIncreaseProgress(5, "Initializing vehicle types");
 	vehicleTypesCreate();
 
 	// Turret stuff
 	precalcIncreaseProgress(5, "Generating turret frames");
 	vehicleTypeBobSourceLoad("turret", &g_sTurretSource, 0);
-
-	// Generate math table
-	precalcIncreaseProgress(5, "Calculating sine table");
-	generateSine();
 
 	precalcIncreaseProgress(5, "Working on projectiles");
 	projectileListCreate(80);
