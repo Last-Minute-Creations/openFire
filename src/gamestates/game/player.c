@@ -251,6 +251,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	uwVTileX = uwVx >> MAP_TILE_SIZE;
 	uwVTileY = uwVy >> MAP_TILE_SIZE;
 	ubTileType = g_pMap[uwVTileX][uwVTileY].ubIdx;
+	g_ubDoSiloHighlight = 0;
 
 	// Drowning
 	if(ubTileType == MAP_LOGIC_WATER) {
@@ -262,7 +263,6 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	}
 
 	// Death from moving spawn
-	g_ubDoSiloHighlight = 0;
 	if(playerCheckDeathFromSpawn(pPlayer)) {
 		return;
 	}
@@ -275,18 +275,19 @@ void playerSimVehicle(tPlayer *pPlayer) {
 		) {
 			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
 			uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
-			if(uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18) {
+			if(
+				pPlayer == g_pLocalPlayer &&
+				uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18
+			) {
 				// Standing on bunkerable position
-				if(pPlayer == g_pLocalPlayer) {
-					// If one of them is local player, save data for highlight draw
-					g_ubDoSiloHighlight = 1;
-					g_uwSiloHighlightTileX = uwVTileX;
-					g_uwSiloHighlightTileY = uwVTileY;
-					// Hide in bunker
-					if(pPlayer->sSteerRequest.ubAction1) {
-						playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));
-						return;
-					}
+				// If one of them is local player, save data for highlight draw
+				g_ubDoSiloHighlight = 1;
+				g_uwSiloHighlightTileX = uwVTileX;
+				g_uwSiloHighlightTileY = uwVTileY;
+				// Hide in bunker
+				if(pPlayer->sSteerRequest.ubAction1) {
+					playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));
+					return;
 				}
 			}
 		}

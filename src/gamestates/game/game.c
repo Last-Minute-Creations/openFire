@@ -114,11 +114,8 @@ void worldUndraw(void) {
 	logAvgEnd(s_pUndrawAvgVehicles);
 
 	// Silo highlight
-	if(s_ubWasSiloHighlighted) {
-		bobUndraw(
-			s_pSiloHighlight, g_pWorldMainBfr
-		);
-	}
+	if(s_ubWasSiloHighlighted)
+		bobUndraw(s_pSiloHighlight, g_pWorldMainBfr);
 }
 
 void gsGameCreate(void) {
@@ -326,11 +323,15 @@ void gsGameLoop(void) {
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight) {
-		bobDraw(
+		if(bobDraw(
 			s_pSiloHighlight, g_pWorldMainBfr,
 			g_uwSiloHighlightTileX << MAP_TILE_SIZE,
 			g_uwSiloHighlightTileY << MAP_TILE_SIZE
-		);
+		)) {
+			s_ubWasSiloHighlighted = 1;
+		}
+		else
+			s_ubWasSiloHighlighted = 0;
 	}
 
 	logAvgBegin(s_pProcessAvgPlayer);
@@ -350,8 +351,6 @@ void gsGameLoop(void) {
 		turretUpdateSprites();
 		logAvgEnd(s_pAvgUpdateSprites);
 	}
-
-	s_ubWasSiloHighlighted = g_ubDoSiloHighlight;
 
 	// This should be done on vblank interrupt
 	if(!s_isScoreShown) {
