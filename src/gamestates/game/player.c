@@ -159,21 +159,21 @@ void playerLocalProcessInput(void) {
 			if(g_isChatting) {
 				if(keyUse(g_sKeyManager.ubLastKey))
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
-				pReq->ubForward     = 0;
-				pReq->ubBackward    = 0;
-				pReq->ubLeft        = 0;
-				pReq->ubRight       = 0;
-				pReq->ubAction3     = 0;
+				pReq->ubForward  = 0;
+				pReq->ubBackward = 0;
+				pReq->ubLeft     = 0;
+				pReq->ubRight    = 0;
+				pReq->ubAction3  = 0;
 			}
 			else {
-				pReq->ubForward     = keyCheck(OF_KEY_FORWARD);
-				pReq->ubBackward    = keyCheck(OF_KEY_BACKWARD);
-				pReq->ubLeft        = keyCheck(OF_KEY_LEFT);
-				pReq->ubRight       = keyCheck(OF_KEY_RIGHT);
-				pReq->ubAction3     = keyCheck(OF_KEY_ACTION3);
+				pReq->ubForward  = keyCheck(OF_KEY_FORWARD);
+				pReq->ubBackward = keyCheck(OF_KEY_BACKWARD);
+				pReq->ubLeft     = keyCheck(OF_KEY_LEFT);
+				pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
+				pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
 			}
-			pReq->ubAction1     = mouseCheck(MOUSE_LMB);
-			pReq->ubAction2     = mouseCheck(MOUSE_RMB);
+			pReq->ubAction1 = mouseCheck(MOUSE_LMB);
+			pReq->ubAction2 = mouseCheck(MOUSE_RMB);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				g_pLocalPlayer->sVehicle.uwX,
