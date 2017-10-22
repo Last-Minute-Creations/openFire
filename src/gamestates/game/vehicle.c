@@ -70,10 +70,10 @@ UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, 
 		fix16_mul(pVehicle->fY, ccos(ubAngle))
 	));
 	tUwAbsRect sRect;
-	sRect.uwX1 = uwRotdX + pVehicle->pType->pCollisionPts[0][0].bX-1;
-	sRect.uwY1 = uwRotdY + pVehicle->pType->pCollisionPts[0][0].bY-1;
-	sRect.uwX2 = uwRotdX + pVehicle->pType->pCollisionPts[0][7].bX+1;
-	sRect.uwY2 = uwRotdY + pVehicle->pType->pCollisionPts[0][7].bY+1;
+	sRect.uwX1 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[0].bX-1;
+	sRect.uwY1 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[0].bY-1;
+	sRect.uwX2 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[7].bX+1;
+	sRect.uwY2 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[7].bY+1;
 	tPlayer *pChkPlayer;
 	FUBYTE i;
 	for(i = 0, pChkPlayer = &g_pPlayers[0]; i != g_ubPlayerCount; ++i, ++pChkPlayer) {
@@ -101,14 +101,14 @@ UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, 
 		UBYTE ubChkAngle = ANGLE_360 + pChkPlayer->sVehicle.ubBodyAngle - ubAngle;
 		if(ubChkAngle >= ANGLE_360)
 			ubChkAngle -= ANGLE_360;
-		tBCoordYX *pChkPoints = pChkPlayer->sVehicle.pType->pCollisionPts[ubChkAngle >> 1];
+		tCollisionPts *pChkPoints = &pChkPlayer->sVehicle.pType->pCollisionPts[ubChkAngle >> 1];
 
 
 		UWORD uwEdgeL, uwEdgeR, uwEdgeT, uwEdgeB;
-		uwEdgeL = uwChkRotdX + MIN(pChkPoints[0].bX, MIN(pChkPoints[2].bX, MIN(pChkPoints[5].bX, pChkPoints[7].bX)));
-		uwEdgeR = uwChkRotdX + MAX(pChkPoints[0].bX, MAX(pChkPoints[2].bX, MAX(pChkPoints[5].bX, pChkPoints[7].bX)));
-		uwEdgeT = uwChkRotdY + MIN(pChkPoints[0].bY, MIN(pChkPoints[2].bY, MIN(pChkPoints[5].bY, pChkPoints[7].bY)));
-		uwEdgeB = uwChkRotdY + MAX(pChkPoints[0].bY, MAX(pChkPoints[2].bY, MAX(pChkPoints[5].bY, pChkPoints[7].bY)));
+		uwEdgeL = uwChkRotdX + pChkPoints->bLeftmost;
+		uwEdgeR = uwChkRotdX + pChkPoints->bRightmost;
+		uwEdgeT = uwChkRotdY + pChkPoints->bTopmost;
+		uwEdgeB = uwChkRotdY + pChkPoints->bBottommost;
 		if(
 			(
 				(uwEdgeT <= sRect.uwY1 && uwEdgeB >= sRect.uwY1) ||
@@ -203,7 +203,7 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 
 	// Check collision
 	if(
-		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
+		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1].pPts) &&
 		(
 			pVehicle == &g_pLocalPlayer->sVehicle &&
 			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
@@ -284,7 +284,7 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 
 	if(
-		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1]) &&
+		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1].pPts) &&
 		(
 			pVehicle == &g_pLocalPlayer->sVehicle &&
 			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)

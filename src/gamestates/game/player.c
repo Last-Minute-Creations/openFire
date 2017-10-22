@@ -205,7 +205,7 @@ void playerLocalProcessInput(void) {
 }
 
 UBYTE playerCheckDeathFromSpawn(tPlayer *pPlayer) {
-	tBCoordYX *pCollisionPts = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1];
+	tBCoordYX *pCollisionPts = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1].pPts;
 
 	// Unrolling for best results
 	FUBYTE fubTileX = (pPlayer->sVehicle.uwX + pCollisionPts[0].bX) >> MAP_TILE_SIZE;

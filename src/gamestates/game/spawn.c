@@ -139,7 +139,7 @@ UBYTE spawnIsCoveredByAnyPlayer(UBYTE ubSpawnIdx) {
 			continue;
 
 		// Unrolled for performance
-		tBCoordYX *pEdges = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1];
+		tBCoordYX *pEdges = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1].pPts;
 		if(
 			((pPlayer->sVehicle.uwX + pEdges[0].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
 			((pPlayer->sVehicle.uwY + pEdges[0].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY

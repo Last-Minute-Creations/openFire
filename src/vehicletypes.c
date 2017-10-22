@@ -231,21 +231,47 @@ fail:
 	return 0;
 }
 
-void vehicleTypeGenerateRotatedCollisions(tBCoordYX pCollisions[][8]) {
+void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockBegin(
-		"vehicleTypeGenerateRotatedCollisions(pCollisions: %p)", pCollisions
+		"vehicleTypeGenerateRotatedCollisions(pFrameCollisions: %p)", pFrameCollisions
 	);
 	for(FUBYTE fubFrame = VEHICLE_BODY_ANGLE_COUNT; fubFrame--;) {
 		FUBYTE fubAngle = fubFrame << 1;
 		for(FUBYTE fubPoint = 0; fubPoint != 8; ++fubPoint) {
-			pCollisions[fubFrame][fubPoint].bX = fix16_to_int(fix16_sub(
-				pCollisions[0][fubPoint].bX * ccos(fubAngle),
-				pCollisions[0][fubPoint].bY * csin(fubAngle)
+			tCollisionPts *pNewCollisions = &pFrameCollisions[fubFrame];
+			pNewCollisions->pPts[fubPoint].bX = fix16_to_int(fix16_sub(
+				pFrameCollisions[0].pPts[fubPoint].bX * ccos(fubAngle),
+				pFrameCollisions[0].pPts[fubPoint].bY * csin(fubAngle)
 			));
-			pCollisions[fubFrame][fubPoint].bY = fix16_to_int(fix16_add(
-				pCollisions[0][fubPoint].bX * csin(fubAngle),
-				pCollisions[0][fubPoint].bY * ccos(fubAngle)
+			pNewCollisions->pPts[fubPoint].bY = fix16_to_int(fix16_add(
+				pFrameCollisions[0].pPts[fubPoint].bX * csin(fubAngle),
+				pFrameCollisions[0].pPts[fubPoint].bY * ccos(fubAngle)
 			));
+
+			pNewCollisions->bLeftmost = MIN(
+				pNewCollisions->pPts[0].bX, MIN(
+					pNewCollisions->pPts[2].bX, MIN(
+						pNewCollisions->pPts[5].bX,
+						pNewCollisions->pPts[7].bX))
+			);
+			pNewCollisions->bRightmost = MAX(
+				pNewCollisions->pPts[0].bX, MAX(
+					pNewCollisions->pPts[2].bX, MAX(
+						pNewCollisions->pPts[5].bX,
+						pNewCollisions->pPts[7].bX))
+			);
+			pNewCollisions->bTopmost = MIN(
+				pNewCollisions->pPts[0].bY, MIN(
+					pNewCollisions->pPts[2].bY, MIN(
+						pNewCollisions->pPts[5].bY,
+						pNewCollisions->pPts[7].bY))
+			);
+			pNewCollisions->bBottommost = MAX(
+				pNewCollisions->pPts[0].bY, MAX(
+					pNewCollisions->pPts[2].bY, MAX(
+						pNewCollisions->pPts[5].bY,
+						pNewCollisions->pPts[7].bY))
+			);
 		}
 	}
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
@@ -293,17 +319,17 @@ void vehicleTypesCreate(void) {
 
 	// Tank collision coords
 	precalcIncreaseProgress(5, "Calculating tank collision coords");
-	pType->pCollisionPts[0][0].bX = 6;  pType->pCollisionPts[0][0].bY = 8;
-	pType->pCollisionPts[0][1].bX = 17; pType->pCollisionPts[0][1].bY = 8;
-	pType->pCollisionPts[0][2].bX = 29; pType->pCollisionPts[0][2].bY = 8;
-	pType->pCollisionPts[0][3].bX = 6;  pType->pCollisionPts[0][3].bY = 16;
-	pType->pCollisionPts[0][4].bX = 29; pType->pCollisionPts[0][4].bY = 16;
-	pType->pCollisionPts[0][5].bX = 6;  pType->pCollisionPts[0][5].bY = 24;
-	pType->pCollisionPts[0][6].bX = 17; pType->pCollisionPts[0][6].bY = 24;
-	pType->pCollisionPts[0][7].bX = 29; pType->pCollisionPts[0][7].bY = 24;
+	pType->pCollisionPts[0].pPts[0].bX = 6;  pType->pCollisionPts[0].pPts[0].bY = 8;
+	pType->pCollisionPts[0].pPts[1].bX = 17; pType->pCollisionPts[0].pPts[1].bY = 8;
+	pType->pCollisionPts[0].pPts[2].bX = 29; pType->pCollisionPts[0].pPts[2].bY = 8;
+	pType->pCollisionPts[0].pPts[3].bX = 6;  pType->pCollisionPts[0].pPts[3].bY = 16;
+	pType->pCollisionPts[0].pPts[4].bX = 29; pType->pCollisionPts[0].pPts[4].bY = 16;
+	pType->pCollisionPts[0].pPts[5].bX = 6;  pType->pCollisionPts[0].pPts[5].bY = 24;
+	pType->pCollisionPts[0].pPts[6].bX = 17; pType->pCollisionPts[0].pPts[6].bY = 24;
+	pType->pCollisionPts[0].pPts[7].bX = 29; pType->pCollisionPts[0].pPts[7].bY = 24;
 	for(FUBYTE i = 0; i != 8; ++i) {
-		pType->pCollisionPts[0][i].bX -= VEHICLE_BODY_WIDTH/2;
-		pType->pCollisionPts[0][i].bY -= VEHICLE_BODY_HEIGHT/2;
+		pType->pCollisionPts[0].pPts[i].bX -= VEHICLE_BODY_WIDTH/2;
+		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 
@@ -328,17 +354,17 @@ void vehicleTypesCreate(void) {
 
 	// Jeep collision coords
 	precalcIncreaseProgress(5, "Calculating jeep collision coords");
-	pType->pCollisionPts[0][0].bX = 8;  pType->pCollisionPts[0][0].bY = 11;
-	pType->pCollisionPts[0][1].bX = 16; pType->pCollisionPts[0][1].bY = 11;
-	pType->pCollisionPts[0][2].bX = 25; pType->pCollisionPts[0][2].bY = 11;
-	pType->pCollisionPts[0][3].bX = 8;  pType->pCollisionPts[0][3].bY = 16;
-	pType->pCollisionPts[0][4].bX = 25; pType->pCollisionPts[0][4].bY = 16;
-	pType->pCollisionPts[0][5].bX = 8;  pType->pCollisionPts[0][5].bY = 20;
-	pType->pCollisionPts[0][6].bX = 16; pType->pCollisionPts[0][6].bY = 20;
-	pType->pCollisionPts[0][7].bX = 25; pType->pCollisionPts[0][7].bY = 20;
+	pType->pCollisionPts[0].pPts[0].bX = 8;  pType->pCollisionPts[0].pPts[0].bY = 11;
+	pType->pCollisionPts[0].pPts[1].bX = 16; pType->pCollisionPts[0].pPts[1].bY = 11;
+	pType->pCollisionPts[0].pPts[2].bX = 25; pType->pCollisionPts[0].pPts[2].bY = 11;
+	pType->pCollisionPts[0].pPts[3].bX = 8;  pType->pCollisionPts[0].pPts[3].bY = 16;
+	pType->pCollisionPts[0].pPts[4].bX = 25; pType->pCollisionPts[0].pPts[4].bY = 16;
+	pType->pCollisionPts[0].pPts[5].bX = 8;  pType->pCollisionPts[0].pPts[5].bY = 20;
+	pType->pCollisionPts[0].pPts[6].bX = 16; pType->pCollisionPts[0].pPts[6].bY = 20;
+	pType->pCollisionPts[0].pPts[7].bX = 25; pType->pCollisionPts[0].pPts[7].bY = 20;
 	for(FUBYTE i = 0; i != 8; ++i) {
-		pType->pCollisionPts[0][i].bX -= VEHICLE_BODY_WIDTH/2;
-		pType->pCollisionPts[0][i].bY -= VEHICLE_BODY_HEIGHT/2;
+		pType->pCollisionPts[0].pPts[i].bX -= VEHICLE_BODY_WIDTH/2;
+		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 

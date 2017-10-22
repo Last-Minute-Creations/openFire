@@ -8,9 +8,6 @@
 #include "gamestates/game/console.h"
 #include "vehicletypes.h"
 
-#define HUD_COLOR_RED 10
-#define HUD_COLOR_BLUE 12
-
 static tVPort *s_pHudVPort;
 tSimpleBufferManager *g_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
@@ -131,7 +128,7 @@ void drawHudBar(
 void hudDrawTeamScore(FUBYTE fubTeam) {
 	const UWORD uwTicketX = 2+72+2;
 	const UWORD uwTicketY[2] = {2+35+3, 2+35+3+5+4};
-	const UWORD pTeamColors[2] = {HUD_COLOR_BLUE, HUD_COLOR_RED};
+	const UWORD pTeamColors[2] = {12, 10};
 	char szSpawnBfr[6];
 	blitRect(g_pHudBfr->pBuffer, uwTicketX, uwTicketY[fubTeam], 26, 5, 0);
 	sprintf(szSpawnBfr, "%5hu", g_pTeams[fubTeam].uwTicketsLeft);
