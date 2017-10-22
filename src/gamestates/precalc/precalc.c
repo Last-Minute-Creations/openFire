@@ -94,7 +94,7 @@ void precalcLoop(void) {
 	vehicleTypeBobSourceLoad("turret", &g_sTurretSource, 0);
 
 	precalcIncreaseProgress(5, "Working on projectiles");
-	projectileListCreate(80);
+	projectileListCreate(5);
 
 	// View is no longer needed
 	viewLoad(0);

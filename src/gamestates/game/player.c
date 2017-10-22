@@ -294,7 +294,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	}
 
 	// Increase counters for control point domination
-	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+	for(FUBYTE i = g_fubControlPointCount; i--;) {
 		// Calc distance
 		// Increase vehicle count near control point for given team
 		if(
@@ -327,7 +327,7 @@ void playerSim(void) {
 	UBYTE ubPlayer;
 	tPlayer *pPlayer;
 
-	for(ubPlayer = 0; ubPlayer != g_ubPlayerLimit; ++ubPlayer) {
+	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;) {
 		pPlayer = &g_pPlayers[ubPlayer];
 		switch(pPlayer->ubState) {
 			case PLAYER_STATE_OFF:
@@ -362,7 +362,7 @@ void playerSim(void) {
 }
 
 UBYTE playerAnyNearPoint(UWORD uwChkX, UWORD uwChkY, UWORD uwDist) {
-	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
+	for(FUBYTE i = g_ubPlayerCount; i--;) {
 		if(g_pPlayers[i].ubState != PLAYER_STATE_DRIVING)
 			continue;
 		if(

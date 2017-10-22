@@ -41,7 +41,7 @@ typedef struct _tProjectile {
 } tProjectile;
 
 void projectileListCreate(
-	IN UBYTE ubProjectileCount
+	IN FUBYTE ubProjectileCount
 );
 void projectileListDestroy(void);
 

@@ -232,7 +232,6 @@ void gsGameCreate(void) {
 	custom.dmacon = BITCLR | DMAF_DISK;
 
 	viewLoad(g_pWorldView);
-	// scoreTableShow();
 	logBlockEnd("gsGameCreate()");
 }
 

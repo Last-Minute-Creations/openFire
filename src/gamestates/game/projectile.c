@@ -9,26 +9,31 @@
 #include "gamestates/game/console.h"
 
 #define PROJECTILE_BULLET_HEIGHT 2
+#define PROJECTILE_DAMAGE 10
 
 tProjectile *s_pProjectiles;
-UBYTE s_ubProjectileCount;
+FUBYTE s_fubProjectileMaxCount;
+FUBYTE s_fubPrevProjectileAdded;
 tBitMap *s_pBulletBitmap;
 tBitmapMask *s_pBulletMask;
 
 fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
 fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
 
-void projectileListCreate(UBYTE ubProjectileCount) {
-	logBlockBegin("projectileListCreate(ubProjectileCount: %hhu)", ubProjectileCount);
+void projectileListCreate(FUBYTE fubProjectileMaxCount) {
+	logBlockBegin(
+		"projectileListCreate(ubProjectileMaxCount: %hhu)", fubProjectileMaxCount
+	);
 
 	// Load gfx
 	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
 	s_pBulletMask = bitmapMaskCreateFromFile("data/projectiles/bullet.msk");
 
 	// Create projectiles
-	s_ubProjectileCount = ubProjectileCount;
-	s_pProjectiles = memAllocFast(ubProjectileCount * sizeof(tProjectile));
-	for(FUBYTE i = 0; i != ubProjectileCount; ++i) {
+	s_fubProjectileMaxCount = fubProjectileMaxCount;
+	s_pProjectiles = memAllocFastClear(fubProjectileMaxCount * sizeof(tProjectile));
+	s_fubPrevProjectileAdded = fubProjectileMaxCount - 1;
+	for(FUBYTE i = 0; i != fubProjectileMaxCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
 		s_pProjectiles[i].pBob = bobCreate(
 			s_pBulletBitmap, s_pBulletMask,
@@ -46,16 +51,15 @@ void projectileListCreate(UBYTE ubProjectileCount) {
 	}
 }
 
-void projectileListDestroy() {
+void projectileListDestroy(void) {
 	UBYTE i;
 
 	logBlockBegin("projectileListDestroy()");
 
 	// Dealloc bobs
-	for(i = 0; i != s_ubProjectileCount; ++i) {
+	for(i = s_fubProjectileMaxCount; i--;)
 		bobDestroy(s_pProjectiles[i].pBob);
-	}
-	memFree(s_pProjectiles, s_ubProjectileCount * sizeof(tProjectile));
+	memFree(s_pProjectiles, s_fubProjectileMaxCount * sizeof(tProjectile));
 
 	// Dealloc bob bitmaps
 	bitmapDestroy(s_pBulletBitmap);
@@ -67,15 +71,14 @@ void projectileListDestroy() {
 tProjectile *projectileCreate(
 	UBYTE ubOwnerType, tProjectileOwner uOwner, UBYTE ubType
 ) {
-	tProjectile *pProjectile;
-	fix16_t fSin, fCos;
-	UBYTE i;
-
 	// Find free projectile
-	pProjectile = 0;
-	for(i = 0; i != s_ubProjectileCount; ++i) {
+	tProjectile *pProjectile = 0;
+	for(FUBYTE i = s_fubPrevProjectileAdded+1; i != s_fubPrevProjectileAdded; ++i) {
+		if(i == s_fubProjectileMaxCount)
+			i = 0;
 		if(s_pProjectiles[i].ubType == PROJECTILE_TYPE_OFF) {
 			pProjectile = &s_pProjectiles[i];
+			s_fubPrevProjectileAdded = i;
 			break;
 		}
 	}
@@ -92,8 +95,8 @@ tProjectile *projectileCreate(
 			pProjectile->ubAngle = uOwner.pVehicle->ubTurretAngle;
 		else
 			pProjectile->ubAngle = uOwner.pVehicle->ubBodyAngle;
-		fSin = csin(pProjectile->ubAngle);
-		fCos = ccos(pProjectile->ubAngle);
+		fix16_t fSin = csin(pProjectile->ubAngle);
+		fix16_t fCos = ccos(pProjectile->ubAngle);
 		pProjectile->fX = fix16_add(uOwner.pVehicle->fX, (VEHICLE_BODY_WIDTH/2) * fCos);
 		pProjectile->fY = fix16_add(uOwner.pVehicle->fY, (VEHICLE_BODY_HEIGHT/2) * fSin);
 	}
@@ -121,19 +124,15 @@ void projectileUndraw(void) {
 	tProjectile *pProjectile;
 	UBYTE i;
 
-	pProjectile = &s_pProjectiles[s_ubProjectileCount-1];
-	for(i = s_ubProjectileCount; i--;) {
+	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile)
 		bobUndraw(pProjectile->pBob, g_pWorldMainBfr);
-		--pProjectile;
-	}
 }
 
 void projectileDraw(void) {
 	tProjectile *pProjectile;
-	UBYTE i;
+	FUBYTE i;
 
-	pProjectile = &s_pProjectiles[0];
-	for(i = s_ubProjectileCount; i--;) {
+	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile) {
 		if(!pProjectile->uwFrameLife)
 			continue;
 		WORD wProjectileX, wProjectileY;
@@ -143,20 +142,15 @@ void projectileDraw(void) {
 			pProjectile->pBob, g_pWorldMainBfr,
 			wProjectileX, wProjectileY
 		);
-		++pProjectile;
 	}
 }
 
 void projectileSim(void) {
-	tProjectile *pProjectile;
 	tVehicle *pVehicle;
-	UBYTE i;
-	UBYTE ubMapX, ubMapY, ubBuildingIdx;
 
-	const UBYTE ubDamage = 10;
-
-	for(i = 0; i != s_ubProjectileCount; ++i) {
-		pProjectile = &s_pProjectiles[i];
+	tProjectile *pProjectile;
+	FUBYTE i;
+	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile) {
 		if(pProjectile->ubType == PROJECTILE_TYPE_OFF)
 			continue;
 
@@ -178,9 +172,9 @@ void projectileSim(void) {
 		}
 
 		// Check collistion with buildings
-		ubMapX = fix16_to_int(pProjectile->fX) >> MAP_TILE_SIZE;
-		ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
-		ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
+		UBYTE ubMapX = fix16_to_int(pProjectile->fX) >> MAP_TILE_SIZE;
+		UBYTE ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
+		UBYTE ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
 			if(
 				pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
@@ -188,7 +182,7 @@ void projectileSim(void) {
 			) {
 				continue;
 			}
-			if(buildingDamage(ubBuildingIdx, ubDamage) == BUILDING_DESTROYED) {
+			if(buildingDamage(ubBuildingIdx, PROJECTILE_DAMAGE) == BUILDING_DESTROYED) {
 				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
 				g_pMap[ubMapX][ubMapY].ubData = 0;
 				mapRequestUpdateTile(ubMapX, ubMapY);
@@ -201,9 +195,7 @@ void projectileSim(void) {
 }
 
 UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile) {
-	const UBYTE ubDamage = 10;
-
-	for(UBYTE i = 0; i != g_ubPlayerLimit; ++i) {
+	for(FUBYTE i = g_ubPlayerLimit; i--;) {
 		if(!g_pPlayers[i].szName[0] || g_pPlayers[i].ubState != PLAYER_STATE_DRIVING)
 			continue;
 		tVehicle *pVehicle = &g_pPlayers[i].sVehicle;
@@ -214,7 +206,7 @@ UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile) {
 			pProjectile->fY > fix16_sub(pVehicle->fY, fQuarterWidth) &&
 			pProjectile->fY < fix16_add(pVehicle->fY, fQuarterWidth)
 		) {
-			if(playerDamageVehicle(&g_pPlayers[i], ubDamage)) {
+			if(playerDamageVehicle(&g_pPlayers[i], PROJECTILE_DAMAGE)) {
 				char szBfr[CONSOLE_MESSAGE_MAX];
 				if(pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET)
 					sprintf(szBfr, "%s was killed by turret", g_pPlayers[i].szName);

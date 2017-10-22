@@ -23,7 +23,7 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	s_pVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pView,
-		// TAG_VPORT_HEIGHT, 192,
+		TAG_VPORT_HEIGHT, 192+1,
 		TAG_VPORT_BPP, SCORE_TABLE_BPP,
 		TAG_DONE
 	);
