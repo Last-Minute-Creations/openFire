@@ -306,16 +306,16 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxLife = 100;
 
 	precalcIncreaseProgress(5, "Generating blue tank frames");
-	vehicleTypeBobSourceLoad("blue/tank", &pType->sMainSource[TEAM_BLUE], 1);
+	vehicleTypeBobSourceLoad("blue/tank", &pType->pMainSources[TEAM_BLUE], 1);
 
 	precalcIncreaseProgress(5, "Generating blue tank turret frames");
-	vehicleTypeBobSourceLoad("blue/tank_turret", &pType->sAuxSource[TEAM_BLUE], 1);
+	vehicleTypeBobSourceLoad("blue/tank_turret", &pType->pAuxSources[TEAM_BLUE], 1);
 
 	precalcIncreaseProgress(5, "Generating red tank turret frames");
-	vehicleTypeBobSourceLoad("red/tank", &pType->sMainSource[TEAM_RED], 1);
+	vehicleTypeBobSourceLoad("red/tank", &pType->pMainSources[TEAM_RED], 1);
 
 	precalcIncreaseProgress(5, "Generating red tank turret frames");
-	vehicleTypeBobSourceLoad("red/tank_turret", &pType->sAuxSource[TEAM_RED], 1);
+	vehicleTypeBobSourceLoad("red/tank_turret", &pType->pAuxSources[TEAM_RED], 1);
 
 	// Tank collision coords
 	precalcIncreaseProgress(5, "Calculating tank collision coords");
@@ -332,6 +332,12 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
+	pType->pMainSources[TEAM_BLUE].pFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
+	pType->pMainSources[TEAM_RED].pFrameOffsets = pType->pMainSources[TEAM_BLUE].pFrameOffsets;
+	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
+		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
+		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
+	}
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -345,12 +351,12 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxLife = 1;
 
 	precalcIncreaseProgress(5, "Generating blue jeep frames");
-	vehicleTypeBobSourceLoad("blue/jeep", &pType->sMainSource[TEAM_BLUE], 1);
-	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_BLUE]);
+	vehicleTypeBobSourceLoad("blue/jeep", &pType->pMainSources[TEAM_BLUE], 1);
+	vehicleTypeSetBlankBobSource(&pType->pAuxSources[TEAM_BLUE]);
 
 	precalcIncreaseProgress(5, "Generating red jeep frames");
-	vehicleTypeBobSourceLoad("red/jeep", &pType->sMainSource[TEAM_RED], 1);
-	vehicleTypeSetBlankBobSource(&pType->sAuxSource[TEAM_RED]);
+	vehicleTypeBobSourceLoad("red/jeep", &pType->pMainSources[TEAM_RED], 1);
+	vehicleTypeSetBlankBobSource(&pType->pAuxSources[TEAM_RED]);
 
 	// Jeep collision coords
 	precalcIncreaseProgress(5, "Calculating jeep collision coords");
@@ -367,6 +373,12 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
+	pType->pMainSources[TEAM_BLUE].pFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
+	pType->pMainSources[TEAM_RED].pFrameOffsets = pType->pMainSources[TEAM_BLUE].pFrameOffsets;
+	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
+		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
+		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
+	}
 
 	logBlockEnd("vehicleTypesCreate");
 }
@@ -379,10 +391,10 @@ void vehicleTypeBobSourceUnload(tBobSource *pSource) {
 }
 
 void vehicleTypeUnloadAllBobSources(tVehicleType *pType) {
-	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_BLUE]);
-	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_BLUE]);
-	vehicleTypeBobSourceUnload(&pType->sMainSource[TEAM_RED]);
-	vehicleTypeBobSourceUnload(&pType->sAuxSource[TEAM_RED]);
+	vehicleTypeBobSourceUnload(&pType->pMainSources[TEAM_BLUE]);
+	vehicleTypeBobSourceUnload(&pType->pAuxSources[TEAM_BLUE]);
+	vehicleTypeBobSourceUnload(&pType->pMainSources[TEAM_RED]);
+	vehicleTypeBobSourceUnload(&pType->pAuxSources[TEAM_RED]);
 }
 
 void vehicleTypesDestroy(void) {

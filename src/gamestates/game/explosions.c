@@ -37,7 +37,7 @@ void explosionsCreate(void) {
 	s_pMask = bitmapMaskCreateFromFile("data/explosion.msk");
 
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
-		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, EXPLOSION_SIZE, 0);
+		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, 0, EXPLOSION_SIZE, 0);
 		s_pExplosions[i].pBob->ubFlags = BOB_FLAG_NODRAW;
 		s_pExplosions[i].uwDuration = 0;
 	}

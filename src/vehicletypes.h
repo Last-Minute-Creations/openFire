@@ -35,8 +35,8 @@ typedef struct {
 	UBYTE ubMaxSuperAmmo;               ///< Chopper rockets, ASV mines
 	UBYTE ubMaxFuel;
 	UBYTE ubMaxLife;
-	tBobSource sMainSource[TEAM_COUNT]; ///< Main bob gfx source.
-	tBobSource sAuxSource[TEAM_COUNT];  ///< Tank turret & chopper takeoff gfx source.
+	tBobSource pMainSources[TEAM_COUNT]; ///< Main bob gfx source.
+	tBobSource pAuxSources[TEAM_COUNT];  ///< Tank turret & chopper takeoff gfx source.
 	tCollisionPts pCollisionPts[VEHICLE_BODY_ANGLE_COUNT];
 } tVehicleType;
 

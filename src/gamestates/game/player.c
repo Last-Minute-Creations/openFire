@@ -30,15 +30,17 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
 	for(i = 0; i != ubPlayerLimit; ++i) {
 		g_pPlayers[i].sVehicle.pBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_BLUE].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sMainSource[TEAM_BLUE].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pFrameOffsets,
 			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
 
 		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_BLUE].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].sAuxSource[TEAM_BLUE].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pBitmap,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pFrameOffsets,
 			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;

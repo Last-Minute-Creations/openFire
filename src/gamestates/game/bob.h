@@ -15,17 +15,25 @@
 /// Used when bob is active - undraw, draw
 #define BOB_FLAG_DRAW          3
 
+typedef struct _tBobOffset {
+	UWORD uwDy;
+	UWORD uwHeight;
+} tBobFrameOffset;
+
 typedef struct _tBobSource {
 	tBitMap *pBitmap;
 	tBitmapMask *pMask;
+	tBobFrameOffset *pFrameOffsets;
 } tBobSource;
 
 typedef struct _tBob {
 	tBobSource sSource;
 	tBitMap* pBg;
 	tUwCoordYX sPrevCoord;
+	FUBYTE fubPrevFrame;
+	FUBYTE fubCurrFrame;
+	FUBYTE fubMaxFrameHeight;
 	UWORD uwOffsY;
-	UWORD uwHeight;
 	UBYTE ubFlags;
 	UBYTE isDrawn;
 } tBob;
@@ -33,8 +41,9 @@ typedef struct _tBob {
 tBob *bobCreate(
 	IN tBitMap *pBitmap,
 	IN tBitmapMask *pMask,
-	IN UWORD uwFrameHeight,
-	IN UWORD uwFrameIdx
+	IN tBobFrameOffset *pFrameOffsets,
+	IN FUBYTE fubMaxFrameHeight,
+	IN FUBYTE fubFrameIdx
 );
 
 void bobDestroy(
@@ -49,8 +58,9 @@ void bobSetSource(
 tBob *bobUniqueCreate(
 	char *szBitmapPath,
 	char *szMaskPath,
-	UWORD uwFrameHeight,
-	UWORD uwFrameIdx
+	IN tBobFrameOffset *pFrameOffsets,
+	IN FUBYTE fubMaxFrameHeight,
+	IN FUBYTE fubFrameIdx
 );
 
 void bobUniqueDestroy(
@@ -59,7 +69,7 @@ void bobUniqueDestroy(
 
 void bobChangeFrame(
 	IN tBob *pBob,
-	IN UWORD uwFrameIdx
+	IN FUBYTE fubFrameIdx
 );
 
 UWORD bobUndraw(

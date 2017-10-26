@@ -36,7 +36,7 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 	for(FUBYTE i = 0; i != fubProjectileMaxCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
 		s_pProjectiles[i].pBob = bobCreate(
-			s_pBulletBitmap, s_pBulletMask,
+			s_pBulletBitmap, s_pBulletMask, 0,
 			PROJECTILE_BULLET_HEIGHT, 0
 		);
 		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
