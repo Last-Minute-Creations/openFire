@@ -17,7 +17,6 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 
 	// Calc source frame checksum
 	ULONG ulAdlerBm = adler32file(szPath);
-	ULONG ulAdlerMask = 0;
 
 	// Check for precalc
 	sprintf(szChecksumFileName, "precalc/%s.adl", szPath);
@@ -28,11 +27,10 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	if(pChecksumFile && pBitmapFile) {
 		ULONG ulPrevAdlerBm, ulPrevAdlerMask;
 		fread(&ulPrevAdlerBm, sizeof(ULONG), 1, pChecksumFile);
-		fread(&ulPrevAdlerMask, sizeof(ULONG), 1, pChecksumFile);
 		fclose(pChecksumFile);
 		fclose(pBitmapFile);
 		// Check if adler is same
-		if(ulAdlerBm == ulPrevAdlerBm && ulAdlerMask == ulPrevAdlerMask) {
+		if(ulAdlerBm == ulPrevAdlerBm) {
 			logWrite("Loading from cache...\n");
 			pBitmap = bitmapCreateFromFile(szBitmapFileName);
 			logBlockEnd("vehicleTypeGenerateRotatedFrames()");
@@ -106,7 +104,6 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	bitmapSave(pBitmap, szBitmapFileName);
 	pChecksumFile = fopen(szChecksumFileName, "wb");
 	fwrite(&ulAdlerBm, sizeof(ULONG), 1, pChecksumFile);
-	fwrite(&ulAdlerMask, sizeof(ULONG), 1, pChecksumFile);
 	fclose(pChecksumFile);
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 	return pBitmap;
