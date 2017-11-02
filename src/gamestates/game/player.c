@@ -1,6 +1,5 @@
 #include "gamestates/game/player.h"
 #include <string.h>
-#include <ace/config.h>
 #include <ace/macros.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
@@ -30,17 +29,17 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
 	for(i = 0; i != ubPlayerLimit; ++i) {
 		g_pPlayers[i].sVehicle.pBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pMask,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainSources[TEAM_BLUE].pFrameOffsets,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrames[TEAM_BLUE],
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrameOffsets,
 			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
 
 		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pBitmap,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pMask,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxSources[TEAM_BLUE].pFrameOffsets,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask,
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrameOffsets,
 			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
 		);
 		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;

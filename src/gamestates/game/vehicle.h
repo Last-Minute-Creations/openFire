@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_VEHICLE_H
 #define GUARD_OF_GAMESTATES_GAME_VEHICLE_H
 
-#include <ace/config.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
 #include "vehicletypes.h"

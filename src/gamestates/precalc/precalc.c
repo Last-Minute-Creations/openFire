@@ -1,5 +1,4 @@
 #include "gamestates/precalc/precalc.h"
-#include <ace/config.h>
 #include <ace/managers/log.h>
 #include <ace/managers/game.h>
 #include <ace/utils/font.h>
@@ -32,7 +31,7 @@ void precalcCreate(void) {
 	);
 	s_pVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pView,
-		TAG_VPORT_BPP, WINDOW_SCREEN_BPP,
+		TAG_VPORT_BPP, PRECALC_BPP,
 		TAG_DONE
 	);
 	s_pBuffer = simpleBufferCreate(0,
@@ -91,7 +90,7 @@ void precalcLoop(void) {
 
 	// Turret stuff
 	precalcIncreaseProgress(5, "Generating turret frames");
-	vehicleTypeBobSourceLoad("turret", &g_sTurretSource, 0);
+	g_pTurretFrames = vehicleTypeGenerateRotatedFrames("vehicles/turret.bm");
 
 	precalcIncreaseProgress(5, "Working on projectiles");
 	projectileListCreate(5);
@@ -114,7 +113,7 @@ void precalcDestroy(void) {
 
 	projectileListDestroy();
 	vehicleTypesDestroy();
-	vehicleTypeBobSourceUnload(&g_sTurretSource);
+	bitmapDestroy(g_pTurretFrames);
 
 	logBlockEnd("precalcDestroy()");
 }

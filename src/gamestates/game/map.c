@@ -1,5 +1,4 @@
 #include "gamestates/game/map.h"
-#include <ace/config.h>
 #include <ace/managers/log.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>

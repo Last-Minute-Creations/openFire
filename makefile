@@ -21,13 +21,13 @@ SL= $(strip $(SLASH))
 SRC_DIR = $(CURR_DIR)$(SL)src
 
 # Directories
-TMP_DIR = $(SRC_DIR)$(SL)tmp
-ACE_DIR = ..$(SL)ace$(SL)ace
-ACE_PARENT = $(ACE_DIR)$(SL)..
+TMP_DIR = build
+ACE_DIR = ..$(SL)ace$
+ACE_INC_DIR = $(ACE_DIR)$(SL)include
 
 # Compiler stuff
 CC = vc
-CC_FLAGS = +kick13 -c99 -O1 -I$(SRC_DIR) -I$(ACE_PARENT) -DAMIGA
+CC_FLAGS = +kick13 -c99 -O1 -I$(SRC_DIR) -I$(ACE_INC_DIR) -DAMIGA
 
 # File list
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -47,14 +47,14 @@ OF_GS_PRECALC_OBJS = $(addprefix $(TMP_DIR)$(SL)gsprecalc_, $(notdir $(OF_GS_PRE
 
 OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_GAME_AI_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
 OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_GAME_AI_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
-ACE_OBJS = $(wildcard $(ACE_DIR)/tmp/*.o)
+ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 
 #
 ace: $(ACE_OBJS)
 	make -C $(ACE_DIR) all
 	@echo.
 	@echo Copying ACE objs:
-	$(CP) $(ACE_DIR)$(SL)tmp$(SL)*.o $(TMP_DIR)
+	$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR)
 	@echo.
 
 of: $(OF_OBJS)

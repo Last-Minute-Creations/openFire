@@ -2,7 +2,7 @@
 #define GUARD_OF_GAMESTATES_GAME_GAMEMATH_H
 
 #include <ace/types.h>
-#include <ace/libfixmath/fix16.h>
+#include <fixmath/fix16.h>
 
 #define ANGLE_0    0
 #define ANGLE_45   16

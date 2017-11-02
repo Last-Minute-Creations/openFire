@@ -1,7 +1,7 @@
 #include "vehicletypes.h"
 #include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
-#include <ace/libfixmath/fix16.h>
+#include <fixmath/fix16.h>
 #include "gamestates/game/bob.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/precalc/precalc.h"
@@ -9,82 +9,49 @@
 
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
-/**
- *  Loads bob gfx data source from appropriate files & prepares rotated frames.
- *  @param szName     Name of vehicle to be loaded.
- *  @param pBobSource Pointer to bob source to be filled.
- *  @return Non-zero on success, otherwise zero.
- *
- *  @todo Make it accept bitmaps wider than 32px?
- */
-UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWithMask) {
-	UBYTE *pChunkySrc;
-	UBYTE *pChunkyRotated;
-	char szBitmapFileName[50], szMaskFileName[50], szChecksumFileName[50];
-	UBYTE ubFrame;
-	UWORD x,y;
+tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
+	char szBitmapFileName[100], szChecksumFileName[100];
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;
-	UWORD uwFrameOffs, uwFrameWidth;
 
-	logBlockBegin(
-		"vehicleTypeBobSourceLoad(szName: %s, pBobSource: %p, isWithMask: %hhu)",
-		szName, pBobSource, isWithMask
-	);
+	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: %s)", szPath);
 
 	// Calc source frame checksum
-	sprintf(szBitmapFileName, "data/vehicles/%s.bm", szName);
-	ULONG ulAdlerBm = adler32file(szBitmapFileName);
+	ULONG ulAdlerBm = adler32file(szPath);
 	ULONG ulAdlerMask = 0;
-	if(isWithMask) {
-		sprintf(szMaskFileName, "data/vehicles/%s.bm", szName);
-		ulAdlerMask = adler32file(szMaskFileName);
-	}
 
 	// Check for precalc
-	sprintf(szChecksumFileName, "precalc/%s.adl", szName);
-	sprintf(szBitmapFileName, "precalc/%s.bm", szName);
-	sprintf(szMaskFileName, "precalc/%s.msk", szName);
+	sprintf(szChecksumFileName, "precalc/%s.adl", szPath);
+	sprintf(szBitmapFileName, "precalc/%s", szPath);
+
 	FILE *pBitmapFile = fopen(szBitmapFileName, "rb");
-	FILE *pMaskFile = 0;
-	if(isWithMask)
-		pMaskFile = fopen(szMaskFileName, "rb");
 	FILE *pChecksumFile = fopen(szChecksumFileName, "rb");
-	if(pChecksumFile && pBitmapFile && (!isWithMask || pMaskFile)) {
+	if(pChecksumFile && pBitmapFile) {
 		ULONG ulPrevAdlerBm, ulPrevAdlerMask;
 		fread(&ulPrevAdlerBm, sizeof(ULONG), 1, pChecksumFile);
 		fread(&ulPrevAdlerMask, sizeof(ULONG), 1, pChecksumFile);
 		fclose(pChecksumFile);
 		fclose(pBitmapFile);
-		if(isWithMask)
-			fclose(pMaskFile);
 		// Check if adler is same
 		if(ulAdlerBm == ulPrevAdlerBm && ulAdlerMask == ulPrevAdlerMask) {
 			logWrite("Loading from cache...\n");
-			pBobSource->pBitmap = bitmapCreateFromFile(szBitmapFileName);
-			if(isWithMask) {
-				pBobSource->pMask = bitmapMaskCreateFromFile(szMaskFileName);
-			}
-			else
-				pBobSource->pMask = 0;
-			logBlockEnd("vehicleTypeBobSourceLoad()");
-			return 1;
+			pBitmap = bitmapCreateFromFile(szBitmapFileName);
+			logBlockEnd("vehicleTypeGenerateRotatedFrames()");
+			return pBitmap;
 		}
 	}
 	else {
 		if(pBitmapFile) fclose(pBitmapFile);
-		if(pMaskFile) fclose(pMaskFile);
 		if(pChecksumFile) fclose(pChecksumFile);
 	}
 
 	// Load first frame to determine sizes
-	sprintf(szBitmapFileName, "data/vehicles/%s.bm", szName);
+	sprintf(szBitmapFileName, "data/%s", szPath);
 	tBitMap *pFirstFrame = bitmapCreateFromFile(szBitmapFileName);
 	logWrite("Read first frame\n");
-	uwFrameWidth = bitmapGetByteWidth(pFirstFrame)*8;
+	UWORD uwFrameWidth = bitmapGetByteWidth(pFirstFrame) << 3;
 
-	pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
-	pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
+	UBYTE *pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
+	UBYTE *pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
 
 	// Create huge-ass bitmap for all frames
 	UBYTE ubFlags = 0;
@@ -102,70 +69,20 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 	// Copy first frame to main bitmap
 	blitCopyAligned(pFirstFrame, 0, 0, pBitmap, 0, 0, uwFrameWidth, uwFrameWidth);
 	bitmapDestroy(pFirstFrame);
-	pBobSource->pBitmap = pBitmap;
 
-	if(isWithMask) {
-		// Create huge-ass mask
-		pMask = bitmapMaskCreate(
-			uwFrameWidth, uwFrameWidth * pBitmap->Depth * VEHICLE_BODY_ANGLE_COUNT
-		);
-		if(!pMask) {
-			logWrite("ERR: Couldn't allocate vehicle mask\n");
-			goto fail;
-		}
-		pBobSource->pMask = pMask;
-
-		// Load first frame's mask
-		sprintf(szMaskFileName, "data/vehicles/%s.msk", szName);
-		pMaskFile = fopen(szMaskFileName, "rb");
-		if(!pMaskFile) {
-			logWrite("ERR: Couldn't open mask file %s\n", szMaskFileName);
-			goto fail;
-		}
-		fseek(pMaskFile, 2*sizeof(UWORD), SEEK_CUR);
-		fread(
-			pMask->pData, sizeof(UWORD) * (pBitmap->BytesPerRow >> 1),
-			uwFrameWidth, pMaskFile
-		);
-		fclose(pMaskFile);
-		pMaskFile = 0;
-		logWrite("Read first frame mask\n");
-	}
-	else
-		pBobSource->pMask = 0;
-
-	// Convert first frame & its mask to bpl+mask chunky
+	// Convert first frame to chunky
 	UWORD uwMaskChunk;
-	for(y = 0; y != uwFrameWidth; ++y) {
+	for(UWORD y = 0; y != uwFrameWidth; ++y) {
 		// Read bitmap row to chunky
 		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*uwFrameWidth]);
 		if(VEHICLE_BODY_WIDTH > 16)
 			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*uwFrameWidth+16]);
-
-		if(isWithMask) {
-			// Add mask bit to chunky pixels
-			// TODO add x-coord loop so that it won't be hardcoded to 16/32px
-			uwMaskChunk = pMask->pData[y * (pBitmap->BytesPerRow>>1)];
-			for(x = 0; x != 16; ++x) {
-				if(uwMaskChunk & (1 << 15))
-					pChunkySrc[y*uwFrameWidth + x] |= 1 << pBitmap->Depth;
-				uwMaskChunk <<= 1;
-			}
-			if(uwFrameWidth > 16) {
-				uwMaskChunk = pMask->pData[y * (pBitmap->BytesPerRow>>1) + 1];
-				for(x = 0; x != 16; ++x) {
-					if(uwMaskChunk & (1 << 15))
-						pChunkySrc[y*uwFrameWidth + 16 + x] |= 1 << pBitmap->Depth;
-					uwMaskChunk <<= 1;
-				}
-			}
-		}
 	}
 
-	for(ubFrame = 1; ubFrame != VEHICLE_BODY_ANGLE_COUNT; ++ubFrame) {
+	for(FUBYTE fubFrame = 1; fubFrame != VEHICLE_BODY_ANGLE_COUNT; ++fubFrame) {
 		// Rotate chunky source
 		fix16_t fAngle = fix16_div(
-			-2*ubFrame * fix16_pi,
+			-2*fubFrame * fix16_pi,
 			fix16_from_int(VEHICLE_BODY_ANGLE_COUNT)
 		);
 		chunkyRotate(
@@ -173,62 +90,56 @@ UWORD vehicleTypeBobSourceLoad(char *szName, tBobSource *pBobSource, UBYTE isWit
 		);
 
 		// Convert rotated chunky frame to planar on huge-ass bitmap
-		for(y = 0; y != uwFrameWidth; ++y) {
-			for(x = 0; x != (uwFrameWidth>>4); ++x)
+		for(UWORD y = 0; y != uwFrameWidth; ++y) {
+			for(UWORD x = 0; x != (uwFrameWidth>>4); ++x)
 				chunkyToPlanar16(
 					&pChunkyRotated[(y*uwFrameWidth) + (x<<4)],
-					x<<4, y + uwFrameWidth*ubFrame,
+					x<<4, y + uwFrameWidth*fubFrame,
 					pBitmap
 				);
-		}
-
-		if(isWithMask) {
-			// Extract mask from rotated chunky & write it to planar mask
-			uwMaskChunk = 0;
-			uwFrameOffs = ubFrame * uwFrameWidth * (pBitmap->BytesPerRow>>1);
-			for(y = 0; y != uwFrameWidth; ++y) {
-				for(x = 0; x != uwFrameWidth; ++x) {
-					uwMaskChunk <<= 1;
-					if(pChunkyRotated[x + y*uwFrameWidth] & (1 << pBitmap->Depth))
-						uwMaskChunk = (uwMaskChunk | 1);
-					if((x & 15) == 15) {
-						if(bitmapIsInterleaved(pBitmap))
-							for(UWORD d = 0; d != pBitmap->Depth; ++d)
-								pMask->pData[uwFrameOffs + y*(pBitmap->BytesPerRow>>1) + d*(uwFrameWidth>>4) + (x>>4)] = uwMaskChunk;
-						else
-							pMask->pData[uwFrameOffs + y*(pBitmap->BytesPerRow>>1) + (x>>4)] = uwMaskChunk;
-						uwMaskChunk = 0;
-					}
-				}
-			}
 		}
 	}
 
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
-	sprintf(szBitmapFileName, "precalc/%s.bm", szName);
-	bitmapSave(pBobSource->pBitmap, szBitmapFileName);
-	if(isWithMask) {
-		sprintf(szMaskFileName, "precalc/%s.msk", szName);
-		bitmapMaskSave(pBobSource->pMask, szMaskFileName);
-	}
+	sprintf(szBitmapFileName, "precalc/%s", szPath);
+	bitmapSave(pBitmap, szBitmapFileName);
 	pChecksumFile = fopen(szChecksumFileName, "wb");
 	fwrite(&ulAdlerBm, sizeof(ULONG), 1, pChecksumFile);
 	fwrite(&ulAdlerMask, sizeof(ULONG), 1, pChecksumFile);
 	fclose(pChecksumFile);
-	logBlockEnd("vehicleTypeBobSourceLoad()");
-	return 1;
+	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
+	return pBitmap;
 fail:
-	if(pMaskFile)
-		fclose(pMaskFile);
-	if(pMask)
-		bitmapMaskDestroy(pMask);
 	if(pBitmap)
 		bitmapDestroy(pBitmap);
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
-	logBlockEnd("vehicleTypeBobSourceLoad()");
+	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 	return 0;
+}
+
+void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName) {
+	char szFilePath[100];
+	tBitMap *pSrcFrame;
+
+	sprintf(szFilePath, "data/vehicles/%s/main_blue.bm", szVehicleName);
+	pType->pMainFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
+
+	sprintf(szFilePath, "data/vehicles/%s/main_red.bm", szVehicleName);
+	pType->pMainFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames(szFilePath);
+
+	sprintf(szFilePath, "data/vehicles/%s/main.bm", szVehicleName);
+	pType->pMainMask = vehicleTypeGenerateRotatedFrames(szFilePath);
+
+	sprintf(szFilePath, "data/vehicles/%s/aux_blue.bm", szVehicleName);
+	pType->pAuxFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
+
+	sprintf(szFilePath, "data/vehicles/%s/aux_red.bm", szVehicleName);
+	pType->pAuxFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames(szFilePath);
+
+	sprintf(szFilePath, "data/vehicles/%s/aux.msk", szVehicleName);
+	pType->pAuxMask = vehicleTypeGenerateRotatedFrames(szFilePath);
 }
 
 void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
@@ -277,11 +188,6 @@ void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }
 
-void vehicleTypeSetBlankBobSource(tBobSource *pSource) {
-	pSource->pBitmap = 0;
-	pSource->pMask = 0;
-}
-
 /**
  *  Generates vehicle type defs.
  *  This fn fills g_pVehicleTypes array
@@ -305,17 +211,8 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
 
-	precalcIncreaseProgress(5, "Generating blue tank frames");
-	vehicleTypeBobSourceLoad("blue/tank", &pType->pMainSources[TEAM_BLUE], 1);
-
-	precalcIncreaseProgress(5, "Generating blue tank turret frames");
-	vehicleTypeBobSourceLoad("blue/tank_turret", &pType->pAuxSources[TEAM_BLUE], 1);
-
-	precalcIncreaseProgress(5, "Generating red tank turret frames");
-	vehicleTypeBobSourceLoad("red/tank", &pType->pMainSources[TEAM_RED], 1);
-
-	precalcIncreaseProgress(5, "Generating red tank turret frames");
-	vehicleTypeBobSourceLoad("red/tank_turret", &pType->pAuxSources[TEAM_RED], 1);
+	precalcIncreaseProgress(5, "Generating tank frames");
+	vehicleTypeFramesCreate(pType, "tank");
 
 	// Tank collision coords
 	precalcIncreaseProgress(5, "Calculating tank collision coords");
@@ -331,12 +228,12 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bX -= VEHICLE_BODY_WIDTH/2;
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
+
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainSources[TEAM_BLUE].pFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
-	pType->pMainSources[TEAM_RED].pFrameOffsets = pType->pMainSources[TEAM_BLUE].pFrameOffsets;
+	pType->pMainFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
 	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
-		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
+		pType->pMainFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
+		pType->pMainFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
 	}
 
 	// Jeep
@@ -350,13 +247,12 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
 
-	precalcIncreaseProgress(5, "Generating blue jeep frames");
-	vehicleTypeBobSourceLoad("blue/jeep", &pType->pMainSources[TEAM_BLUE], 1);
-	vehicleTypeSetBlankBobSource(&pType->pAuxSources[TEAM_BLUE]);
-
-	precalcIncreaseProgress(5, "Generating red jeep frames");
-	vehicleTypeBobSourceLoad("red/jeep", &pType->pMainSources[TEAM_RED], 1);
-	vehicleTypeSetBlankBobSource(&pType->pAuxSources[TEAM_RED]);
+	precalcIncreaseProgress(5, "Generating jeep frames");
+	vehicleTypeFramesCreate(pType, "jeep");
+	pType->pAuxFrameOffsets = 0;
+	pType->pAuxFrames[TEAM_BLUE] = 0;
+	pType->pAuxFrames[TEAM_RED] = 0;
+	pType->pAuxMask = 0;
 
 	// Jeep collision coords
 	precalcIncreaseProgress(5, "Calculating jeep collision coords");
@@ -373,28 +269,29 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainSources[TEAM_BLUE].pFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
-	pType->pMainSources[TEAM_RED].pFrameOffsets = pType->pMainSources[TEAM_BLUE].pFrameOffsets;
+	pType->pMainFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
 	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
-		pType->pMainSources[TEAM_BLUE].pFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
+		pType->pMainFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
+		pType->pMainFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
 	}
 
 	logBlockEnd("vehicleTypesCreate");
 }
 
-void vehicleTypeBobSourceUnload(tBobSource *pSource) {
-	if(pSource->pBitmap)
-		bitmapDestroy(pSource->pBitmap);
-	if(pSource->pMask)
-		bitmapMaskDestroy(pSource->pMask);
-}
-
-void vehicleTypeUnloadAllBobSources(tVehicleType *pType) {
-	vehicleTypeBobSourceUnload(&pType->pMainSources[TEAM_BLUE]);
-	vehicleTypeBobSourceUnload(&pType->pAuxSources[TEAM_BLUE]);
-	vehicleTypeBobSourceUnload(&pType->pMainSources[TEAM_RED]);
-	vehicleTypeBobSourceUnload(&pType->pAuxSources[TEAM_RED]);
+void vehicleTypeUnloadFrameData(tVehicleType *pType) {
+	memFree(
+		pType->pMainFrameOffsets,
+		VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
+	);
+	bitmapDestroy(pType->pMainFrames[TEAM_BLUE]);
+	bitmapDestroy(pType->pMainFrames[TEAM_RED]);
+	bitmapDestroy(pType->pMainMask);
+	if(pType->pAuxFrames[TEAM_BLUE])
+		bitmapDestroy(pType->pAuxFrames[TEAM_BLUE]);
+	if(pType->pAuxFrames[TEAM_RED])
+		bitmapDestroy(pType->pAuxFrames[TEAM_RED]);
+	if(pType->pAuxMask)
+		bitmapDestroy(pType->pAuxMask);
 }
 
 void vehicleTypesDestroy(void) {
@@ -403,8 +300,9 @@ void vehicleTypesDestroy(void) {
 	logBlockBegin("vehicleTypesDestroy()");
 
 	// Free bob sources
-	vehicleTypeUnloadAllBobSources(&g_pVehicleTypes[VEHICLE_TYPE_TANK]);
-	vehicleTypeUnloadAllBobSources(&g_pVehicleTypes[VEHICLE_TYPE_JEEP]);
+	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_TANK]);
+
+	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_JEEP]);
 	// TODO ASV
 	// TODO Chopper
 

@@ -41,13 +41,19 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 void vehicleSetupBob(tVehicle *pVehicle) {
 	// Set main bob frames
-	bobSetSource(pVehicle->pBob, &pVehicle->pType->pMainSources[TEAM_BLUE]);
+	bobSetData(
+		pVehicle->pBob,	pVehicle->pType->pMainFrames[TEAM_BLUE],
+		pVehicle->pType->pMainMask, pVehicle->pType->pMainFrameOffsets
+	);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
 	pVehicle->pBob->isDrawn = 0;
 
 	// Set aux bob frames
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->pAuxSources[TEAM_BLUE]);
+		bobSetData(
+			pVehicle->pAuxBob, pVehicle->pType->pAuxFrames[TEAM_BLUE],
+			pVehicle->pType->pAuxMask, pVehicle->pType->pAuxFrameOffsets
+		);
 		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
 	}
 	else
@@ -306,10 +312,10 @@ void vehicleDraw(tVehicle *pVehicle) {
 		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]
 	) {
 		blitCopyMask(
-			pVehicle->pAuxBob->sSource.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
+			pVehicle->pAuxBob->sData.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
 			g_pWorldMainBfr->pBuffer, uwX, uwY,
 			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-			pVehicle->pAuxBob->sSource.pMask->pData
+			(UWORD*)pVehicle->pAuxBob->sData.pMask->Planes[0]
 		);
 	}
 }

@@ -15,7 +15,7 @@ typedef struct _tExplosion {
 
 tExplosion s_pExplosions[EXPLOSIONS_MAX];
 static tBitMap *s_pBitmap;
-static tBitmapMask *s_pMask;
+static tBitMap *s_pMask;
 
 void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 	// Find free explosion slot
@@ -34,7 +34,7 @@ void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 void explosionsCreate(void) {
 	logBlockBegin("explosionsCreate()");
 	s_pBitmap = bitmapCreateFromFile("data/explosion.bm");
-	s_pMask = bitmapMaskCreateFromFile("data/explosion.msk");
+	s_pMask = bitmapCreateFromFile("data/explosion.msk");
 
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, 0, EXPLOSION_SIZE, 0);
@@ -50,7 +50,7 @@ void explosionsDestroy(void) {
 		bobDestroy(s_pExplosions[i].pBob);
 
 	bitmapDestroy(s_pBitmap);
-	bitmapMaskDestroy(s_pMask);
+	bitmapDestroy(s_pMask);
 	logBlockEnd("explosionsDestroy()");
 }
 

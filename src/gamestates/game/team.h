@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_TEAM_H
 #define GUARD_OF_GAMESTATES_GAME_TEAM_H
 
-#include <ace/config.h>
 #include "gamestates/game/spawn.h"
 
 #define TEAM_COUNT 2

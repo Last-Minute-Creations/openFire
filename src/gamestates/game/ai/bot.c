@@ -1,5 +1,5 @@
 #include "gamestates/game/ai/bot.h"
-#include <ace/libfixmath/fix16.h>
+#include <fixmath/fix16.h>
 #include "gamestates/game/spawn.h"
 
 #define AI_BOT_STATE_IDLE           0

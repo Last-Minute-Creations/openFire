@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_TURRET_H
 #define GUARD_OF_GAMESTATES_GAME_TURRET_H
 
-#include <ace/config.h>
 #include "gamestates/game/bob.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/game.h"
@@ -28,7 +27,7 @@ typedef struct _tTurret {
 	UBYTE ubCooldown; ///< Cooldown between shots.
 } tTurret;
 
-extern tBobSource g_sTurretSource;
+extern tBitMap *g_pTurretFrames;
 extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
 extern UWORD **g_pTurretTiles;

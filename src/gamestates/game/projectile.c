@@ -15,7 +15,7 @@ tProjectile *s_pProjectiles;
 FUBYTE s_fubProjectileMaxCount;
 FUBYTE s_fubPrevProjectileAdded;
 tBitMap *s_pBulletBitmap;
-tBitmapMask *s_pBulletMask;
+tBitMap *s_pBulletMask;
 
 fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
 fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
@@ -27,7 +27,7 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 
 	// Load gfx
 	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
-	s_pBulletMask = bitmapMaskCreateFromFile("data/projectiles/bullet.msk");
+	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet.msk");
 
 	// Create projectiles
 	s_fubProjectileMaxCount = fubProjectileMaxCount;
@@ -63,7 +63,7 @@ void projectileListDestroy(void) {
 
 	// Dealloc bob bitmaps
 	bitmapDestroy(s_pBulletBitmap);
-	bitmapMaskDestroy(s_pBulletMask);
+	bitmapDestroy(s_pBulletMask);
 
 	logBlockEnd("projectileListDestroy()");
 }

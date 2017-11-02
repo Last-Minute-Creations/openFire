@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_BOB_H
 #define GUARD_OF_GAMESTATES_GAME_BOB_H
 
-#include <ace/config.h>
 #include <ace/utils/bitmap.h>
 #include <ace/utils/bitmapmask.h>
 #include <ace/managers/viewport/simplebuffer.h>
@@ -20,14 +19,14 @@ typedef struct _tBobOffset {
 	UWORD uwHeight;
 } tBobFrameOffset;
 
-typedef struct _tBobSource {
+typedef struct _tBobData {
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;
+	tBitMap *pMask;
 	tBobFrameOffset *pFrameOffsets;
-} tBobSource;
+} tBobData;
 
 typedef struct _tBob {
-	tBobSource sSource;
+	tBobData sData;
 	tBitMap* pBg;
 	tUwCoordYX sPrevCoord;
 	FUBYTE fubPrevFrame;
@@ -40,7 +39,7 @@ typedef struct _tBob {
 
 tBob *bobCreate(
 	IN tBitMap *pBitmap,
-	IN tBitmapMask *pMask,
+	IN tBitMap *pMask,
 	IN tBobFrameOffset *pFrameOffsets,
 	IN FUBYTE fubMaxFrameHeight,
 	IN FUBYTE fubFrameIdx
@@ -50,9 +49,11 @@ void bobDestroy(
 	IN tBob *pBob
 );
 
-void bobSetSource(
+void bobSetData(
 	IN tBob *pBob,
-	IN tBobSource *pSource
+	IN tBitMap *pFrames,
+	IN tBitMap *pMask,
+	IN tBobFrameOffset *pOffsets
 );
 
 tBob *bobUniqueCreate(

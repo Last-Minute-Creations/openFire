@@ -2,7 +2,7 @@
 #include <ace/managers/blit.h>
 
 tBob *bobCreate(
-	tBitMap *pBitmap, tBitmapMask *pMask,
+	tBitMap *pBitmap, tBitMap *pMask,
 	tBobFrameOffset *pFrameOffsets, FUBYTE fubMaxFrameHeight, FUBYTE fubFrameIdx
 ) {
 	tBob *pBob;
@@ -19,14 +19,14 @@ tBob *bobCreate(
 		return 0;
 	}
 	logWrite("Addr: %p\n", pBob);
-	pBob->sSource.pBitmap = pBitmap;
-	pBob->sSource.pMask = pMask;
+	pBob->sData.pBitmap = pBitmap;
+	pBob->sData.pMask = pMask;
+	pBob->sData.pFrameOffsets = pFrameOffsets;
 	pBob->fubCurrFrame = fubFrameIdx;
 	pBob->fubPrevFrame = fubFrameIdx;
 	pBob->ubFlags = BOB_FLAG_START_DRAWING;
 	pBob->isDrawn = 0;
 	pBob->fubMaxFrameHeight = fubMaxFrameHeight;
-	pBob->sSource.pFrameOffsets = pFrameOffsets;
 
 	// BG buffer
 	pBob->pBg = bitmapCreate(
@@ -45,10 +45,12 @@ void bobDestroy(tBob *pBob) {
 	logBlockEnd("bobDestroy()");
 }
 
-void bobSetSource(tBob *pBob, tBobSource *pSource) {
-	pBob->sSource.pBitmap = pSource->pBitmap;
-	pBob->sSource.pMask = pSource->pMask;
-	pBob->sSource.pFrameOffsets = pSource->pFrameOffsets;
+void bobSetData(
+	tBob *pBob, tBitMap *pFrames, tBitMap *pMask, tBobFrameOffset *pOffsets
+) {
+	pBob->sData.pBitmap = pFrames;
+	pBob->sData.pMask = pMask;
+	pBob->sData.pFrameOffsets = pOffsets;
 }
 
 tBob *bobUniqueCreate(
@@ -56,7 +58,7 @@ tBob *bobUniqueCreate(
 	tBobFrameOffset *pFrameOffsets, FUBYTE fubMaxFrameHeight, FUBYTE fubFrameIdx
 )	{
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;
+	tBitMap *pMask;
 	tBob *pBob;
 
 	logBlockBegin(
@@ -73,7 +75,7 @@ tBob *bobUniqueCreate(
 	}
 	if(fubMaxFrameHeight == 0)
 	fubMaxFrameHeight = pBitmap->Rows;
-	pMask = bitmapMaskCreateFromFile(szMaskPath);
+	pMask = bitmapCreateFromFile(szMaskPath);
 	if(!pMask) {
 		logWrite("ERR: Couldn't read mask file!\n");
 		bitmapDestroy(pBitmap);
@@ -87,8 +89,8 @@ tBob *bobUniqueCreate(
 
 void bobUniqueDestroy(tBob *pBob) {
 	logBlockBegin("bobUniqueDestroy(pBob: %p)", pBob);
-	bitmapDestroy(pBob->sSource.pBitmap);
-	bitmapMaskDestroy(pBob->sSource.pMask);
+	bitmapDestroy(pBob->sData.pBitmap);
+	bitmapDestroy(pBob->sData.pMask);
 	bobDestroy(pBob);
 	logBlockEnd("bobUniqueDestroy()");
 }
@@ -102,9 +104,9 @@ UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest) {
 	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING || !pBob->isDrawn)
 		return 0;
 	UWORD uwFrameDy, uwFrameHeight;
-	if(pBob->sSource.pFrameOffsets) {
-		uwFrameDy = pBob->sSource.pFrameOffsets[pBob->fubPrevFrame].uwDy;
-		uwFrameHeight = pBob->sSource.pFrameOffsets[pBob->fubPrevFrame].uwHeight;
+	if(pBob->sData.pFrameOffsets) {
+		uwFrameDy = pBob->sData.pFrameOffsets[pBob->fubPrevFrame].uwDy;
+		uwFrameHeight = pBob->sData.pFrameOffsets[pBob->fubPrevFrame].uwHeight;
 	}
 	else {
 		uwFrameDy = 0;
@@ -132,9 +134,9 @@ UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
 		return 0;
 	}
 	UWORD uwFrameDy, uwFrameHeight;
-	if(pBob->sSource.pFrameOffsets) {
-		uwFrameDy = pBob->sSource.pFrameOffsets[pBob->fubCurrFrame].uwDy;
-		uwFrameHeight = pBob->sSource.pFrameOffsets[pBob->fubCurrFrame].uwHeight;
+	if(pBob->sData.pFrameOffsets) {
+		uwFrameDy = pBob->sData.pFrameOffsets[pBob->fubCurrFrame].uwDy;
+		uwFrameHeight = pBob->sData.pFrameOffsets[pBob->fubCurrFrame].uwHeight;
 	}
 	else {
 		uwFrameDy = 0;
@@ -148,10 +150,10 @@ UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
 
 	// Redraw bob
 	blitCopyMask(
-		pBob->sSource.pBitmap, 0, pBob->uwOffsY + uwFrameDy,
+		pBob->sData.pBitmap, 0, pBob->uwOffsY + uwFrameDy,
 		pDest->pBuffer, uwX, uwY + uwFrameDy,
-		bitmapGetByteWidth(pBob->sSource.pBitmap)<<3, uwFrameHeight,
-		pBob->sSource.pMask->pData
+		bitmapGetByteWidth(pBob->sData.pBitmap)<<3, uwFrameHeight,
+		(UWORD*)pBob->sData.pMask->Planes[0]
 	);
 
 	// Update bob position
