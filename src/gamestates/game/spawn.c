@@ -17,9 +17,9 @@ void spawnManagerCreate(FUBYTE fubMaxCount) {
 	s_ubSpawnMaxCount = fubMaxCount;
 	g_ubSpawnCount = 0;
 	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * fubMaxCount);
-	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/blue/bunkering.bm");
+	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/bunkering_blue.bm");
 	// TODO: bunkering_brown.bm
-	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/red/bunkering.bm");
+	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/bunkering_red.bm");
 	logBlockEnd("spawnManagerCreate()");
 }
 

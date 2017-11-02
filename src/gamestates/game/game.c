@@ -133,7 +133,9 @@ void gsGameCreate(void) {
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0, 0);
+	s_pSiloHighlight = bobUniqueCreate(
+		"data/silohighlight.bm", "data/silohighlight_mask.bm", 0, 0, 0
+	);
 
 	teamsInit();
 

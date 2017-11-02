@@ -34,7 +34,7 @@ void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 void explosionsCreate(void) {
 	logBlockBegin("explosionsCreate()");
 	s_pBitmap = bitmapCreateFromFile("data/explosion.bm");
-	s_pMask = bitmapCreateFromFile("data/explosion.msk");
+	s_pMask = bitmapCreateFromFile("data/explosion_mask.bm");
 
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, 0, EXPLOSION_SIZE, 0);

@@ -119,27 +119,33 @@ fail:
 	return 0;
 }
 
-void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName) {
+void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UBYTE isAux) {
 	char szFilePath[100];
 	tBitMap *pSrcFrame;
 
-	sprintf(szFilePath, "data/vehicles/%s/main_blue.bm", szVehicleName);
+	sprintf(szFilePath, "vehicles/%s/main_blue.bm", szVehicleName);
 	pType->pMainFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
 
-	sprintf(szFilePath, "data/vehicles/%s/main_red.bm", szVehicleName);
+	sprintf(szFilePath, "vehicles/%s/main_red.bm", szVehicleName);
 	pType->pMainFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames(szFilePath);
 
-	sprintf(szFilePath, "data/vehicles/%s/main.bm", szVehicleName);
+	sprintf(szFilePath, "vehicles/%s/main_mask.bm", szVehicleName);
 	pType->pMainMask = vehicleTypeGenerateRotatedFrames(szFilePath);
+	if(isAux) {
+		sprintf(szFilePath, "vehicles/%s/aux_blue.bm", szVehicleName);
+		pType->pAuxFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
 
-	sprintf(szFilePath, "data/vehicles/%s/aux_blue.bm", szVehicleName);
-	pType->pAuxFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
+		sprintf(szFilePath, "vehicles/%s/aux_red.bm", szVehicleName);
+		pType->pAuxFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames(szFilePath);
 
-	sprintf(szFilePath, "data/vehicles/%s/aux_red.bm", szVehicleName);
-	pType->pAuxFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames(szFilePath);
-
-	sprintf(szFilePath, "data/vehicles/%s/aux.msk", szVehicleName);
-	pType->pAuxMask = vehicleTypeGenerateRotatedFrames(szFilePath);
+		sprintf(szFilePath, "vehicles/%s/aux_mask.bm", szVehicleName);
+		pType->pAuxMask = vehicleTypeGenerateRotatedFrames(szFilePath);
+	}
+	else {
+		pType->pAuxFrames[TEAM_BLUE] = 0;
+		pType->pAuxFrames[TEAM_RED] = 0;
+		pType->pAuxMask = 0;
+	}
 }
 
 void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
@@ -212,7 +218,7 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxLife = 100;
 
 	precalcIncreaseProgress(5, "Generating tank frames");
-	vehicleTypeFramesCreate(pType, "tank");
+	vehicleTypeFramesCreate(pType, "tank", 1);
 
 	// Tank collision coords
 	precalcIncreaseProgress(5, "Calculating tank collision coords");
@@ -248,11 +254,8 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxLife = 1;
 
 	precalcIncreaseProgress(5, "Generating jeep frames");
-	vehicleTypeFramesCreate(pType, "jeep");
+	vehicleTypeFramesCreate(pType, "jeep", 0);
 	pType->pAuxFrameOffsets = 0;
-	pType->pAuxFrames[TEAM_BLUE] = 0;
-	pType->pAuxFrames[TEAM_RED] = 0;
-	pType->pAuxMask = 0;
 
 	// Jeep collision coords
 	precalcIncreaseProgress(5, "Calculating jeep collision coords");

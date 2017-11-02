@@ -2,7 +2,6 @@
 #define GUARD_OF_GAMESTATES_GAME_BOB_H
 
 #include <ace/utils/bitmap.h>
-#include <ace/utils/bitmapmask.h>
 #include <ace/managers/viewport/simplebuffer.h>
 
 /// Used when bob is inactive - no undraw, no draw

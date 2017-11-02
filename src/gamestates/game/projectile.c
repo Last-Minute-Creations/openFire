@@ -27,7 +27,7 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 
 	// Load gfx
 	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
-	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet.msk");
+	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet_mask.bm");
 
 	// Create projectiles
 	s_fubProjectileMaxCount = fubProjectileMaxCount;

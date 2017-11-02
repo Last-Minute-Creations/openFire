@@ -2,7 +2,6 @@
 #define GUARD_OF_GAMESTATES_GAME_VEHICLE_H
 
 #include <ace/utils/bitmap.h>
-#include <ace/utils/bitmapmask.h>
 #include "vehicletypes.h"
 #include "gamestates/game/map.h"
 #include "gamestates/game/gamemath.h"

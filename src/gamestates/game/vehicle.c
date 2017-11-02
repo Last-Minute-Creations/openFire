@@ -2,7 +2,6 @@
 #include <ace/macros.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/bitmapmask.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/map.h"
