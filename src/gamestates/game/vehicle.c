@@ -56,12 +56,12 @@ void vehicleSetupBob(tVehicle *pVehicle) {
 		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
 	}
 	else
-		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+		pVehicle->pAuxBob->ubState = BOB_STATE_NODRAW;
 }
 
 void vehicleUnset(tVehicle *pVehicle) {
-	pVehicle->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
-	pVehicle->pAuxBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	pVehicle->pBob->ubState = BOB_STATE_STOP_DRAWING;
+	pVehicle->pAuxBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
 UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
@@ -306,15 +306,27 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 void vehicleDraw(tVehicle *pVehicle) {
 	UWORD uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
 	UWORD uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
-	if(
-		bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY)
-		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]
-	) {
-		blitCopyMask(
-			pVehicle->pAuxBob->sData.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
-			g_pWorldMainBfr->pBuffer, uwX, uwY,
-			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-			(UWORD*)pVehicle->pAuxBob->sData.pMask->Planes[0]
+	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
+		UBYTE ubMainY1 = pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwDy;
+		UBYTE ubMainY2 = ubMainY1 + pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwHeight;
+		UBYTE ubAuxY1 = pVehicle->pAuxBob->sData.pFrameOffsets[pVehicle->pAuxBob->fubCurrFrame].uwDy;
+		UBYTE ubAuxY2 = ubAuxY1 + pVehicle->pAuxBob->sData.pFrameOffsets[pVehicle->pAuxBob->fubCurrFrame].uwHeight;
+		UBYTE ubBgDy = MIN(ubMainY1, ubAuxY1);
+		UBYTE ubBgHeight = MAX(ubMainY2, ubAuxY2) - ubBgDy;
+		if(bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
+			blitCopyMask(
+				pVehicle->pAuxBob->sData.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
+				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
+				(UWORD*)pVehicle->pAuxBob->sData.pMask->Planes[0]
+			);
+		}
+	}
+	else {
+		bobDraw(
+			pVehicle->pBob, g_pWorldMainBfr, uwX, uwY,
+			pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwDy,
+			pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwHeight
 		);
 	}
 }

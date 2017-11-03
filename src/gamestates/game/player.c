@@ -34,7 +34,7 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrameOffsets,
 			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
 		);
-		g_pPlayers[i].sVehicle.pBob->ubFlags = BOB_FLAG_NODRAW;
+		g_pPlayers[i].sVehicle.pBob->ubState = BOB_STATE_NODRAW;
 
 		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
@@ -42,7 +42,7 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrameOffsets,
 			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
 		);
-		g_pPlayers[i].sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+		g_pPlayers[i].sVehicle.pAuxBob->ubState = BOB_STATE_NODRAW;
 	}
 }
 
@@ -339,11 +339,11 @@ void playerSim(void) {
 				else {
 					pPlayer->ubState = PLAYER_STATE_DRIVING;
 					// TODO: somewhere else?
-					pPlayer->sVehicle.pBob->ubFlags = BOB_FLAG_START_DRAWING;
+					pPlayer->sVehicle.pBob->ubState = BOB_STATE_START_DRAWING;
 					if(pPlayer->ubCurrentVehicleType == VEHICLE_TYPE_TANK)
-						pPlayer->sVehicle.pAuxBob->ubFlags = BOB_FLAG_START_DRAWING;
+						pPlayer->sVehicle.pAuxBob->ubState = BOB_STATE_START_DRAWING;
 					else
-						pPlayer->sVehicle.pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+						pPlayer->sVehicle.pAuxBob->ubState = BOB_STATE_NODRAW;
 				}
 				spawnAnimate(pPlayer->ubSpawnIdx);
 				continue;

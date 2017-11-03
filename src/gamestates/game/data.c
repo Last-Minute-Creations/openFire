@@ -21,22 +21,22 @@ void dataSend(void) {
 void dataRecv(void) {
 	// Packet spoofing
 	tDataFrame *pFrame = (tDataFrame*)&s_pDataBfr;
-	// pFrame->sHeader.uwServerTime = 0;
-	// pFrame->sHeader.uwSize = 0;
-	// pFrame->sHeader.uwType = DATA_PACKET_TYPE_SRV_STATE;
-	// for(UWORD i = 0; i != 8; ++i) {
-	// 	// Fill players
-	// 	pFrame->pPlayerStates[i].fDx = 0;
-	// 	pFrame->pPlayerStates[i].fDy = 0;
-	// 	pFrame->pPlayerStates[i].fX = fix16_from_int((10+(i & 3)*2) << MAP_TILE_SIZE);
-	// 	pFrame->pPlayerStates[i].fY = fix16_from_int((5 + 2*(i/4)) << MAP_TILE_SIZE);
-	// 	pFrame->pPlayerStates[i].ubBodyAngle = 0;
-	// 	pFrame->pPlayerStates[i].ubDestAngle = 0;
-	// 	pFrame->pPlayerStates[i].ubTurretAngle = 0;
-	// 	pFrame->pPlayerStates[i].ubPlayerState = PLAYER_STATE_DRIVING;
-	// 	pFrame->pPlayerStates[i].ubVehicleType = VEHICLE_TYPE_TANK;
-	// }
-	s_isPacketRead = 0;
+	pFrame->sHeader.uwServerTime = 0;
+	pFrame->sHeader.uwSize = 0;
+	pFrame->sHeader.uwType = DATA_PACKET_TYPE_SRV_STATE;
+	for(UWORD i = 0; i != 8; ++i) {
+		// Fill players
+		pFrame->pPlayerStates[i].fDx = 0;
+		pFrame->pPlayerStates[i].fDy = 0;
+		pFrame->pPlayerStates[i].fX = fix16_from_int((10+(i & 3)*2) << MAP_TILE_SIZE);
+		pFrame->pPlayerStates[i].fY = fix16_from_int((5 + 2*(i/4)) << MAP_TILE_SIZE);
+		pFrame->pPlayerStates[i].ubBodyAngle = 0;
+		pFrame->pPlayerStates[i].ubDestAngle = 0;
+		pFrame->pPlayerStates[i].ubTurretAngle = 0;
+		pFrame->pPlayerStates[i].ubPlayerState = PLAYER_STATE_DRIVING;
+		pFrame->pPlayerStates[i].ubVehicleType = VEHICLE_TYPE_TANK;
+	}
+	s_isPacketRead = 1;
 
 	if(s_isPacketRead) {
 		for(UBYTE i = 0; i != 8; ++i) {
@@ -57,7 +57,7 @@ void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
 	if(pPlayer->ubState != pState->ubPlayerState) {
 		pPlayer->ubState = pState->ubPlayerState;
 		if(pState->ubPlayerState == PLAYER_STATE_DRIVING)
-			pPlayer->sVehicle.pBob->ubFlags = BOB_FLAG_START_DRAWING;
+			pPlayer->sVehicle.pBob->ubState = BOB_STATE_START_DRAWING;
 		// TODO something here
 	}
 	if(pPlayer->ubState != PLAYER_STATE_LIMBO && pPlayer->ubState != PLAYER_STATE_OFF) {

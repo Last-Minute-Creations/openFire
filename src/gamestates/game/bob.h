@@ -5,13 +5,13 @@
 #include <ace/managers/viewport/simplebuffer.h>
 
 /// Used when bob is inactive - no undraw, no draw
-#define BOB_FLAG_NODRAW        0
+#define BOB_STATE_NODRAW        0
 /// Used when bob is going to be inactive - undraw, no draw
-#define BOB_FLAG_STOP_DRAWING  1
+#define BOB_STATE_STOP_DRAWING  1
 /// Used when bob is going to be active - no undraw, draw
-#define BOB_FLAG_START_DRAWING 2
+#define BOB_STATE_START_DRAWING 2
 /// Used when bob is active - undraw, draw
-#define BOB_FLAG_DRAW          3
+#define BOB_STATE_DRAW          3
 
 typedef struct _tBobOffset {
 	UWORD uwDy;
@@ -28,11 +28,11 @@ typedef struct _tBob {
 	tBobData sData;
 	tBitMap* pBg;
 	tUwCoordYX sPrevCoord;
-	FUBYTE fubPrevFrame;
+	tBobFrameOffset sBgDrawOffset;
 	FUBYTE fubCurrFrame;
 	FUBYTE fubMaxFrameHeight;
 	UWORD uwOffsY;
-	UBYTE ubFlags;
+	UBYTE ubState;
 	UBYTE isDrawn;
 } tBob;
 
@@ -81,7 +81,9 @@ UWORD bobDraw(
 	IN tBob *pBob,
 	IN tSimpleBufferManager *pDest,
 	IN UWORD uwX,
-	IN UWORD uwY
+	IN UWORD uwY,
+	IN UBYTE ubBgDy,
+	IN UBYTE ubBgHeight
 );
 
 void bobEnable(

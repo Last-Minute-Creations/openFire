@@ -23,8 +23,7 @@ tBob *bobCreate(
 	pBob->sData.pMask = pMask;
 	pBob->sData.pFrameOffsets = pFrameOffsets;
 	pBob->fubCurrFrame = fubFrameIdx;
-	pBob->fubPrevFrame = fubFrameIdx;
-	pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	pBob->ubState = BOB_STATE_START_DRAWING;
 	pBob->isDrawn = 0;
 	pBob->fubMaxFrameHeight = fubMaxFrameHeight;
 
@@ -101,51 +100,51 @@ void bobChangeFrame(tBob *pBob, FUBYTE fubFrameIdx) {
 }
 
 UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest) {
-	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_START_DRAWING || !pBob->isDrawn)
+	if(pBob->ubState == BOB_STATE_NODRAW || pBob->ubState == BOB_STATE_START_DRAWING || !pBob->isDrawn)
 		return 0;
 	UWORD uwFrameDy, uwFrameHeight;
-	if(pBob->sData.pFrameOffsets) {
-		uwFrameDy = pBob->sData.pFrameOffsets[pBob->fubPrevFrame].uwDy;
-		uwFrameHeight = pBob->sData.pFrameOffsets[pBob->fubPrevFrame].uwHeight;
-	}
-	else {
-		uwFrameDy = 0;
-		uwFrameHeight = pBob->fubMaxFrameHeight;
-	}
 	blitCopyAligned(
 		pBob->pBg, 0, 0,
 		pDest->pBuffer, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0,
-		pBob->sPrevCoord.sUwCoord.uwY + uwFrameDy,
-		bitmapGetByteWidth(pBob->pBg) << 3, uwFrameHeight
+		pBob->sPrevCoord.sUwCoord.uwY + pBob->sBgDrawOffset.uwDy,
+		bitmapGetByteWidth(pBob->pBg) << 3, pBob->sBgDrawOffset.uwHeight
 	);
 	pBob->isDrawn = 0;
-	if(pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
-		pBob->ubFlags = BOB_FLAG_NODRAW;
+	if(pBob->ubState == BOB_STATE_STOP_DRAWING)
+		pBob->ubState = BOB_STATE_NODRAW;
 	return 1;
 }
 
-UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
-	// Save BG
-	if(pBob->ubFlags == BOB_FLAG_NODRAW || pBob->ubFlags == BOB_FLAG_STOP_DRAWING)
+UWORD bobDraw(
+	tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY,
+	UBYTE ubBgDy, UBYTE ubBgHeight
+) {
+	// Check if needs blit
+	if(pBob->ubState <= BOB_STATE_STOP_DRAWING)
 		return 0;
 	if(!simpleBufferIsRectVisible(
 		pDest, uwX, uwY, bitmapGetByteWidth(pBob->pBg) << 3, pBob->pBg->Rows
 	)) {
 		return 0;
 	}
+
+	// Save BG
 	UWORD uwFrameDy, uwFrameHeight;
 	if(pBob->sData.pFrameOffsets) {
 		uwFrameDy = pBob->sData.pFrameOffsets[pBob->fubCurrFrame].uwDy;
 		uwFrameHeight = pBob->sData.pFrameOffsets[pBob->fubCurrFrame].uwHeight;
+		pBob->sBgDrawOffset.uwDy = ubBgDy;
+		pBob->sBgDrawOffset.uwHeight = ubBgHeight;
 	}
 	else {
-		uwFrameDy = 0;
-		uwFrameHeight = pBob->fubMaxFrameHeight;
+		// TODO eliminate this case?
+		uwFrameDy = pBob->sBgDrawOffset.uwDy = 0;
+		uwFrameHeight = pBob->sBgDrawOffset.uwHeight = pBob->fubMaxFrameHeight;
 	}
 	blitCopyAligned(
-		pDest->pBuffer, uwX & 0xFFF0, uwY + uwFrameDy,
+		pDest->pBuffer, uwX & 0xFFF0, uwY + pBob->sBgDrawOffset.uwDy,
 		pBob->pBg, 0, 0,
-		bitmapGetByteWidth(pBob->pBg) << 3, uwFrameHeight
+		bitmapGetByteWidth(pBob->pBg) << 3, pBob->sBgDrawOffset.uwHeight
 	);
 
 	// Redraw bob
@@ -160,19 +159,18 @@ UWORD bobDraw(tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY) {
 	pBob->sPrevCoord.sUwCoord.uwX = uwX;
 	pBob->sPrevCoord.sUwCoord.uwY = uwY;
 	pBob->isDrawn = 1;
-	pBob->fubPrevFrame = pBob->fubCurrFrame;
 
-	if(pBob->ubFlags == BOB_FLAG_START_DRAWING)
-		pBob->ubFlags = BOB_FLAG_DRAW;
+	if(pBob->ubState == BOB_STATE_START_DRAWING)
+		pBob->ubState = BOB_STATE_DRAW;
 	return 1;
 }
 
 void bobEnable(tBob *pBob) {
-	if(pBob->ubFlags < BOB_FLAG_START_DRAWING)
-		pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	if(pBob->ubState < BOB_STATE_START_DRAWING)
+		pBob->ubState = BOB_STATE_START_DRAWING;
 }
 
 void bobDisable(tBob *pBob) {
-	if(pBob->ubFlags > BOB_FLAG_STOP_DRAWING)
-		pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	if(pBob->ubState > BOB_STATE_STOP_DRAWING)
+		pBob->ubState = BOB_STATE_STOP_DRAWING;
 }

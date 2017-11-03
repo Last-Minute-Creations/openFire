@@ -191,6 +191,38 @@ void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }
 
+tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
+	tBobFrameOffset *pOffsets = memAllocFast(
+		sizeof(tBobFrameOffset) * VEHICLE_BODY_ANGLE_COUNT
+	);
+
+	UWORD uwWordsPerRow = pMask->BytesPerRow; // TODO why not divided by 2??
+	// logWrite("wpr: %hu\n", uwWordsPerRow);
+
+	for(uint8_t i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
+		UBYTE ubFirst = 0xFF;
+		UBYTE ubLast = 0;
+		for(uint8_t y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
+			// logWrite("y %hhu: ", y);
+			for(uint8_t x = 0; x <= VEHICLE_BODY_WIDTH; x += 16) {
+				UWORD uwWordOffs = (i*VEHICLE_BODY_HEIGHT + y)*uwWordsPerRow + (x>>4);
+				// logWrite("%04x", (UWORD*)(pMask->Planes[0])[uwWordOffs]);
+				if((UWORD*)(pMask->Planes[0])[uwWordOffs]) {
+					if(y < ubFirst)
+						ubFirst = y;
+					if(y > ubLast)
+						ubLast = y;
+				}
+			}
+			// logWrite("\n");
+		}
+		pOffsets[i].uwDy = ubFirst;
+		pOffsets[i].uwHeight = ubLast - ubFirst+1;
+		logWrite("frame: %hhu, ubFirst: %hhu, ubLast: %hhu\n", i, ubFirst, ubLast);
+	}
+	return pOffsets;
+}
+
 /**
  *  Generates vehicle type defs.
  *  This fn fills g_pVehicleTypes array
@@ -233,11 +265,10 @@ void vehicleTypesCreate(void) {
 	}
 
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
-	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		pType->pMainFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
-		pType->pMainFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
-	}
+	UWORD pPalette[2] = {0, 0xfff};
+	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
+	if(pType->pAuxMask)
+		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -269,11 +300,9 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = memAllocFast(VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset));
-	for(FUBYTE i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		pType->pMainFrameOffsets[i].uwDy = VEHICLE_BODY_HEIGHT/2 + pType->pCollisionPts[i].bTopmost;
-		pType->pMainFrameOffsets[i].uwHeight = pType->pCollisionPts[i].bBottommost - pType->pCollisionPts[i].bTopmost+1;
-	}
+	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
+	if(pType->pAuxMask)
+		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
 
 	logBlockEnd("vehicleTypesCreate");
 }

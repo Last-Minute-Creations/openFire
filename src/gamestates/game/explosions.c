@@ -20,11 +20,11 @@ static tBitMap *s_pMask;
 void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 	// Find free explosion slot
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
-		if(s_pExplosions[i].pBob->ubFlags < BOB_FLAG_START_DRAWING) {
+		if(s_pExplosions[i].pBob->ubState < BOB_STATE_START_DRAWING) {
 			// Free slot found - setup explosion
 			s_pExplosions[i].uwX = uwX;
 			s_pExplosions[i].uwY = uwY;
-			s_pExplosions[i].pBob->ubFlags = BOB_FLAG_START_DRAWING;
+			s_pExplosions[i].pBob->ubState = BOB_STATE_START_DRAWING;
 			s_pExplosions[i].pBob->isDrawn = 0;
 			return;
 		}
@@ -38,7 +38,7 @@ void explosionsCreate(void) {
 
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		s_pExplosions[i].pBob = bobCreate(s_pBitmap, s_pMask, 0, EXPLOSION_SIZE, 0);
-		s_pExplosions[i].pBob->ubFlags = BOB_FLAG_NODRAW;
+		s_pExplosions[i].pBob->ubState = BOB_STATE_NODRAW;
 		s_pExplosions[i].uwDuration = 0;
 	}
 	logBlockEnd("explosionsCreate()");
@@ -59,7 +59,7 @@ void explosionsUndraw(tSimpleBufferManager *pBfr) {
 		if(!bobUndraw(s_pExplosions[i].pBob, pBfr))
 			continue;
 		if(s_pExplosions[i].uwDuration >= EXPLOSION_DURATION) {
-			s_pExplosions[i].pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+			s_pExplosions[i].pBob->ubState = BOB_STATE_STOP_DRAWING;
 			s_pExplosions[i].uwDuration = 0;
 		}
 		else {
@@ -76,7 +76,8 @@ void explosionsDraw(tSimpleBufferManager *pBfr) {
 	for(UWORD i = 0; i != EXPLOSIONS_MAX; ++i) {
 		bobDraw(
 			s_pExplosions[i].pBob, pBfr,
-			s_pExplosions[i].uwX, s_pExplosions[i].uwY
+			s_pExplosions[i].uwX, s_pExplosions[i].uwY,
+			0, 32
 		);
 	}
 }

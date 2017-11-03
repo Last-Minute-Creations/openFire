@@ -39,7 +39,7 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 			s_pBulletBitmap, s_pBulletMask, 0,
 			PROJECTILE_BULLET_HEIGHT, 0
 		);
-		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
+		s_pProjectiles[i].pBob->ubState = BOB_STATE_NODRAW;
 	}
 
 	logBlockEnd("projectileListCreate()");
@@ -110,14 +110,14 @@ tProjectile *projectileCreate(
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
 
 	// Bob
-	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	pProjectile->pBob->ubState = BOB_STATE_START_DRAWING;
 	pProjectile->pBob->isDrawn = 0;
 	return pProjectile;
 }
 
 void projectileDestroy(tProjectile *pProjectile) {
 	pProjectile->ubType = PROJECTILE_TYPE_OFF;
-	pProjectile->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	pProjectile->pBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
 void projectileUndraw(void) {
@@ -140,7 +140,7 @@ void projectileDraw(void) {
 		wProjectileY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
 		bobDraw(
 			pProjectile->pBob, g_pWorldMainBfr,
-			wProjectileX, wProjectileY
+			wProjectileX, wProjectileY, 0, 2
 		);
 	}
 }
