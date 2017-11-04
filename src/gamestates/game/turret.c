@@ -121,6 +121,10 @@ void turretDestroy(UWORD uwIdx) {
 	}
 	tTurret *pTurret = &g_pTurrets[uwIdx];
 
+	// Already destroyed?
+	if(!pTurret->uwX)
+		return;
+
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
 	UWORD uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
