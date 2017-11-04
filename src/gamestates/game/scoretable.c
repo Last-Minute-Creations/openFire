@@ -35,7 +35,7 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	s_pFont = pFont;
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 16);
-	paletteLoad("data/openfire_sprites.plt", &s_pVPort->pPalette[16], 16);
+	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 16);
 
 	tSimpleBufferManager *pHudBfr = (tSimpleBufferManager*)vPortGetManager(pHudVPort, VPM_SCROLL);
 

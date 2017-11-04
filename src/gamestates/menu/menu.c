@@ -46,7 +46,7 @@ void menuCreate(void) {
 	copBlockDisableSprites(s_pView->pCopList, 0xFE);
 	cursorCreate(s_pView, 0, "data/crosshair.bm", 0);
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << MENU_BPP);
-	paletteLoad("data/openfire_sprites.plt", &s_pVPort->pPalette[16], 1 << MENU_BPP);
+	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 1 << MENU_BPP);
 	s_pFont = fontCreate("data/silkscreen5.fnt");
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 	buttonListCreate(10, s_pBuffer->pBuffer, s_pFont);

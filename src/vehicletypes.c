@@ -261,7 +261,6 @@ void vehicleTypesCreate(void) {
 	}
 
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	UWORD pPalette[2] = {0, 0xfff};
 	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
 	if(pType->pAuxMask)
 		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
