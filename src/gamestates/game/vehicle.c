@@ -306,27 +306,29 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 void vehicleDraw(tVehicle *pVehicle) {
 	UWORD uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
 	UWORD uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+	tBob *pMainBob = pVehicle->pBob;
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		UBYTE ubMainY1 = pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwDy;
-		UBYTE ubMainY2 = ubMainY1 + pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwHeight;
-		UBYTE ubAuxY1 = pVehicle->pAuxBob->sData.pFrameOffsets[pVehicle->pAuxBob->fubCurrFrame].uwDy;
-		UBYTE ubAuxY2 = ubAuxY1 + pVehicle->pAuxBob->sData.pFrameOffsets[pVehicle->pAuxBob->fubCurrFrame].uwHeight;
+		tBob *pAuxBob = pVehicle->pAuxBob;
+		UBYTE ubMainY1 = pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy;
+		UBYTE ubMainY2 = ubMainY1 + pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight - 1;
+		UBYTE ubAuxY1 = pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwDy;
+		UBYTE ubAuxY2 = ubAuxY1 + pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwHeight - 1;
 		UBYTE ubBgDy = MIN(ubMainY1, ubAuxY1);
-		UBYTE ubBgHeight = MAX(ubMainY2, ubAuxY2) - ubBgDy;
-		if(bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
+		UBYTE ubBgHeight = MAX(ubMainY2, ubAuxY2) - ubBgDy + 1;
+		if(bobDraw(pMainBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
 			blitCopyMask(
-				pVehicle->pAuxBob->sData.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
+				pAuxBob->sData.pBitmap, 0, pAuxBob->uwOffsY,
 				g_pWorldMainBfr->pBuffer, uwX, uwY,
 				VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-				(UWORD*)pVehicle->pAuxBob->sData.pMask->Planes[0]
+				(UWORD*)pAuxBob->sData.pMask->Planes[0]
 			);
 		}
 	}
 	else {
 		bobDraw(
-			pVehicle->pBob, g_pWorldMainBfr, uwX, uwY,
-			pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwDy,
-			pVehicle->pBob->sData.pFrameOffsets[pVehicle->pBob->fubCurrFrame].uwHeight
+			pMainBob, g_pWorldMainBfr, uwX, uwY,
+			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy,
+			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight
 		);
 	}
 }

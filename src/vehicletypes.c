@@ -196,29 +196,24 @@ tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
 		sizeof(tBobFrameOffset) * VEHICLE_BODY_ANGLE_COUNT
 	);
 
-	UWORD uwWordsPerRow = pMask->BytesPerRow; // TODO why not divided by 2??
-	// logWrite("wpr: %hu\n", uwWordsPerRow);
+	const UWORD uwWordsPerRow = pMask->BytesPerRow >> 1;
 
 	for(uint8_t i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
 		UBYTE ubFirst = 0xFF;
 		UBYTE ubLast = 0;
 		for(uint8_t y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
-			// logWrite("y %hhu: ", y);
 			for(uint8_t x = 0; x <= VEHICLE_BODY_WIDTH; x += 16) {
 				UWORD uwWordOffs = (i*VEHICLE_BODY_HEIGHT + y)*uwWordsPerRow + (x>>4);
-				// logWrite("%04x", (UWORD*)(pMask->Planes[0])[uwWordOffs]);
-				if((UWORD*)(pMask->Planes[0])[uwWordOffs]) {
+				if(((UWORD*)pMask->Planes[0])[uwWordOffs]) {
 					if(y < ubFirst)
 						ubFirst = y;
 					if(y > ubLast)
 						ubLast = y;
 				}
 			}
-			// logWrite("\n");
 		}
 		pOffsets[i].uwDy = ubFirst;
 		pOffsets[i].uwHeight = ubLast - ubFirst+1;
-		logWrite("frame: %hhu, ubFirst: %hhu, ubLast: %hhu\n", i, ubFirst, ubLast);
 	}
 	return pOffsets;
 }
