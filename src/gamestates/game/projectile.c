@@ -15,7 +15,7 @@ tProjectile *s_pProjectiles;
 FUBYTE s_fubProjectileMaxCount;
 FUBYTE s_fubPrevProjectileAdded;
 tBitMap *s_pBulletBitmap;
-tBitmapMask *s_pBulletMask;
+tBitMap *s_pBulletMask;
 
 fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
 fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
@@ -27,7 +27,7 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 
 	// Load gfx
 	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
-	s_pBulletMask = bitmapMaskCreateFromFile("data/projectiles/bullet.msk");
+	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet_mask.bm");
 
 	// Create projectiles
 	s_fubProjectileMaxCount = fubProjectileMaxCount;
@@ -36,10 +36,10 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 	for(FUBYTE i = 0; i != fubProjectileMaxCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
 		s_pProjectiles[i].pBob = bobCreate(
-			s_pBulletBitmap, s_pBulletMask,
+			s_pBulletBitmap, s_pBulletMask, 0,
 			PROJECTILE_BULLET_HEIGHT, 0
 		);
-		s_pProjectiles[i].pBob->ubFlags = BOB_FLAG_NODRAW;
+		s_pProjectiles[i].pBob->ubState = BOB_STATE_NODRAW;
 	}
 
 	logBlockEnd("projectileListCreate()");
@@ -63,7 +63,7 @@ void projectileListDestroy(void) {
 
 	// Dealloc bob bitmaps
 	bitmapDestroy(s_pBulletBitmap);
-	bitmapMaskDestroy(s_pBulletMask);
+	bitmapDestroy(s_pBulletMask);
 
 	logBlockEnd("projectileListDestroy()");
 }
@@ -110,14 +110,14 @@ tProjectile *projectileCreate(
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
 
 	// Bob
-	pProjectile->pBob->ubFlags = BOB_FLAG_START_DRAWING;
+	pProjectile->pBob->ubState = BOB_STATE_START_DRAWING;
 	pProjectile->pBob->isDrawn = 0;
 	return pProjectile;
 }
 
 void projectileDestroy(tProjectile *pProjectile) {
 	pProjectile->ubType = PROJECTILE_TYPE_OFF;
-	pProjectile->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	pProjectile->pBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
 void projectileUndraw(void) {
@@ -140,7 +140,7 @@ void projectileDraw(void) {
 		wProjectileY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
 		bobDraw(
 			pProjectile->pBob, g_pWorldMainBfr,
-			wProjectileX, wProjectileY
+			wProjectileX, wProjectileY, 0, 2
 		);
 	}
 }

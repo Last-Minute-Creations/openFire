@@ -2,7 +2,6 @@
 #include <ace/macros.h>
 #include <ace/managers/blit.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/bitmapmask.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/map.h"
@@ -41,22 +40,28 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 
 void vehicleSetupBob(tVehicle *pVehicle) {
 	// Set main bob frames
-	bobSetSource(pVehicle->pBob, &pVehicle->pType->sMainSource[TEAM_BLUE]);
+	bobSetData(
+		pVehicle->pBob,	pVehicle->pType->pMainFrames[TEAM_BLUE],
+		pVehicle->pType->pMainMask, pVehicle->pType->pMainFrameOffsets
+	);
 	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
 	pVehicle->pBob->isDrawn = 0;
 
 	// Set aux bob frames
 	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		bobSetSource(pVehicle->pAuxBob, &pVehicle->pType->sAuxSource[TEAM_BLUE]);
+		bobSetData(
+			pVehicle->pAuxBob, pVehicle->pType->pAuxFrames[TEAM_BLUE],
+			pVehicle->pType->pAuxMask, pVehicle->pType->pAuxFrameOffsets
+		);
 		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
 	}
 	else
-		pVehicle->pAuxBob->ubFlags = BOB_FLAG_NODRAW;
+		pVehicle->pAuxBob->ubState = BOB_STATE_NODRAW;
 }
 
 void vehicleUnset(tVehicle *pVehicle) {
-	pVehicle->pBob->ubFlags = BOB_FLAG_STOP_DRAWING;
-	pVehicle->pAuxBob->ubFlags = BOB_FLAG_STOP_DRAWING;
+	pVehicle->pBob->ubState = BOB_STATE_STOP_DRAWING;
+	pVehicle->pAuxBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
 UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
@@ -301,15 +306,29 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 void vehicleDraw(tVehicle *pVehicle) {
 	UWORD uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
 	UWORD uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
-	if(
-		bobDraw(pVehicle->pBob, g_pWorldMainBfr, uwX, uwY)
-		&& pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]
-	) {
-		blitCopyMask(
-			pVehicle->pAuxBob->sSource.pBitmap, 0, pVehicle->pAuxBob->uwOffsY,
-			g_pWorldMainBfr->pBuffer, uwX, uwY,
-			VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-			pVehicle->pAuxBob->sSource.pMask->pData
+	tBob *pMainBob = pVehicle->pBob;
+	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
+		tBob *pAuxBob = pVehicle->pAuxBob;
+		UBYTE ubMainY1 = pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy;
+		UBYTE ubMainY2 = ubMainY1 + pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight - 1;
+		UBYTE ubAuxY1 = pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwDy;
+		UBYTE ubAuxY2 = ubAuxY1 + pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwHeight - 1;
+		UBYTE ubBgDy = MIN(ubMainY1, ubAuxY1);
+		UBYTE ubBgHeight = MAX(ubMainY2, ubAuxY2) - ubBgDy + 1;
+		if(bobDraw(pMainBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
+			blitCopyMask(
+				pAuxBob->sData.pBitmap, 0, pAuxBob->uwOffsY,
+				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
+				(UWORD*)pAuxBob->sData.pMask->Planes[0]
+			);
+		}
+	}
+	else {
+		bobDraw(
+			pMainBob, g_pWorldMainBfr, uwX, uwY,
+			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy,
+			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight
 		);
 	}
 }

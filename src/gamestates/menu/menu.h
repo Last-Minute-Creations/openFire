@@ -1,7 +1,7 @@
 #ifndef GUARD_OF_GAMESTATES_MENU_MENU_H
 #define GUARD_OF_GAMESTATES_MENU_MENU_H
 
-#include <ace/config.h>
+#include <ace/types.h>
 
 void menuCreate(void);
 

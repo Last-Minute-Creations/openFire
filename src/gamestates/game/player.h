@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_PLAYER_H
 #define GUARD_OF_GAMESTATES_GAME_PLAYER_H
 
-#include <ace/config.h>
 #include "gamestates/game/vehicle.h"
 
 #define PLAYER_NAME_MAX        20

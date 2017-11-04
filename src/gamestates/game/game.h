@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_GAME_H
 #define GUARD_OF_GAMESTATES_GAME_GAME_H
 
-#include <ace/config.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/key.h>
 #include "gamestates/game/bob.h"

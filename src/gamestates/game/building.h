@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_BUILDING_H
 #define GUARD_OF_GAMESTATES_GAME_BUILDING_H
 
-#include <ace/config.h>
 #include "gamestates/game/turret.h"
 
 #define BUILDING_IDX_INVALID 0

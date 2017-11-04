@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_PRECALC_PRECALC_H
 #define GUARD_OF_PRECALC_PRECALC_H
 
-#include <ace/config.h>
 #include "vehicletypes.h"
 
 void precalcCreate(void);

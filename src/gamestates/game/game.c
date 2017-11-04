@@ -133,7 +133,9 @@ void gsGameCreate(void) {
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	s_pSiloHighlight = bobUniqueCreate("data/silohighlight.bm", "data/silohighlight.msk", 0, 0);
+	s_pSiloHighlight = bobUniqueCreate(
+		"data/silohighlight.bm", "data/silohighlight_mask.bm", 0, 0, 0
+	);
 
 	teamsInit();
 
@@ -218,11 +220,11 @@ void gsGameCreate(void) {
 
 	// AI
 	aiManagerCreate();
-	// for(FUBYTE i = 0; i != 7; ++i) {
-	// 	char szName[10];
-	// 	sprintf(szName, "player%hhu", i);
-	// 	playerAdd(szName, TEAM_BLUE);
-	// }
+	for(FUBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player%hhu", i);
+		playerAdd(szName, TEAM_BLUE);
+	}
 
 	// Now that world buffer is created, do the first draw
 	mapRedraw();
@@ -324,7 +326,7 @@ void gsGameLoop(void) {
 	if(g_ubDoSiloHighlight) {
 		if(bobDraw(
 			s_pSiloHighlight, g_pWorldMainBfr,
-			g_uwSiloHighlightX, g_uwSiloHighlightY
+			g_uwSiloHighlightX, g_uwSiloHighlightY, 0, 32
 		)) {
 			s_ubWasSiloHighlighted = 1;
 		}

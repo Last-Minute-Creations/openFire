@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_PROJECTILE_H
 #define GUARD_OF_GAMESTATES_GAME_PROJECTILE_H
 
-#include <ace/config.h>
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/bob.h"

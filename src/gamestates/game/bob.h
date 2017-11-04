@@ -1,56 +1,66 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_BOB_H
 #define GUARD_OF_GAMESTATES_GAME_BOB_H
 
-#include <ace/config.h>
 #include <ace/utils/bitmap.h>
-#include <ace/utils/bitmapmask.h>
 #include <ace/managers/viewport/simplebuffer.h>
 
 /// Used when bob is inactive - no undraw, no draw
-#define BOB_FLAG_NODRAW        0
+#define BOB_STATE_NODRAW        0
 /// Used when bob is going to be inactive - undraw, no draw
-#define BOB_FLAG_STOP_DRAWING  1
+#define BOB_STATE_STOP_DRAWING  1
 /// Used when bob is going to be active - no undraw, draw
-#define BOB_FLAG_START_DRAWING 2
+#define BOB_STATE_START_DRAWING 2
 /// Used when bob is active - undraw, draw
-#define BOB_FLAG_DRAW          3
+#define BOB_STATE_DRAW          3
 
-typedef struct _tBobSource {
+typedef struct _tBobOffset {
+	UWORD uwDy;
+	UWORD uwHeight;
+} tBobFrameOffset;
+
+typedef struct _tBobData {
 	tBitMap *pBitmap;
-	tBitmapMask *pMask;
-} tBobSource;
+	tBitMap *pMask;
+	tBobFrameOffset *pFrameOffsets;
+} tBobData;
 
 typedef struct _tBob {
-	tBobSource sSource;
+	tBobData sData;
 	tBitMap* pBg;
 	tUwCoordYX sPrevCoord;
+	tBobFrameOffset sBgDrawOffset;
+	FUBYTE fubCurrFrame;
+	FUBYTE fubMaxFrameHeight;
 	UWORD uwOffsY;
-	UWORD uwHeight;
-	UBYTE ubFlags;
+	UBYTE ubState;
 	UBYTE isDrawn;
 } tBob;
 
 tBob *bobCreate(
 	IN tBitMap *pBitmap,
-	IN tBitmapMask *pMask,
-	IN UWORD uwFrameHeight,
-	IN UWORD uwFrameIdx
+	IN tBitMap *pMask,
+	IN tBobFrameOffset *pFrameOffsets,
+	IN FUBYTE fubMaxFrameHeight,
+	IN FUBYTE fubFrameIdx
 );
 
 void bobDestroy(
 	IN tBob *pBob
 );
 
-void bobSetSource(
+void bobSetData(
 	IN tBob *pBob,
-	IN tBobSource *pSource
+	IN tBitMap *pFrames,
+	IN tBitMap *pMask,
+	IN tBobFrameOffset *pOffsets
 );
 
 tBob *bobUniqueCreate(
 	char *szBitmapPath,
 	char *szMaskPath,
-	UWORD uwFrameHeight,
-	UWORD uwFrameIdx
+	IN tBobFrameOffset *pFrameOffsets,
+	IN FUBYTE fubMaxFrameHeight,
+	IN FUBYTE fubFrameIdx
 );
 
 void bobUniqueDestroy(
@@ -59,7 +69,7 @@ void bobUniqueDestroy(
 
 void bobChangeFrame(
 	IN tBob *pBob,
-	IN UWORD uwFrameIdx
+	IN FUBYTE fubFrameIdx
 );
 
 UWORD bobUndraw(
@@ -71,7 +81,9 @@ UWORD bobDraw(
 	IN tBob *pBob,
 	IN tSimpleBufferManager *pDest,
 	IN UWORD uwX,
-	IN UWORD uwY
+	IN UWORD uwY,
+	IN UBYTE ubBgDy,
+	IN UBYTE ubBgHeight
 );
 
 void bobEnable(

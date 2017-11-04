@@ -1,7 +1,7 @@
 _arch/*
 _res/*
 *.lnk
-src/tmp/*
+build/*
 *.log
 debug/*
 .vscode/*

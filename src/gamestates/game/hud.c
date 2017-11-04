@@ -1,5 +1,4 @@
 #include "gamestates/game/hud.h"
-#include <ace/config.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>

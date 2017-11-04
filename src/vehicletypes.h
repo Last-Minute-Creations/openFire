@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_VEHICLETYPES_H
 #define GUARD_OF_VEHICLETYPES_H
 
-#include <ace/config.h>
 #include "gamestates/game/bob.h"
 #include "gamestates/game/team.h"
 
@@ -26,32 +25,43 @@ typedef struct _tCollisionPoints {
 	BYTE bRightmost;
 } tCollisionPts;
 
-typedef struct {
-	UBYTE ubFwdSpeed;                   ///< Forward movement speed
-	UBYTE ubBwSpeed;                    ///< Backward movement speed
-	UBYTE ubRotSpeed;                   ///< Rotate speed
-	UBYTE ubRotSpeedDiv;                ///< Rotate speed divider - do rotation every ubRotSpeedDiv frames
-	UBYTE ubMaxBaseAmmo;                ///< Tank cannon, chopper gun, ASV rockets, jeep 'nades
-	UBYTE ubMaxSuperAmmo;               ///< Chopper rockets, ASV mines
+typedef struct _tVehicleType {
+	UBYTE ubFwdSpeed;     ///< Forward movement speed
+	UBYTE ubBwSpeed;      ///< Backward movement speed
+	UBYTE ubRotSpeed;     ///< Rotate speed
+	UBYTE ubRotSpeedDiv;  ///< Rotate speed divider - do rotation every ubRotSpeedDiv frames
+	UBYTE ubMaxBaseAmmo;  ///< Tank cannon, chopper gun, ASV rockets, jeep 'nades
+	UBYTE ubMaxSuperAmmo; ///< Chopper rockets, ASV mines
 	UBYTE ubMaxFuel;
 	UBYTE ubMaxLife;
-	tBobSource sMainSource[TEAM_COUNT]; ///< Main bob gfx source.
-	tBobSource sAuxSource[TEAM_COUNT];  ///< Tank turret & chopper takeoff gfx source.
 	tCollisionPts pCollisionPts[VEHICLE_BODY_ANGLE_COUNT];
+	// Main bob source
+	tBitMap *pMainFrames[TEAM_COUNT];
+	tBitMap *pMainMask;
+	tBobFrameOffset *pMainFrameOffsets;
+	// Aux bob source
+	tBitMap *pAuxFrames[TEAM_COUNT];
+	tBitMap *pAuxMask;
+	tBobFrameOffset *pAuxFrameOffsets;
 } tVehicleType;
 
 void vehicleTypesCreate(void);
 
 void vehicleTypesDestroy(void);
 
-UWORD vehicleTypeBobSourceLoad(
-	IN char *szName,
-	IN tBobSource *pBobSource,
-	IN UBYTE isWithMask
+/**
+ *  Generates rotated frames for vehicle use.
+ *  @param szPath Path to file with source frame.
+ *  @return       Pointer to newly created bitmap with rotated frames, otherwise zero.
+ *
+ *  @todo Make it accept bitmaps wider than 32px?
+ */
+tBitMap *vehicleTypeGenerateRotatedFrames(
+	IN char *szPath
 );
 
-void vehicleTypeBobSourceUnload(
-	IN tBobSource *pSource
+void vehicleTypeFramesDestroy(
+	IN tVehicleType *pType
 );
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];

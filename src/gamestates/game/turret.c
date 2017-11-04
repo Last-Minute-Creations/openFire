@@ -15,7 +15,7 @@
 
 UWORD g_uwTurretCount;
 tTurret *g_pTurrets; // 20x25: 1100*7 ~ 8KiB
-tBobSource g_sTurretSource;
+tBitMap *g_pTurretFrames;
 
 static UWORD s_uwMaxTurrets;
 UWORD **g_pTurretTiles; // 20x25: +2KiB
@@ -65,7 +65,7 @@ void turretListCreate(void) {
 	// Force blank last line of turret gfx
 	for(UWORD uwFrame = 0; uwFrame != VEHICLE_BODY_ANGLE_COUNT; ++uwFrame) {
 		blitRect(
-			g_sTurretSource.pBitmap,
+			g_pTurretFrames,
 			0, TURRET_SPRITE_SIZE*uwFrame + TURRET_SPRITE_SIZE-1,
 			16, 1, 0
 		);
@@ -304,7 +304,7 @@ void turretUpdateSprites(void) {
 		uwTurretsInRow = 0;
 		uwRowStartCopOffs = uwCopOffs;
 		wCopVPos = WORLD_VPORT_BEGIN_Y + wSpriteBeginOnScreenY;
-		const UWORD uwWordsPerRow = (g_sTurretSource.pBitmap->BytesPerRow >> 1);
+		const UWORD uwWordsPerRow = (g_pTurretFrames->BytesPerRow >> 1);
 		for(uwTileX = uwFirstTileX; uwTileX <= uwLastTileX; ++uwTileX) {
 			// Get turret from tile, skip if there is none
 			if(g_pTurretTiles[uwTileX][uwTileY] == 0xFFFF)
@@ -318,7 +318,7 @@ void turretUpdateSprites(void) {
 
 			// Get turret gfx
 			uwSpriteLine = (angleToFrame(pTurret->ubAngle)*TURRET_SPRITE_SIZE + uwFirstVisibleSpriteLine)* uwWordsPerRow;
-			UWORD *pSpriteBpls = &((UWORD**)g_sTurretSource.pBitmap->Planes)[0][uwSpriteLine];
+			UWORD *pSpriteBpls = &((UWORD**)g_pTurretFrames->Planes)[0][uwSpriteLine];
 			pRowSpriteBpls[uwTurretsInRow] = pSpriteBpls;
 			const UWORD pTeamColors[TEAM_COUNT+1] = {0x69C, 0xB21, 0xAAA};
 

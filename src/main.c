@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include <ace/types.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
 #include <ace/managers/timer.h>
@@ -23,7 +24,8 @@ int main(void) {
 
 	inputOpen();
 
-	gameCreate(precalcCreate, precalcLoop, precalcDestroy);
+	gameCreate();
+	gamePushState(precalcCreate, precalcLoop, precalcDestroy);
 	while (gameIsRunning()) {
 		timerProcess();
 		inputProcess();
