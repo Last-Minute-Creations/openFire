@@ -191,11 +191,20 @@ void playerLocalProcessInput(void) {
 			else if(mouseUse(MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
 				tUwRect sTankRect = {
-					.uwX = 2 + 5, .uwY = uwHudOffs + 5, .uwWidth = 28, .uwHeight = 20
+					.uwX = 2 + 4, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
+				};
+				tUwRect sJeepRect = {
+					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
 				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
 				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
+					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
+					g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
+					displayPrepareDriving();
+				}
+				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
+					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
 					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
 					g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 					displayPrepareDriving();

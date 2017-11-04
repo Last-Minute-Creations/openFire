@@ -282,8 +282,8 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubFwdSpeed);
 	}
 	else if(pSteerRequest->ubBackward) {
-		fNewPosX = fix16_add(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed);
-		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosX = fix16_sub(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosY = fix16_sub(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubBwSpeed);
 	}
 	UWORD uwNewPosX = fix16_to_int(fNewPosX);
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
