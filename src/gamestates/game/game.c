@@ -50,7 +50,6 @@ static UBYTE s_ubWasSiloHighlighted;
 #ifdef SPEED_LOG
 static tAvg *s_pDrawAvgExplosions;
 static tAvg *s_pDrawAvgProjectiles;
-static tAvg *s_pDrawAvgVehicles;
 static tAvg *s_pUndrawAvgExplosions;
 static tAvg *s_pUndrawAvgProjectiles;
 static tAvg *s_pUndrawAvgVehicles;
@@ -189,7 +188,6 @@ void gsGameCreate(void) {
 	#ifdef SPEED_LOG
 	s_pDrawAvgExplosions = logAvgCreate("draw explosions", 50);
 	s_pDrawAvgProjectiles = logAvgCreate("draw projectiles", 50);
-	s_pDrawAvgVehicles = logAvgCreate("draw vehicles", 50);
 
 	s_pUndrawAvgExplosions = logAvgCreate("undraw explosions", 50);
 	s_pUndrawAvgProjectiles = logAvgCreate("undraw projectiles", 50);
@@ -393,7 +391,6 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pUndrawAvgExplosions);
 	logAvgDestroy(s_pUndrawAvgProjectiles);
 	logAvgDestroy(s_pUndrawAvgVehicles);
-	logAvgDestroy(s_pDrawAvgVehicles);
 	logAvgDestroy(s_pDrawAvgProjectiles);
 	logAvgDestroy(s_pDrawAvgExplosions);
 	logAvgDestroy(s_pProcessAvgCursor);
