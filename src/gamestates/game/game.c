@@ -218,11 +218,11 @@ void gsGameCreate(void) {
 
 	// AI
 	aiManagerCreate();
-	for(FUBYTE i = 0; i != 7; ++i) {
-		char szName[10];
-		sprintf(szName, "player%hhu", i);
-		playerAdd(szName, TEAM_BLUE);
-	}
+	// for(FUBYTE i = 0; i != 7; ++i) {
+	// 	char szName[10];
+	// 	sprintf(szName, "player %hhu", i);
+	// 	playerAdd(szName, TEAM_BLUE);
+	// }
 
 	// Now that world buffer is created, do the first draw
 	mapRedraw();

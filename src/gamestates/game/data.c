@@ -24,19 +24,20 @@ void dataRecv(void) {
 	pFrame->sHeader.uwServerTime = 0;
 	pFrame->sHeader.uwSize = 0;
 	pFrame->sHeader.uwType = DATA_PACKET_TYPE_SRV_STATE;
-	for(UWORD i = 0; i != 8; ++i) {
-		// Fill players
-		pFrame->pPlayerStates[i].fDx = 0;
-		pFrame->pPlayerStates[i].fDy = 0;
-		pFrame->pPlayerStates[i].fX = fix16_from_int((10+(i & 3)*2) << MAP_TILE_SIZE);
-		pFrame->pPlayerStates[i].fY = fix16_from_int((5 + 2*(i/4)) << MAP_TILE_SIZE);
-		pFrame->pPlayerStates[i].ubBodyAngle = 0;
-		pFrame->pPlayerStates[i].ubDestAngle = 0;
-		pFrame->pPlayerStates[i].ubTurretAngle = 0;
-		pFrame->pPlayerStates[i].ubPlayerState = PLAYER_STATE_DRIVING;
-		pFrame->pPlayerStates[i].ubVehicleType = VEHICLE_TYPE_TANK;
-	}
-	s_isPacketRead = 1;
+	// for(UWORD i = 0; i != 8; ++i) {
+	// 	// Fill players
+	// 	pFrame->pPlayerStates[i].fDx = 0;
+	// 	pFrame->pPlayerStates[i].fDy = 0;
+	// 	pFrame->pPlayerStates[i].fX = fix16_from_int((10+(i & 3)*2) << MAP_TILE_SIZE);
+	// 	pFrame->pPlayerStates[i].fY = fix16_from_int((5 + 2*(i/4)) << MAP_TILE_SIZE);
+	// 	pFrame->pPlayerStates[i].ubBodyAngle = 0;
+	// 	pFrame->pPlayerStates[i].ubDestAngle = 0;
+	// 	pFrame->pPlayerStates[i].ubTurretAngle = 0;
+	// 	pFrame->pPlayerStates[i].ubPlayerState = PLAYER_STATE_DRIVING;
+	// 	pFrame->pPlayerStates[i].ubVehicleType = VEHICLE_TYPE_TANK;
+	// }
+	// s_isPacketRead = 1;
+	s_isPacketRead = 0;
 
 	if(s_isPacketRead) {
 		for(UBYTE i = 0; i != 8; ++i) {
