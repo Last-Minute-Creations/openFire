@@ -265,6 +265,8 @@ void vehicleTypesCreate(void) {
 	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
 	if(pType->pAuxMask)
 		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
+	else
+		pType->pAuxFrameOffsets = 0;
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -279,7 +281,6 @@ void vehicleTypesCreate(void) {
 
 	precalcIncreaseProgress(5, "Generating jeep frames");
 	vehicleTypeFramesCreate(pType, "jeep", 0);
-	pType->pAuxFrameOffsets = 0;
 
 	// Jeep collision coords
 	precalcIncreaseProgress(5, "Calculating jeep collision coords");
@@ -299,6 +300,8 @@ void vehicleTypesCreate(void) {
 	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
 	if(pType->pAuxMask)
 		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
+	else
+		pType->pAuxFrameOffsets = 0;
 
 	logBlockEnd("vehicleTypesCreate");
 }
@@ -308,6 +311,12 @@ void vehicleTypeUnloadFrameData(tVehicleType *pType) {
 		pType->pMainFrameOffsets,
 		VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
 	);
+	if(pType->pAuxFrameOffsets) {
+		memFree(
+			pType->pAuxFrameOffsets,
+			VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
+		);
+	}
 	bitmapDestroy(pType->pMainFrames[TEAM_BLUE]);
 	bitmapDestroy(pType->pMainFrames[TEAM_RED]);
 	bitmapDestroy(pType->pMainMask);
