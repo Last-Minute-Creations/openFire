@@ -49,7 +49,7 @@ void precalcCreate(void) {
 	s_pFont = fontCreate("data/silkscreen5.fnt");
 	fontDrawStr(
 		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4,
-		"Precalcing...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+		"Precalculating...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 	);
 	if(s_isHdd) {
 		fontDrawStr(

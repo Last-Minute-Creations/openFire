@@ -137,7 +137,6 @@ UWORD bobDraw(
 		pBob->sBgDrawOffset.uwHeight = ubBgHeight;
 	}
 	else {
-		// TODO eliminate this case?
 		uwFrameDy = pBob->sBgDrawOffset.uwDy = 0;
 		uwFrameHeight = pBob->sBgDrawOffset.uwHeight = pBob->fubMaxFrameHeight;
 	}

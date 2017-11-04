@@ -16,7 +16,8 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: %s)", szPath);
 
 	// Calc source frame checksum
-	ULONG ulAdlerBm = adler32file(szPath);
+	sprintf(szBitmapFileName, "data/%s", szPath);
+	ULONG ulAdlerBm = adler32file(szBitmapFileName);
 
 	// Check for precalc
 	sprintf(szChecksumFileName, "precalc/%s.adl", szPath);
