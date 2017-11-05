@@ -84,6 +84,12 @@ void playerSimVehicle(
 	IN tPlayer *pPlayer
 );
 
+void playerSay(
+	IN tPlayer *pPlayer,
+	IN char *szMsg,
+	IN UBYTE isSayTeam
+);
+
 inline tPlayer *playerGetByVehicle(
 	IN tVehicle *pVehicle
 ) {

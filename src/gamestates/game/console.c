@@ -2,6 +2,7 @@
 #include <ace/utils/font.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/hud.h"
+#include "gamestates/game/player.h"
 
 // 210x59
 #define CONSOLE_MAX_ENTRIES 8
@@ -61,7 +62,7 @@ FUBYTE consoleChatProcessChar(char c) {
 		if(s_fubChatLineLength == 5)
 			return 0;
 		s_pChatBfr[s_fubChatLineLength] = 0;
-		consoleWrite(&s_pChatBfr[5], CONSOLE_COLOR_GENERAL);
+		playerSay(g_pLocalPlayer, &s_pChatBfr[5], 0);
 		consoleChatEnd();
 		return 0;
 	}

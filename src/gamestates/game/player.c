@@ -80,7 +80,7 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 			sprintf(szMessage, "%s joined BLUE", szName);
 		else
 			sprintf(szMessage, "%s joined RED", szName);
-		consoleWrite(szMessage, 1);
+		consoleWrite(szMessage, CONSOLE_COLOR_GENERAL);
 		return pPlayer;
 	}
 	logWrite("Can't add player %s - no more slots\n", szName);
@@ -382,6 +382,21 @@ UBYTE playerAnyNearPoint(UWORD uwChkX, UWORD uwChkY, UWORD uwDist) {
 			return 1;
 	}
 	return 0;
+}
+
+void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam) {
+	char szBfr[PLAYER_NAME_MAX + CONSOLE_MESSAGE_MAX + 2+1];
+	strcpy(szBfr, pPlayer->szName);
+	strcat(szBfr, ": ");
+	strcat(szBfr, szMsg);
+	UBYTE ubColor;
+	if(isSayTeam)
+		ubColor = pPlayer->ubTeam == TEAM_BLUE ? CONSOLE_COLOR_BLUE : CONSOLE_COLOR_RED;
+	else
+		ubColor = CONSOLE_COLOR_SAY;
+	consoleWrite(szBfr,	ubColor);
+
+	// TODO send to server
 }
 
 tPlayer *g_pPlayers;
