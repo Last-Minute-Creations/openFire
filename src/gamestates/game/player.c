@@ -111,6 +111,8 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 }
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
+	if(pPlayer->uwCooldown)
+		return;
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
 	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 	pPlayer->ubState = PLAYER_STATE_SURFACING;
@@ -362,6 +364,10 @@ void playerSim(void) {
 			case PLAYER_STATE_DRIVING:
 				playerSimVehicle(pPlayer);
 				vehicleDraw(&pPlayer->sVehicle);
+				continue;
+			case PLAYER_STATE_LIMBO:
+				if(pPlayer->uwCooldown)
+					--pPlayer->uwCooldown;
 				continue;
 		}
 	}
