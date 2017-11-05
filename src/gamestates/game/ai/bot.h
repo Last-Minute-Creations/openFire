@@ -7,6 +7,8 @@
 
 #define AI_BOT_ROUTE_NODE_MAX 20
 
+#define AI_BOT_DEBUG
+
 typedef struct _tBotRoute {
 	UBYTE ubNodeCount;
 	UBYTE ubCurrNode;
@@ -30,5 +32,9 @@ void botManagerCreate(
 );
 
 void botManagerDestroy(void);
+
+void botAdd(char *szName, UBYTE ubTeam);
+
+void botProcess(void);
 
 #endif // GUARD_OF_GAMESTATES_GAME_AI_BOT_H

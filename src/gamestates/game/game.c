@@ -23,6 +23,7 @@
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
 #include "gamestates/game/ai/ai.h"
+#include "gamestates/game/ai/bot.h"
 #include "gamestates/game/scoretable.h"
 #include "gamestates/menu/menu.h"
 
@@ -72,6 +73,8 @@ UWORD uwLimboY;
 
 ULONG g_ulGameFrame;
 tFont *g_pSmallFont;
+
+UBYTE g_isLocalBot;
 
 void displayPrepareLimbo(FUBYTE fubSpawnIdx) {
 	cursorSetConstraints(0,0, 320, 255);
@@ -212,12 +215,18 @@ void gsGameCreate(void) {
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
-	// Add players
-	playerListCreate(8);
-	g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
-
 	// AI
+	playerListCreate(8);
 	aiManagerCreate();
+
+	// Add players
+	if(g_isLocalBot) {
+		botAdd("player", TEAM_BLUE);
+		g_pLocalPlayer = &g_pPlayers[0];
+	}
+	else
+		g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+
 	// for(FUBYTE i = 0; i != 7; ++i) {
 	// 	char szName[10];
 	// 	sprintf(szName, "player %hhu", i);
@@ -279,6 +288,7 @@ void gsGameLoop(void) {
 	logAvgBegin(s_pProcessAvgInput);
 	playerLocalProcessInput(); // Steer requests, chat, limbo
 	logAvgEnd(s_pProcessAvgInput);
+	botProcess();
 
 	logAvgBegin(s_pProcessAvgDataSend);
 	dataSend(); // Send input requests to server

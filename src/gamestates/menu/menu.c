@@ -20,11 +20,17 @@ static tSimpleBufferManager *s_pBuffer;
 static tFont *s_pFont;
 
 void menuOnStartGame(void) {
+	g_isLocalBot = 0;
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }
 
 void menuOnQuit(void) {
 	gamePopState();
+}
+
+void menuOnDemo(void) {
+	g_isLocalBot = 1;
+	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }
 
 void menuCreate(void) {
@@ -51,8 +57,9 @@ void menuCreate(void) {
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
 	buttonListCreate(10, s_pBuffer->pBuffer, s_pFont);
 
-	buttonAdd(64, 96, 320-128, 32, "PLAY GAME", menuOnStartGame);
-	buttonAdd(64, 96+32+16, 320-128, 32, "EXIT", menuOnQuit);
+	buttonAdd(64, 80, 320-128, 32, "PLAY GAME", menuOnStartGame);
+	buttonAdd(64, 80+32+16, 320-128, 32, "DEMO", menuOnDemo);
+	buttonAdd(64, 80+32+16+32+16, 320-128, 32, "EXIT", menuOnQuit);
 
 	buttonDrawAll();
 

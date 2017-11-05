@@ -27,13 +27,12 @@ void botManagerDestroy(void) {
 }
 
 void botAdd(char *szName, UBYTE ubTeam) {
-	tPlayer *pPlayer = playerAdd(szName, ubTeam);
-	if(!pPlayer) {
+	tBot *pBot = &s_pBots[s_fubBotCount];
+	pBot->pPlayer = playerAdd(szName, ubTeam);
+	if(!pBot->pPlayer) {
 		logWrite("ERR: No more room for bots\n");
 		return;
 	}
-	tBot *pBot = &s_pBots[s_fubBotCount];
-	pBot->pPlayer = pPlayer;
 	pBot->pNextNode = 0;
 	pBot->ubState = AI_BOT_STATE_IDLE;
 	pBot->ubTick = 0;
@@ -41,6 +40,8 @@ void botAdd(char *szName, UBYTE ubTeam) {
 	pBot->uwNextY = 0;
 	pBot->ubNextAngle = 0;
 	++s_fubBotCount;
+
+	playerSay(pBot->pPlayer, "Ich bin ein computer", 0);
 }
 
 void botRemoveByName(char *szName) {
@@ -85,6 +86,14 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 	}
 	if(!pRouteEnd)
 		return;
+#ifdef AI_BOT_DEBUG
+	char szSayBfr[50];
+	sprintf(
+		szSayBfr,	"New target at %"PRI_FUBYTE",%"PRI_FUBYTE,
+		pRouteEnd->fubX, pRouteEnd->fubY
+	);
+	playerSay(pBot->pPlayer, szSayBfr, 0);
+#endif // AI_BOT_DEBUG
 
 	// TODO Find shortest route to destination
 	tAiNode *pRouteStart = aiFindClosestNode(
@@ -226,8 +235,10 @@ void botProcessLimbo(tBot *pBot) {
 	pBot->ubState = AI_BOT_STATE_IDLE;
 	// Make sure noone from own team stands at spawn
 	// TODO: spawn kill ppl from other team
-	if(!spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx))
+	if(!spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
 		playerSelectVehicle(pBot->pPlayer, VEHICLE_TYPE_TANK);
+		playerSay(pBot->pPlayer, "Surfacing...", 0);
+	}
 }
 
 void botProcess(void) {

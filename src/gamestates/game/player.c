@@ -113,6 +113,10 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
 	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
+	pPlayer->ubState = PLAYER_STATE_SURFACING;
+	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
+	if(pPlayer == g_pLocalPlayer)
+		displayPrepareDriving();
 }
 
 void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
@@ -197,18 +201,10 @@ void playerLocalProcessInput(void) {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
 				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
-				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
+				if(inRect(uwMouseX, uwMouseY, sTankRect))
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
-					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
-					g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
-					displayPrepareDriving();
-				}
-				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
+				else if(inRect(uwMouseX, uwMouseY, sJeepRect))
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
-					g_pLocalPlayer->ubState = PLAYER_STATE_SURFACING;
-					g_pLocalPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
-					displayPrepareDriving();
-				}
 			}
 		} break;
 	}
