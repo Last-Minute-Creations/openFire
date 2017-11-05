@@ -4,20 +4,16 @@
 #include <ace/types.h>
 #include "gamestates/game/player.h"
 #include "gamestates/game/ai/ai.h"
-
-#define AI_BOT_ROUTE_NODE_MAX 20
+#include "gamestates/game/ai/route.h"
 
 #define AI_BOT_DEBUG
 
-typedef struct _tBotRoute {
-	UBYTE ubNodeCount;
-	UBYTE ubCurrNode;
-	tAiNode pNodes[AI_BOT_ROUTE_NODE_MAX];
-} tBotRoute;
+#define AI_BOT_ROUTE_CANDIDATE_COUNT 5
+#define AI_BOT_ROUTE_SUBCANDIDATE_COUNT 5
 
 typedef struct _tBot {
 	tPlayer *pPlayer;
-	tBotRoute sRoute;
+	tRoute sRoute;
 	tAiNode *pNextNode;
 	UBYTE ubState;
 	UBYTE ubTick;

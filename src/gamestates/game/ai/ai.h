@@ -14,6 +14,7 @@
 typedef struct _tAiNode {
 	FUBYTE fubY;
 	FUBYTE fubX;
+	FUBYTE fubIdx;
 	FUBYTE fubType;
 	tControlPoint *pControlPoint;
 } tAiNode;
@@ -22,13 +23,18 @@ void aiManagerCreate(void);
 
 void aiManagerDestroy(void);
 
-void aiCalculateCosts(void);
+void aiCalculateTileCosts(void);
 
-void aiCalculateCostFrag(
+void aiCalculateTileCostsFrag(
 	IN FUBYTE fubX1,
 	IN FUBYTE fubY1,
 	IN FUBYTE fubX2,
 	IN FUBYTE fubY2
+);
+
+UWORD aiGetCostBetweenNodes(
+	IN tAiNode *pSrc,
+	IN tAiNode *pDst
 );
 
 /**

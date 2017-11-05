@@ -35,6 +35,7 @@ void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 	g_pNodes[g_fubNodeCount].fubY = fubY;
 	g_pNodes[g_fubNodeCount].fubX = fubX;
 	g_pNodes[g_fubNodeCount].fubType = fubNodeType;
+	g_pNodes[g_fubNodeCount].fubIdx = g_fubNodeCount;
 
 	// Add to capture list?
 	if(fubNodeType == AI_NODE_TYPE_CAPTURE) {
@@ -107,10 +108,9 @@ void aiGraphCreate(void) {
 	else {
 		s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
 		for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
-			s_pNodeConnectionCosts[fubFrom] = memAllocFast(sizeof(UWORD) * g_fubNodeCount);
+			tAiNode *pFrom = &g_pNodes[fubFrom];
+			s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
 			for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
-				s_pNodeConnectionCosts[fubFrom][fubTo] = 0;
-				tAiNode *pFrom = &g_pNodes[fubFrom];
 				tAiNode *pTo = &g_pNodes[fubTo];
 				BYTE bDeltaX = pTo->fubX - pFrom->fubX;
 				BYTE bDeltaY = pTo->fubY - pFrom->fubY;
@@ -154,6 +154,7 @@ void aiManagerCreate(void) {
 	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
 	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
 		s_pTileCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
+	aiCalculateTileCosts();
 
 	// Create node network
 	aiGraphCreate();
@@ -170,11 +171,13 @@ void aiManagerDestroy(void) {
 	logBlockEnd("aiManagerDestroy()");
 }
 
-void aiCalculateCosts(void) {
-	aiCalculateCostFrag(0, 0, g_fubMapTileWidth-1, g_fubMapTileHeight-1);
+void aiCalculateTileCosts(void) {
+	logBlockBegin("aiCalculateTileCosts()");
+	aiCalculateTileCostsFrag(0, 0, g_fubMapTileWidth-1, g_fubMapTileHeight-1);
+	logBlockEnd("aiCalculateTileCosts()");
 }
 
-void aiCalculateCostFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2) {
+void aiCalculateTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2) {
 	for(FUBYTE x = fubX1; x <= fubX2; ++x) {
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			// check for turret in range of fire
@@ -205,4 +208,8 @@ tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
 		}
 	}
 	return pClosest;
+}
+
+UWORD aiGetCostBetweenNodes(tAiNode *pSrc, tAiNode *pDst) {
+	return s_pNodeConnectionCosts[pSrc->fubIdx][pDst->fubIdx];
 }

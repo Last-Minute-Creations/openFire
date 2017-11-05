@@ -52,22 +52,71 @@ void botRemoveByPtr(tBot *pBot) {
 
 }
 
-void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
-	pBot->sRoute.ubNodeCount = 0;
-	pBot->sRoute.ubCurrNode = 0;
+typedef struct _tBotRouteSubcandidate {
+	tRoute *pBaseRoute;
+	tAiNode *pNextNode;
+	UWORD uwCost;
+} tBotRouteSubcandidate;
 
-	// TODO implement
-	if(pBot->sRoute.ubNodeCount >= AI_BOT_ROUTE_NODE_MAX) {
-		// Route too long
-		logWrite(
-			"WARN: Route too long "
-			"from %"PRI_FUBYTE",%"PRI_FUBYTE" to %"PRI_FUBYTE",%"PRI_FUBYTE"\n",
-			pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY
-		);
-		pBot->sRoute.ubNodeCount = 0;
-		pBot->sRoute.ubCurrNode = 0;
-		return;
-	}
+void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
+	logBlockBegin("botSetupRoute()");
+	// Setup direct roads as candidates
+	tRoute pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
+	for(FUBYTE fubRoute = AI_BOT_ROUTE_CANDIDATE_COUNT; fubRoute--;)
+		routeInit(&pCandidates[fubRoute], pNodeStart, pNodeEnd);
+	logWrite("Initial route cost: %hu\n", pCandidates[0].uwCost);
+
+	tBotRouteSubcandidate pSubCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
+	UBYTE ubIsDone;
+	do {
+		ubIsDone = 1;
+		for(FUBYTE fubRoute = AI_BOT_ROUTE_CANDIDATE_COUNT; fubRoute--;) {
+			tRoute *pBaseRoute = &pCandidates[fubRoute];
+
+			// Reset subcandidates
+			for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
+				pSubCandidates[fubSub].uwCost = 0xFFFF;
+			}
+
+			// Find subcandidates
+			for(FUBYTE fubNode = g_fubNodeCount; fubNode--;) {
+				if(routeHasNode(pBaseRoute, &g_pNodes[fubNode]))
+					continue;
+				UWORD uwCost = routeGetCostWithNode(pBaseRoute, &g_pNodes[fubNode]);
+				if(uwCost > pBaseRoute->uwCost)
+					continue;
+				ubIsDone = 0;
+
+				// Check with subcandidates
+				for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
+					if(pSubCandidates[fubSub].uwCost > uwCost) {
+						if(fubSub) {
+							memcpy(
+								&pSubCandidates[0], &pSubCandidates[1],
+								sizeof(tBotRouteSubcandidate) * fubSub
+							);
+						}
+						pSubCandidates[fubSub].pBaseRoute = pBaseRoute;
+						pSubCandidates[fubSub].pNextNode = &g_pNodes[fubNode];
+						pSubCandidates[fubSub].uwCost = uwCost;
+					}
+				}
+			}
+
+			// Set candidates as top 5 subcandidates
+			logWrite("Top 5 costs: ");
+			for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;) {
+				routeCopy(&pCandidates[i], pSubCandidates[i].pBaseRoute);
+				routePushNode(&pCandidates[i], pSubCandidates[i].pNextNode);
+				logWrite("%hu ", pCandidates[i].uwCost);
+			}
+			logWrite("\n");
+		}
+	} while(!ubIsDone);
+
+	// Set route to best candidate
+	routeCopy(&pBot->sRoute, &pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT-1]);
+	logBlockEnd("botSetupRoute()");
 }
 
 void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
@@ -100,11 +149,12 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
 		pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
 	);
-	botSetupRoute(pBot, pRouteStart, pRouteEnd);
+	if(pRouteStart) {
+		// Find best route
+		botSetupRoute(pBot, pRouteStart, pRouteEnd);
 
-	// Set first node of route as next to reach
-	if(pBot->sRoute.ubNodeCount) {
-		pBot->pNextNode = &pBot->sRoute.pNodes[0];
+		// Set first node of route as next to reach
+		pBot->pNextNode = pBot->sRoute.pNodes[0];
 		pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 		pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	}
@@ -176,7 +226,7 @@ void botProcessDriving(tBot *pBot) {
 			}
 			else {
 				// Get next node from route
-				pBot->pNextNode = &pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
+				pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			}
