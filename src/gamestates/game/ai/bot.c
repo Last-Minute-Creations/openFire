@@ -162,6 +162,7 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 
 		// Set first node of route as next to reach
 		pBot->pNextNode = pBot->sRoute.pNodes[0];
+		pBot->sRoute.ubCurrNode = 0;
 		pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 		pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	}
@@ -171,6 +172,11 @@ void botProcessDriving(tBot *pBot) {
 	switch(pBot->ubState) {
 		case AI_BOT_STATE_IDLE:
 			botFindNewTarget(pBot, pBot->pNextNode);
+#ifdef AI_BOT_DEBUG
+			char szBfr[100];
+			sprintf(szBfr, "Going to %hu,%hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
+			playerSay(pBot->pPlayer, szBfr, 0);
+#endif // AI_BOT_DEBUG
 			pBot->ubTick = 10;
 			pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			break;
@@ -187,42 +193,51 @@ void botProcessDriving(tBot *pBot) {
 			}
 			else
 				++pBot->ubTick;
+			// Check if in destination
+			if(
+				ABS(pBot->uwNextX - pBot->pPlayer->sVehicle.uwX) < (MAP_HALF_TILE/2) &&
+				ABS(pBot->uwNextY - pBot->pPlayer->sVehicle.uwY) < (MAP_HALF_TILE/2)
+			) {
+				pBot->pPlayer->sSteerRequest.ubForward = 0;
+				pBot->pPlayer->sSteerRequest.ubBackward = 0;
+				pBot->pPlayer->sSteerRequest.ubLeft = 0;
+				pBot->pPlayer->sSteerRequest.ubRight = 0;
+				pBot->ubState = AI_BOT_STATE_NODE_REACHED;
+				break;
+			}
+
 			// Steer to proper angle
 			BYTE bDir = getDeltaAngleDirection(pBot->pPlayer->sVehicle.ubBodyAngle, pBot->ubNextAngle, 1);
-			if(bDir > 0) {
-				pBot->pPlayer->sSteerRequest.ubLeft = 0;
-				pBot->pPlayer->sSteerRequest.ubRight = 1;
-			}
-			else if(bDir < 0) {
-				pBot->pPlayer->sSteerRequest.ubLeft = 1;
-				pBot->pPlayer->sSteerRequest.ubRight = 0;
-			}
-			else {
-				pBot->pPlayer->sSteerRequest.ubLeft = 0;
-				pBot->pPlayer->sSteerRequest.ubRight = 0;
-				// Check field in front for collisions
-				UWORD uwChkX = pBot->pPlayer->sVehicle.uwX + fix16_to_int(
-					(3*MAP_FULL_TILE)/2 * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
-				);
-				UWORD uwChkY = pBot->pPlayer->sVehicle.uwY + fix16_to_int(
-					(3*MAP_FULL_TILE)/2 * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
-				);
-				if(playerAnyNearPoint(uwChkX, uwChkY, MAP_FULL_TILE)) {
-					pBot->ubState = AI_BOT_STATE_BLOCKED;
-					pBot->ubTick = 0;
-					break;
+			if(bDir) {
+				if(bDir > 0) {
+					pBot->pPlayer->sSteerRequest.ubLeft = 0;
+					pBot->pPlayer->sSteerRequest.ubRight = 1;
 				}
-				// Move until close to node
-				if(
-					ABS(pBot->uwNextX - pBot->pPlayer->sVehicle.uwX) > MAP_HALF_TILE ||
-					ABS(pBot->uwNextY - pBot->pPlayer->sVehicle.uwY) > MAP_HALF_TILE
-				)
-					pBot->pPlayer->sSteerRequest.ubForward = 1;
-				else {
-					pBot->pPlayer->sSteerRequest.ubForward = 0;
-					pBot->ubState = AI_BOT_STATE_NODE_REACHED;
+				else if(bDir < 0) {
+					pBot->pPlayer->sSteerRequest.ubLeft = 1;
+					pBot->pPlayer->sSteerRequest.ubRight = 0;
 				}
+				break;
 			}
+
+			// Check field in front for collisions
+			pBot->pPlayer->sSteerRequest.ubLeft = 0;
+			pBot->pPlayer->sSteerRequest.ubRight = 0;
+			UWORD uwChkX = pBot->pPlayer->sVehicle.uwX + fix16_to_int(
+				(3*MAP_FULL_TILE)/2 * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
+			);
+			UWORD uwChkY = pBot->pPlayer->sVehicle.uwY + fix16_to_int(
+				(3*MAP_FULL_TILE)/2 * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
+			);
+			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_FULL_TILE)) {
+				pBot->ubState = AI_BOT_STATE_BLOCKED;
+				pBot->ubTick = 0;
+				pBot->pPlayer->sSteerRequest.ubForward = 0;
+				break;
+			}
+
+			// Move until close to node
+			pBot->pPlayer->sSteerRequest.ubForward = 1;
 			break;
 		case AI_BOT_STATE_NODE_REACHED:
 			++pBot->sRoute.ubCurrNode;
@@ -230,12 +245,27 @@ void botProcessDriving(tBot *pBot) {
 				// Last node from route - hold pos
 				pBot->ubTick = 0;
 				pBot->ubState = AI_BOT_STATE_HOLDING_POS;
+#ifdef AI_BOT_DEBUG
+				char szBfr[100];
+				sprintf(szBfr, "Destination reached - holding pos\n");
+				playerSay(pBot->pPlayer, szBfr, 0);
+#endif // AI_BOT_DEBUG
 			}
 			else {
 				// Get next node from route
 				pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
+				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+#ifdef AI_BOT_DEBUG
+				char szBfr[100];
+				sprintf(
+					szBfr, "Moving to next pos: %hu, %hu\n",
+					pBot->pNextNode->fubX, pBot->pNextNode->fubY
+				);
+				playerSay(pBot->pPlayer, szBfr, 0);
+#endif // AI_BOT_DEBUG
 			}
 			break;
 		case AI_BOT_STATE_HOLDING_POS:
@@ -281,6 +311,8 @@ void botProcessDriving(tBot *pBot) {
 }
 
 void botProcessLimbo(tBot *pBot) {
+	if(pBot->pPlayer->uwCooldown)
+		return;
 	// Find some place to go - e.g. capture point
 	botFindNewTarget(pBot, 0);
 	// Find nearest spawn point
