@@ -8,7 +8,7 @@ void routeInit(tRoute *pRoute, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 	pRoute->uwCost = aiGetCostBetweenNodes(pNodeStart, pNodeEnd);
 }
 
-void routeCopy(tRoute *pDstRoute, tRoute *pSrcRoute) {
+void routeCopy(tRoute *pSrcRoute, tRoute *pDstRoute) {
 	memcpy(pDstRoute, pSrcRoute, sizeof(tRoute));
 }
 

@@ -19,8 +19,8 @@ void routeInit(
 );
 
 void routeCopy(
-	IN tRoute *pDstRoute,
-	IN tRoute *pSrcRoute
+	IN tRoute *pSrcRoute,
+	IN tRoute *pDstRoute
 );
 
 UBYTE routePushNode(

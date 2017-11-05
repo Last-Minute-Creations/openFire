@@ -64,19 +64,21 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 	tRoute pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
 	for(FUBYTE fubRoute = AI_BOT_ROUTE_CANDIDATE_COUNT; fubRoute--;)
 		routeInit(&pCandidates[fubRoute], pNodeStart, pNodeEnd);
+	logWrite("Finding route from %hu,%hu to %hu,%hu\n", pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY);
 	logWrite("Initial route cost: %hu\n", pCandidates[0].uwCost);
 
 	tBotRouteSubcandidate pSubCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
-	UBYTE ubIsDone;
+	// Reset subcandidates
+	for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
+		pSubCandidates[fubSub].uwCost = 0xFFFF;
+	}
+
+	UBYTE isDone;
 	do {
-		ubIsDone = 1;
+		isDone = 1;
+
 		for(FUBYTE fubRoute = AI_BOT_ROUTE_CANDIDATE_COUNT; fubRoute--;) {
 			tRoute *pBaseRoute = &pCandidates[fubRoute];
-
-			// Reset subcandidates
-			for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
-				pSubCandidates[fubSub].uwCost = 0xFFFF;
-			}
 
 			// Find subcandidates
 			for(FUBYTE fubNode = g_fubNodeCount; fubNode--;) {
@@ -85,7 +87,7 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 				UWORD uwCost = routeGetCostWithNode(pBaseRoute, &g_pNodes[fubNode]);
 				if(uwCost > pBaseRoute->uwCost)
 					continue;
-				ubIsDone = 0;
+				isDone = 0;
 
 				// Check with subcandidates
 				for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
@@ -102,20 +104,25 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 					}
 				}
 			}
-
-			// Set candidates as top 5 subcandidates
-			logWrite("Top 5 costs: ");
-			for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;) {
-				routeCopy(&pCandidates[i], pSubCandidates[i].pBaseRoute);
-				routePushNode(&pCandidates[i], pSubCandidates[i].pNextNode);
-				logWrite("%hu ", pCandidates[i].uwCost);
-			}
-			logWrite("\n");
 		}
-	} while(!ubIsDone);
+		if(isDone)
+			break;
+		// Set candidates as top 5 subcandidates
+		logWrite("Top 5 costs: ");
+		tRoute pTmp[5];
+		for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;)
+			routeCopy(pSubCandidates[i].pBaseRoute, &pTmp[i]);
+		for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;) {
+			routeCopy(&pTmp[i], &pCandidates[i]);
+			routePushNode(&pCandidates[i], pSubCandidates[i].pNextNode);
+			logWrite("%hu ", pCandidates[i].uwCost);
+		}
+		logWrite("\n");
+
+	} while(!isDone);
 
 	// Set route to best candidate
-	routeCopy(&pBot->sRoute, &pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT-1]);
+	routeCopy(&pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT-1], &pBot->sRoute);
 	logBlockEnd("botSetupRoute()");
 }
 
