@@ -300,9 +300,8 @@ void gsGameLoop(void) {
 		);
 	}
 	else {
-		// TODO: uwSpawnX & uwSpawnY should be taken from player's x/y after death
-		UWORD uwSpawnX = (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-		UWORD uwSpawnY = (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+		UWORD uwSpawnX = g_pLocalPlayer->sVehicle.uwX;
+		UWORD uwSpawnY = g_pLocalPlayer->sVehicle.uwY;
 		UWORD uwLimboX = MAX(0, uwSpawnX - WORLD_VPORT_WIDTH/2);
 		UWORD uwLimboY = MAX(0, uwSpawnY- WORLD_VPORT_HEIGHT/2);
 		WORD wDx = CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);

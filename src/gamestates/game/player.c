@@ -60,7 +60,7 @@ void playerListDestroy() {
 
 void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	if(fubSpawnIdx == SPAWN_INVALID)
-		pPlayer->ubSpawnIdx = spawnGetNearest(
+		fubSpawnIdx = pPlayer->ubSpawnIdx = spawnGetNearest(
 			pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
 			pPlayer->sVehicle.uwY >> MAP_TILE_SIZE,
 			pPlayer->ubTeam
