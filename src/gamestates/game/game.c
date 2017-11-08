@@ -68,29 +68,14 @@ static tAvg *s_pAvgUpdateSprites;
 static tAvg *s_pProcessAvgHud;
 #endif
 
-UWORD uwLimboX;
-UWORD uwLimboY;
-
 ULONG g_ulGameFrame;
 tFont *g_pSmallFont;
 
 UBYTE g_isLocalBot;
 
-void displayPrepareLimbo(FUBYTE fubSpawnIdx) {
+void displayPrepareLimbo(void) {
 	cursorSetConstraints(0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
-
-	if(fubSpawnIdx == SPAWN_INVALID)
-		g_pLocalPlayer->ubSpawnIdx = spawnGetNearest(
-			g_pLocalPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
-			g_pLocalPlayer->sVehicle.uwY >> MAP_TILE_SIZE,
-			g_pLocalPlayer->ubTeam
-		);
-	else
-		g_pLocalPlayer->ubSpawnIdx = fubSpawnIdx;
-
-	uwLimboX = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_WIDTH/2));
-	uwLimboY = MAX(0, (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE - (WORLD_VPORT_HEIGHT/2));
 }
 
 void displayPrepareDriving(void) {
@@ -226,6 +211,7 @@ void gsGameCreate(void) {
 	}
 	else
 		g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+	displayPrepareLimbo();
 
 	// for(FUBYTE i = 0; i != 7; ++i) {
 	// 	char szName[10];
@@ -235,7 +221,6 @@ void gsGameCreate(void) {
 
 	// Now that world buffer is created, do the first draw
 	mapRedraw();
-	displayPrepareLimbo(SPAWN_INVALID);
 
 	// Get some speed out of unnecessary DMA
 	custom.dmacon = BITCLR | DMAF_DISK;
@@ -315,6 +300,11 @@ void gsGameLoop(void) {
 		);
 	}
 	else {
+		// TODO: uwSpawnX & uwSpawnY should be taken from player's x/y after death
+		UWORD uwSpawnX = (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+		UWORD uwSpawnY = (g_pSpawns[g_pLocalPlayer->ubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+		UWORD uwLimboX = MAX(0, uwSpawnX - WORLD_VPORT_WIDTH/2);
+		UWORD uwLimboY = MAX(0, uwSpawnY- WORLD_VPORT_HEIGHT/2);
 		WORD wDx = CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
 		WORD wDy = CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);

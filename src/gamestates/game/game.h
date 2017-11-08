@@ -52,9 +52,7 @@ void gsGameCreate(void);
 void gsGameLoop(void);
 void gsGameDestroy(void);
 
-void displayPrepareLimbo(
-	IN FUBYTE fubSpawnIdx
-);
+void displayPrepareLimbo(void);
 void displayPrepareDriving(void);
 
 #endif

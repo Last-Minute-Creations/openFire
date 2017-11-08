@@ -58,6 +58,24 @@ void playerListDestroy() {
 	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
 }
 
+void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
+	if(fubSpawnIdx == SPAWN_INVALID)
+		pPlayer->ubSpawnIdx = spawnGetNearest(
+			pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
+			pPlayer->sVehicle.uwY >> MAP_TILE_SIZE,
+			pPlayer->ubTeam
+		);
+	else
+		pPlayer->ubSpawnIdx = fubSpawnIdx;
+
+	pPlayer->sVehicle.uwX = (g_pSpawns[fubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pPlayer->sVehicle.uwY = (g_pSpawns[fubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+	pPlayer->sVehicle.fX = fix16_from_int(pPlayer->sVehicle.uwX);
+	pPlayer->sVehicle.fY = fix16_from_int(pPlayer->sVehicle.uwY);
+	if(pPlayer == g_pLocalPlayer)
+		displayPrepareLimbo();
+}
+
 /**
  *  @todo Vehicle count from server rules
  *  @todo Vehicle global for whole team
@@ -74,13 +92,17 @@ tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
-		logWrite("Player %s joined team %hu, player idx: %hu\n", szName, ubTeam, i);
 		char szMessage[35];
 		if(ubTeam == TEAM_BLUE)
 			sprintf(szMessage, "%s joined BLUE", szName);
 		else
 			sprintf(szMessage, "%s joined RED", szName);
 		consoleWrite(szMessage, CONSOLE_COLOR_GENERAL);
+
+		// Set vehicle coordinates 'cuz playerMoveToLimbo finds closest spawn
+		pPlayer->sVehicle.uwX = 0;
+		pPlayer->sVehicle.uwY = 0;
+		playerMoveToLimbo(pPlayer, SPAWN_INVALID);
 		return pPlayer;
 	}
 	logWrite("Can't add player %s - no more slots\n", szName);
@@ -126,8 +148,7 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	pPlayer->ubState = PLAYER_STATE_BUNKERING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 	spawnSetBusy(fubSpawnIdx, SPAWN_BUSY_BUNKERING, VEHICLE_TYPE_TANK);
-	if(pPlayer == g_pLocalPlayer)
-		displayPrepareLimbo(fubSpawnIdx);
+	playerMoveToLimbo(pPlayer, fubSpawnIdx);
 }
 
 FUBYTE playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
@@ -152,10 +173,8 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
-	if(pPlayer == g_pLocalPlayer) {
-		pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
-		displayPrepareLimbo(SPAWN_INVALID);
-	}
+	pPlayer->uwCooldown = PLAYER_DEATH_COOLDOWN;
+	playerMoveToLimbo(pPlayer, SPAWN_INVALID);
 }
 
 void playerLocalProcessInput(void) {
