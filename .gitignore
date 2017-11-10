@@ -6,3 +6,4 @@ build/*
 debug/*
 .vscode/*
 precalc/*
+*.code-workspace
