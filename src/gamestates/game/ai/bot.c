@@ -138,6 +138,7 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 			g_pCaptureNodes[i] != pNodeToEvade
 		) {
 			pRouteEnd = g_pCaptureNodes[i];
+			break;
 		}
 	}
 	if(!pRouteEnd)
@@ -151,7 +152,6 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 	playerSay(pBot->pPlayer, szSayBfr, 0);
 #endif // AI_BOT_DEBUG
 
-	// TODO Find shortest route to destination
 	tAiNode *pRouteStart = aiFindClosestNode(
 		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
 		pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
@@ -272,10 +272,17 @@ void botProcessDriving(tBot *pBot) {
 			// Move to tile next to it to prevent blocking other players/bots
 			// If point has been captured start measuring ticks
 			if(pBot->ubTick >= 200) {
-				// After some ticks go to next point
-				botFindNewTarget(pBot, 0);
-				if(pBot->pNextNode)
-					pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+				tAiNode *pLastNode = pBot->sRoute.pNodes[pBot->sRoute.ubNodeCount-1];
+				// After some ticks check if work is done on this point
+				if(pLastNode->pControlPoint->fubTeam == pBot->pPlayer->ubTeam) {
+					// If so, go to next point
+					botFindNewTarget(pBot, 0);
+					if(pBot->pNextNode)
+						pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+				}
+				else {
+					playerSay(pBot->pPlayer, "capturing...", 0);
+				}
 				pBot->ubTick = 0;
 			}
 			else
