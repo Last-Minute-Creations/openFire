@@ -12,6 +12,19 @@ static tBot *s_pBots;
 static FUBYTE s_fubBotCount;
 static FUBYTE s_fubBotLimit;
 
+static void botSay(tBot *pBot, char *szFmt, ...) {
+#ifdef AI_BOT_DEBUG
+	va_list vArgs;
+	va_start(vArgs, szFmt);
+	UWORD uwSize = vsprintf(0, szFmt, vArgs);
+	char *szBfr = memAllocFast(uwSize);
+	vsprintf(szBfr, szFmt, vArgs);
+	playerSay(pBot->pPlayer, szBfr, 0);
+	memFree(szBfr, uwSize);
+	va_end(vArgs);
+#endif // #ifdef AI_BOT_DEBUG
+}
+
 void botManagerCreate(FUBYTE fubBotLimit) {
 	logBlockBegin("botManagerCreate(fubBotLimit: %"PRI_FUBYTE")", fubBotLimit);
 	s_fubBotCount = 0;
@@ -41,7 +54,7 @@ void botAdd(char *szName, UBYTE ubTeam) {
 	pBot->ubNextAngle = 0;
 	++s_fubBotCount;
 
-	playerSay(pBot->pPlayer, "Ich bin ein computer", 0);
+	botSay(pBot, "Ich bin ein computer");
 }
 
 void botRemoveByName(char *szName) {
@@ -143,15 +156,13 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 	}
 	if(!pRouteEnd)
 		return;
-#ifdef AI_BOT_DEBUG
-	char szSayBfr[50];
-	sprintf(
-		szSayBfr,	"New target at %"PRI_FUBYTE",%"PRI_FUBYTE,
-		pRouteEnd->fubX, pRouteEnd->fubY
-	);
-	playerSay(pBot->pPlayer, szSayBfr, 0);
-#endif // AI_BOT_DEBUG
 
+	botSay(pBot, "New target at %"PRI_FUBYTE",%"PRI_FUBYTE,	pRouteEnd->fubX, pRouteEnd->fubY);
+	logWrite(
+		"Bot pos: %hu, %hu (%d,%d)\n",
+		pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
+		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE, pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
+	);
 	tAiNode *pRouteStart = aiFindClosestNode(
 		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
 		pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
@@ -172,11 +183,7 @@ void botProcessDriving(tBot *pBot) {
 	switch(pBot->ubState) {
 		case AI_BOT_STATE_IDLE:
 			botFindNewTarget(pBot, pBot->pNextNode);
-#ifdef AI_BOT_DEBUG
-			char szBfr[100];
-			sprintf(szBfr, "Going to %hu,%hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
-			playerSay(pBot->pPlayer, szBfr, 0);
-#endif // AI_BOT_DEBUG
+			botSay(pBot, "Going to %hu,%hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
 			pBot->ubTick = 10;
 			pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			break;
@@ -245,11 +252,7 @@ void botProcessDriving(tBot *pBot) {
 				// Last node from route - hold pos
 				pBot->ubTick = 0;
 				pBot->ubState = AI_BOT_STATE_HOLDING_POS;
-#ifdef AI_BOT_DEBUG
-				char szBfr[100];
-				sprintf(szBfr, "Destination reached - holding pos\n");
-				playerSay(pBot->pPlayer, szBfr, 0);
-#endif // AI_BOT_DEBUG
+				botSay(pBot, "Destination reached - holding pos");
 			}
 			else {
 				// Get next node from route
@@ -258,14 +261,7 @@ void botProcessDriving(tBot *pBot) {
 				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
-#ifdef AI_BOT_DEBUG
-				char szBfr[100];
-				sprintf(
-					szBfr, "Moving to next pos: %hu, %hu\n",
-					pBot->pNextNode->fubX, pBot->pNextNode->fubY
-				);
-				playerSay(pBot->pPlayer, szBfr, 0);
-#endif // AI_BOT_DEBUG
+				botSay(pBot, "Moving to next pos: %hu, %hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
 			}
 			break;
 		case AI_BOT_STATE_HOLDING_POS:
@@ -280,9 +276,8 @@ void botProcessDriving(tBot *pBot) {
 					if(pBot->pNextNode)
 						pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 				}
-				else {
-					playerSay(pBot->pPlayer, "capturing...", 0);
-				}
+				else
+					botSay(pBot, "capturing...");
 				pBot->ubTick = 0;
 			}
 			else
@@ -333,7 +328,7 @@ void botProcessLimbo(tBot *pBot) {
 	// TODO: spawn kill ppl from other team
 	if(!spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
 		playerSelectVehicle(pBot->pPlayer, VEHICLE_TYPE_TANK);
-		playerSay(pBot->pPlayer, "Surfacing...", 0);
+		botSay(pBot, "Surfacing...");
 	}
 }
 
