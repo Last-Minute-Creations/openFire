@@ -73,24 +73,24 @@ void aiGraphCreate(void) {
 			}
 			else if(
 				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
-				g_pMap[x-1][y].ubIdx == MAP_LOGIC_WALL &&
-				g_pMap[x+1][y].ubIdx == MAP_LOGIC_WALL
+				mapIsWall(g_pMap[x-1][y].ubIdx) &&
+				mapIsWall(g_pMap[x+1][y].ubIdx)
 			) {
 				// Gate with horizontal walls
-				if(g_pMap[x-1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y-1].ubIdx != MAP_LOGIC_WALL)
+				if(!mapIsWall(g_pMap[x-1][y-1].ubIdx) && !mapIsWall(g_pMap[x+1][y-1].ubIdx))
 					aiGraphAddNode(x,y-1, AI_NODE_TYPE_ROAD);
-				if(g_pMap[x-1][y+1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y+1].ubIdx != MAP_LOGIC_WALL)
+				if(!mapIsWall(g_pMap[x-1][y+1].ubIdx) && !mapIsWall(g_pMap[x+1][y+1].ubIdx))
 					aiGraphAddNode(x,y+1, AI_NODE_TYPE_ROAD);
 			}
 			else if(
 				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
-				g_pMap[x][y-1].ubIdx == MAP_LOGIC_WALL &&
-				g_pMap[x][y+1].ubIdx == MAP_LOGIC_WALL
+				mapIsWall(g_pMap[x][y-1].ubIdx) &&
+				mapIsWall(g_pMap[x][y+1].ubIdx)
 			) {
 				// Gate with vertical walls
-				if(g_pMap[x-1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x-1][y+1].ubIdx != MAP_LOGIC_WALL)
+				if(!mapIsWall(g_pMap[x-1][y-1].ubIdx) && !mapIsWall(g_pMap[x-1][y+1].ubIdx))
 					aiGraphAddNode(x-1,y, AI_NODE_TYPE_ROAD);
-				if(g_pMap[x+1][y-1].ubIdx != MAP_LOGIC_WALL && g_pMap[x+1][y+1].ubIdx != MAP_LOGIC_WALL)
+				if(!mapIsWall(g_pMap[x+1][y-1].ubIdx) && !mapIsWall(g_pMap[x+1][y+1].ubIdx))
 					aiGraphAddNode(x+1,y, AI_NODE_TYPE_ROAD);
 			}
 			// TODO this won't work if e.g. horizontal gate is adjacent to vertical wall
@@ -180,18 +180,25 @@ void aiCalculateTileCosts(void) {
 void aiCalculateTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2) {
 	for(FUBYTE x = fubX1; x <= fubX2; ++x) {
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
-			// check for turret in range of fire
+			// Check for walls
+			if(g_pMap[x][y].ubIdx == MAP_LOGIC_WATER) {
+				s_pTileCosts[x][y] = 0xFF;
+				continue;
+			}
+			if(mapIsWall(g_pMap[x][y].ubIdx)) {
+				s_pTileCosts[x][y] = 0xFF;
+				continue;
+			}
+			else {
+				// There should be a minimal cost of transport for finding shortest path
+				s_pTileCosts[x][y] = 1;
+			}
+			// Check for turret in range of fire
 			FUBYTE fubTileRange = TURRET_MAX_PROCESS_RANGE_Y >> MAP_TILE_SIZE;
-			s_pTileCosts[x][y] = 0;
 			for(FUBYTE i = MAX(0, x - fubTileRange); i != MIN(g_fubMapTileWidth, x+fubTileRange); ++i)
 				for(FUBYTE j = MAX(0, y - fubTileRange); j != MIN(g_fubMapTileHeight, y+fubTileRange); ++j)
 					if(g_pTurretTiles[i][j])
-					s_pTileCosts[x][y] += 2;
-			// Check for walls
-			if(g_pMap[x][y].ubIdx == MAP_LOGIC_WATER)
-				s_pTileCosts[x][y] = 0xFF;
-			else if(g_pMap[x][y].ubIdx == MAP_LOGIC_WALL)
-				s_pTileCosts[x][y] += 5;
+						s_pTileCosts[x][y] += MIN(s_pTileCosts[x][y]+10, 255);
 		}
 	}
 }

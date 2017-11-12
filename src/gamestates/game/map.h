@@ -101,6 +101,10 @@ UBYTE mapTileFromLogic(
 	IN FUBYTE ubTileY
 );
 
+UBYTE mapIsWall(
+	IN UBYTE ubMapTile
+);
+
 void mapUpdateTiles(void);
 
 extern tTile **g_pMap;
