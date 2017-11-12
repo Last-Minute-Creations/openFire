@@ -127,11 +127,11 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 }
 
 void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
-	tAiNode *pRouteEnd = 0;
 
 	// Find capture point which is neutral or needs defending or being
 	// attacked or nearest to attack
 	// TODO remaining variants, prioritize
+	tAiNode *pRouteEnd = 0;
 	for(FUBYTE i = 0; i != g_fubCaptureNodeCount; ++i) {
 		if(
 			g_pCaptureNodes[i]->pControlPoint->fubTeam != pBot->pPlayer->ubTeam &&
@@ -161,8 +161,8 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 		botSetupRoute(pBot, pRouteStart, pRouteEnd);
 
 		// Set first node of route as next to reach
-		pBot->pNextNode = pBot->sRoute.pNodes[0];
 		pBot->sRoute.ubCurrNode = 0;
+		pBot->pNextNode = pBot->sRoute.pNodes[0];
 		pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 		pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	}
