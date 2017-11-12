@@ -14,13 +14,11 @@ static FUBYTE s_fubBotLimit;
 
 static void botSay(tBot *pBot, char *szFmt, ...) {
 #ifdef AI_BOT_DEBUG
+	char szBfr[100];
 	va_list vArgs;
 	va_start(vArgs, szFmt);
-	UWORD uwSize = vsprintf(0, szFmt, vArgs);
-	char *szBfr = memAllocFast(uwSize);
 	vsprintf(szBfr, szFmt, vArgs);
 	playerSay(pBot->pPlayer, szBfr, 0);
-	memFree(szBfr, uwSize);
 	va_end(vArgs);
 #endif // #ifdef AI_BOT_DEBUG
 }
