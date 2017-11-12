@@ -208,7 +208,7 @@ tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
 	tAiNode *pClosest = 0;
 	for(FUBYTE i = 0; i != g_fubNodeCount; ++i) {
 		tAiNode *pNode = &g_pNodes[i];
-		UWORD uwDist = ABS(pNode->fubX - fubTileX) + ABS(pNode->fubY + fubTileY);
+		UWORD uwDist = ABS(pNode->fubX - fubTileX) + ABS(pNode->fubY - fubTileY);
 		if(uwDist < uwClosestDist) {
 			uwClosestDist = uwDist;
 			pClosest = pNode;
