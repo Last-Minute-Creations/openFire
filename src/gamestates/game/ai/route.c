@@ -33,11 +33,8 @@ UWORD routeGetCostWithNode(tRoute *pRoute, tAiNode *pNode) {
 	return pRoute->uwCost - aiGetCostBetweenNodes(
 		pRoute->pNodes[pRoute->ubNodeCount-2],
 		pRoute->pNodes[pRoute->ubNodeCount-1]
-	) +	pRoute->uwCost + aiGetCostBetweenNodes(
-		pRoute->pNodes[pRoute->ubNodeCount-2], pNode
-	) + aiGetCostBetweenNodes(
-		pNode, pRoute->pNodes[pRoute->ubNodeCount]
-	);
+	) +	aiGetCostBetweenNodes(pRoute->pNodes[pRoute->ubNodeCount-2], pNode)
+		+ aiGetCostBetweenNodes(pNode, pRoute->pNodes[pRoute->ubNodeCount-1]);
 }
 
 UBYTE routeHasNode(tRoute *pRoute, tAiNode *pNode) {
