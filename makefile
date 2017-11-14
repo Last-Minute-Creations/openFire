@@ -27,7 +27,7 @@ ACE_INC_DIR = $(ACE_DIR)$(SL)include
 
 # Compiler stuff
 CC = vc
-CC_FLAGS = +kick13 -c99 -O1 -I$(SRC_DIR) -I$(ACE_INC_DIR) -DAMIGA
+CC_FLAGS = +kick13 -c99 -I$(SRC_DIR) -I$(ACE_INC_DIR) -DAMIGA
 
 # File list
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
