@@ -32,8 +32,8 @@ void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 			return;
 
 	// Add node
-	g_pNodes[g_fubNodeCount].fubY = fubY;
 	g_pNodes[g_fubNodeCount].fubX = fubX;
+	g_pNodes[g_fubNodeCount].fubY = fubY;
 	g_pNodes[g_fubNodeCount].fubType = fubNodeType;
 	g_pNodes[g_fubNodeCount].fubIdx = g_fubNodeCount;
 
@@ -50,8 +50,7 @@ void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 	++g_fubNodeCount;
 }
 
-void aiGraphCreate(void) {
-	logBlockBegin("aiGraphCreate()");
+static FUBYTE aiGraphGenerateMapNodes(void) {
 	// Get all nodes on map
 	for(FUBYTE x = 0; x < g_fubMapTileWidth; ++x) {
 		for(FUBYTE y = 0; y < g_fubMapTileHeight; ++y) {
@@ -100,35 +99,58 @@ void aiGraphCreate(void) {
 		"Created %"PRI_FUBYTE" nodes (capture pts: %"PRI_FUBYTE")\n",
 		g_fubNodeCount, g_fubCaptureNodeCount
 	);
+	return g_fubNodeCount;
+}
 
-	// Create array for connections & calculate costs between nodes
-	if(!g_fubNodeCount) {
-		logWrite("WARN: No AI nodes on map!\n");
+UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
+	BYTE bDeltaX = pTo->fubX - pFrom->fubX;
+	BYTE bDeltaY = pTo->fubY - pFrom->fubY;
+	UWORD uwCost = 0;
+	if(ABS(bDeltaX) > ABS(bDeltaY)) {
+		BYTE bDirX = SGN(bDeltaX);
+		FUBYTE fubPrevY = pFrom->fubY;
+		for(FUBYTE x = pFrom->fubX; x < pTo->fubX; x += bDirX) {
+			FUBYTE y = pFrom->fubY + ((bDeltaY * (x - pFrom->fubX) + bDeltaX/2) / bDeltaX);
+			uwCost += s_pTileCosts[x][y];
+			if(y != fubPrevY) {
+				uwCost += s_pTileCosts[x][fubPrevY];
+				uwCost += s_pTileCosts[x-bDirX][y];
+			}
+			fubPrevY = y;
+		}
 	}
 	else {
-		s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
-		for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
-			tAiNode *pFrom = &g_pNodes[fubFrom];
-			s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
-			for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
-				tAiNode *pTo = &g_pNodes[fubTo];
-				BYTE bDeltaX = pTo->fubX - pFrom->fubX;
-				BYTE bDeltaY = pTo->fubY - pFrom->fubY;
-				if(ABS(bDeltaX) > ABS(bDeltaY)) {
-					BYTE bDirX = SGN(bDeltaX);
-					for(FUBYTE x = pFrom->fubX; x != pTo->fubX; x += bDirX) {
-						FUBYTE y = pFrom->fubY + ((bDeltaY * (x - pFrom->fubX)) / bDeltaX);
-						s_pNodeConnectionCosts[fubFrom][fubTo] += s_pTileCosts[x][y];
-					}
-				}
-				else {
-					BYTE bDirY = SGN(bDeltaY);
-					for(FUBYTE y = pFrom->fubY; y != pTo->fubY; y += bDirY) {
-						FUBYTE x = pFrom->fubX + ((bDeltaX * (y - pFrom->fubY)) / bDeltaY);
-						s_pNodeConnectionCosts[fubFrom][fubTo] += s_pTileCosts[x][y];
-					}
-				}
+		BYTE bDirY = SGN(bDeltaY);
+		FUBYTE fubPrevX = pFrom->fubX;
+		for(FUBYTE y = pFrom->fubY; y < pTo->fubY; y += bDirY) {
+			FUBYTE x = pFrom->fubX + ((bDeltaX * (y - pFrom->fubY) + bDeltaY/2) / bDeltaY);
+			uwCost += s_pTileCosts[x][y];
+			if(x != fubPrevX) {
+				uwCost += s_pTileCosts[x][y-bDirY];
+				uwCost += s_pTileCosts[fubPrevX][y];
 			}
+			fubPrevX = x;
+		}
+	}
+	return uwCost;
+}
+
+void aiGraphCreate(void) {
+	logBlockBegin("aiGraphCreate()");
+	if(!aiGraphGenerateMapNodes()) {
+		logWrite("WARN: No AI nodes on map!\n");
+		logBlockEnd("aiGraphCreate()");
+		return;
+	}
+
+	// Create array for connections & calculate costs between nodes
+	s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
+	for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
+		s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
+		for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
+			s_pNodeConnectionCosts[fubFrom][fubTo] = aiCalcCostBetweenNodes(
+				&g_pNodes[fubFrom], &g_pNodes[fubTo]
+			);
 		}
 	}
 	logBlockEnd("aiGraphCreate()");
@@ -144,40 +166,7 @@ void aiGraphDestroy(void) {
 	logBlockEnd("aiGraphDestroy()");
 }
 
-void aiManagerCreate(void) {
-	logBlockBegin("aiManagerCreate()");
-	g_fubNodeCount = 0;
-	g_fubCaptureNodeCount = 0;
-	botManagerCreate(g_ubPlayerLimit);
-
-	// Calculate tile costs
-	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		s_pTileCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
-	aiCalculateTileCosts();
-
-	// Create node network
-	aiGraphCreate();
-	logBlockEnd("aiManagerCreate()");
-}
-
-void aiManagerDestroy(void) {
-	logBlockBegin("aiManagerDestroy()");
-	aiGraphDestroy();
-	botManagerDestroy();
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
-	memFree(s_pTileCosts, g_fubMapTileWidth * sizeof(UBYTE*));
-	logBlockEnd("aiManagerDestroy()");
-}
-
-void aiCalculateTileCosts(void) {
-	logBlockBegin("aiCalculateTileCosts()");
-	aiCalculateTileCostsFrag(0, 0, g_fubMapTileWidth-1, g_fubMapTileHeight-1);
-	logBlockEnd("aiCalculateTileCosts()");
-}
-
-void aiCalculateTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2) {
+void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2) {
 	for(FUBYTE x = fubX1; x <= fubX2; ++x) {
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			// Check for walls
@@ -203,6 +192,13 @@ void aiCalculateTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE f
 	}
 }
 
+void aiCalcTileCosts(void) {
+	logBlockBegin("aiCalcTileCosts()");
+	aiCalcTileCostsFrag(0, 0, g_fubMapTileWidth-1, g_fubMapTileHeight-1);
+	logBlockEnd("aiCalcTileCosts()");
+}
+
+
 tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
 	UWORD uwClosestDist = 0xFFFF;
 	tAiNode *pClosest = 0;
@@ -219,4 +215,31 @@ tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
 
 UWORD aiGetCostBetweenNodes(tAiNode *pSrc, tAiNode *pDst) {
 	return s_pNodeConnectionCosts[pSrc->fubIdx][pDst->fubIdx];
+}
+
+void aiManagerCreate(void) {
+	logBlockBegin("aiManagerCreate()");
+	g_fubNodeCount = 0;
+	g_fubCaptureNodeCount = 0;
+	botManagerCreate(g_ubPlayerLimit);
+
+	// Calculate tile costs
+	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
+	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
+		s_pTileCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
+	aiCalcTileCosts();
+
+	// Create node network
+	aiGraphCreate();
+	logBlockEnd("aiManagerCreate()");
+}
+
+void aiManagerDestroy(void) {
+	logBlockBegin("aiManagerDestroy()");
+	aiGraphDestroy();
+	botManagerDestroy();
+	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
+		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
+	memFree(s_pTileCosts, g_fubMapTileWidth * sizeof(UBYTE*));
+	logBlockEnd("aiManagerDestroy()");
 }
