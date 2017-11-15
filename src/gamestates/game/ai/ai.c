@@ -198,7 +198,6 @@ void aiCalcTileCosts(void) {
 	logBlockEnd("aiCalcTileCosts()");
 }
 
-
 tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY) {
 	UWORD uwClosestDist = 0xFFFF;
 	tAiNode *pClosest = 0;
