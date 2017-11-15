@@ -36,7 +36,7 @@ void precalcCreate(void) {
 	);
 	s_pBuffer = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pVPort,
-		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR,
+		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
 		TAG_DONE
 	);
 
