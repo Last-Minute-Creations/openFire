@@ -122,7 +122,7 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	const UWORD uwProgressX = 60;
 	const UWORD uwProgressY = 208;
 	const UWORD uwProgressWidth = 200;
-	const UWORD uwProgressHeight = 16;
+	const UWORD uwProgressHeight = 10;
 
 	s_fubProgress = MIN(100, s_fubProgress+fubAmountToAdd);
 	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", s_fubProgress, szText);
