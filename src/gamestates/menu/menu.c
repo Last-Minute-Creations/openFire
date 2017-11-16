@@ -2,35 +2,89 @@
 #include <clib/dos_protos.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
-#include <ace/utils/font.h>
-#include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
 #include "config.h"
 #include "cursor.h"
 #include "gamestates/menu/button.h"
+#include "gamestates/menu/maplist.h"
 #include "gamestates/game/game.h"
 
 #define MENU_BPP 4
 
 static tView *s_pView;
 static tVPort *s_pVPort;
-static tSimpleBufferManager *s_pBuffer;
-static tFont *s_pFont;
 
-void menuOnStartGame(void) {
+tSimpleBufferManager *g_pMenuBuffer;
+tFont *g_pMenuFont;
+
+void menuMainOnStartGame(void) {
 	g_isLocalBot = 0;
-	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
+	gameChangeState(mapListCreate, mapListLoop, mapListDestroy);
 }
 
-void menuOnQuit(void) {
-	gamePopState();
+void menuMainOnQuit(void) {
+	gameClose();
 }
 
-void menuOnDemo(void) {
+void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
+	gamePopState(); // From current menu state
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
+}
+
+#define MENU_BUTTON_WIDTH 80
+#define MENU_BUTTON_HEIGHT 16
+#define MENU_BUTTON_OFFS_X 32
+
+void menuMainCreate(void) {
+	// Display logo
+	blitRect(
+		g_pMenuBuffer->pBuffer, 0, 0,
+		bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3, g_pMenuBuffer->pBuffer->Rows,
+		0
+	);
+	WaitBlit();
+	bitmapLoadFromFile(g_pMenuBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
+
+	// Create buttons
+	buttonListCreate(10, g_pMenuBuffer->pBuffer, g_pMenuFont);
+	buttonAdd(
+		MENU_BUTTON_OFFS_X, 64   , MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT,
+		"PLAY GAME", menuMainOnStartGame
+	);
+	buttonAdd(
+		MENU_BUTTON_OFFS_X, 64+20, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT,
+		"DEMO", menuMainOnDemo
+	);
+	buttonAdd(
+		MENU_BUTTON_OFFS_X, 64+100, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT,
+		"EXIT", menuMainOnQuit
+	);
+	buttonDrawAll();
+
+	// Add notice
+	const UWORD uwColorNotice = 14;
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 236,
+		"Founded by KaiN, Selur and Softiron",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 243,
+		"as a RetroKomp 2017 Gamedev Compo entry.",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 250,
+		"Remaining authors are listed on project page.",
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+	);
+}
+
+void menuMainDestroy(void) {
+	buttonListDestroy();
 }
 
 void menuCreate(void) {
@@ -44,7 +98,7 @@ void menuCreate(void) {
 		TAG_VPORT_BPP, MENU_BPP,
 		TAG_DONE
 	);
-	s_pBuffer = simpleBufferCreate(0,
+	g_pMenuBuffer = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pVPort,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
 		TAG_DONE
@@ -53,29 +107,10 @@ void menuCreate(void) {
 	cursorCreate(s_pView, 0, "data/crosshair.bm", 0);
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << MENU_BPP);
 	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 1 << MENU_BPP);
-	s_pFont = fontCreate("data/silkscreen5.fnt");
-	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
-	buttonListCreate(10, s_pBuffer->pBuffer, s_pFont);
+	g_pMenuFont = fontCreate("data/silkscreen5.fnt");
 
-	buttonAdd(64, 80, 320-128, 32, "PLAY GAME", menuOnStartGame);
-	buttonAdd(64, 80+32+16, 320-128, 32, "DEMO", menuOnDemo);
-	buttonAdd(64, 80+32+16+32+16, 320-128, 32, "EXIT", menuOnQuit);
-
-	buttonDrawAll();
-
-	const UWORD uwColorNotice = 14;
-	fontDrawStr(
-		s_pBuffer->pBuffer, s_pFont, 320/2, 236, "Founded by KaiN, Selur and Softiron",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
-	);
-	fontDrawStr(
-		s_pBuffer->pBuffer, s_pFont, 320/2, 243, "as a RetroKomp 2017 Gamedev Compo entry.",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
-	);
-	fontDrawStr(
-		s_pBuffer->pBuffer, s_pFont, 320/2, 250, "Remaining authors are listed on project page.",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
-	);
+	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
+	menuMainCreate();
 
 	viewLoad(s_pView);
 }
@@ -84,19 +119,24 @@ void menuDestroy(void) {
 	viewLoad(0);
 	cursorDestroy();
 	buttonListDestroy();
-	fontDestroy(s_pFont);
+	fontDestroy(g_pMenuFont);
 	viewDestroy(s_pView);
 }
 
 void menuLoop() {
 	if(keyUse(KEY_ESCAPE)) {
-		gamePopState();
+		gamePopState(); // From whichever menu state game is in
+		gamePopState(); // From menu
 		return;
 	}
-	cursorUpdate();
 	if(mouseUse(MOUSE_LMB))
 		buttonProcessClick(g_uwMouseX, g_uwMouseY);
 
+	menuProcess();
+}
+
+void menuProcess(void) {
+	cursorUpdate();
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
 }
