@@ -8,17 +8,24 @@ tBitMap *s_pBfr;
 tFont *s_pFont;
 
 void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont) {
+	logBlockBegin(
+		"buttonListCreate(fubButtonCount: %"PRI_FUBYTE", pBfr: %p, tFont: %p)",
+		fubButtonCount, pBfr, pFont
+	);
 	s_fubButtonCount = 0;
 	s_fubMaxButtonCount = fubButtonCount;
 	s_pBfr = pBfr;
 	s_pFont = pFont;
 	s_pButtons = memAllocFastClear(s_fubMaxButtonCount * sizeof(tButton));
+	logBlockEnd("buttonListCreate()");
 }
 
 void buttonListDestroy(void) {
+	logBlockBegin("buttonListDestroy()");
 	memFree(s_pButtons, s_fubMaxButtonCount * sizeof(tButton));
 	s_fubButtonCount = 0;
 	s_fubMaxButtonCount = 0;
+	logBlockEnd("buttonListDestroy()");
 }
 
 void buttonAdd(
@@ -85,11 +92,13 @@ void buttonDrawAll(void) {
 		buttonDraw(&s_pButtons[i]);
 }
 
-void buttonProcessClick(UWORD uwX, UWORD uwY) {
-	for(FUBYTE i = 0; i != s_fubButtonCount; ++i)
+FUBYTE buttonProcessClick(UWORD uwX, UWORD uwY) {
+	for(FUBYTE i = 0; i != s_fubButtonCount; ++i) {
 		if(inRect(uwX, uwY, s_pButtons[i].sRect)) {
 			if(s_pButtons[i].onClick)
 				s_pButtons[i].onClick();
-			return;
+			return 1;
 		}
+	}
+	return 0;
 }

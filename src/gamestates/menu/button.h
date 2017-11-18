@@ -32,7 +32,7 @@ void buttonAdd(
 
 void buttonDrawAll(void);
 
-void buttonProcessClick(
+FUBYTE buttonProcessClick(
 	IN UWORD uwX,
 	IN UWORD uwY
 );
