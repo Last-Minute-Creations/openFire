@@ -110,7 +110,6 @@ void menuCreate(void) {
 	g_pMenuFont = fontCreate("data/silkscreen5.fnt");
 
 	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
-	menuMainCreate();
 
 	viewLoad(s_pView);
 }
