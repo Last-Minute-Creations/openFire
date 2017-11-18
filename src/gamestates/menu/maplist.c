@@ -95,8 +95,11 @@ void mapListCreate(void) {
 		g_pMenuBuffer->pBuffer, 10, 10, 100, 200,
 		g_pMenuFont, s_sMapList.uwMapCount
 	);
-	for(UWORD i = 0; i != s_sMapList.uwMapCount; ++i)
+	for(UWORD i = 0; i != s_sMapList.uwMapCount; ++i) {
+		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = 0;
 		listCtlAddEntry(s_pListCtl, s_sMapList.pMaps[i].szFileName);
+		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = '.';
+	}
 
 	listCtlDraw(s_pListCtl);
 	buttonDrawAll();
