@@ -73,9 +73,9 @@ void precalcCreate(void) {
 }
 
 void precalcLoop(void) {
-	static FUBYTE fubInited = 0;
+	static FUBYTE isInit = 0;
 
-	if(fubInited) {
+	if(isInit) {
 		gameClose();
 		return;
 	}
@@ -102,7 +102,7 @@ void precalcLoop(void) {
 
 	// All done - load menu
 	gamePushState(menuCreate, menuLoop, menuDestroy);
-	fubInited = 1;
+	isInit = 1;
 
 	// If returned - close game
 	logBlockEnd("precalcLoop()");
