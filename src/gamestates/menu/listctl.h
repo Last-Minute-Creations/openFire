@@ -14,6 +14,7 @@ typedef struct _tListCtl {
 	UBYTE ubEntryHeight;
 	UWORD uwEntryCnt;
 	UWORD uwEntryMaxCnt;
+	UWORD uwEntrySel;
 	char **pEntries;
 	tFont *pFont;
 	tBitMap *pBfr;

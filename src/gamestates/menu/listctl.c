@@ -26,6 +26,7 @@ tListCtl *listCtlCreate(
 	pCtl->ubDrawState = LISTCTL_DRAWSTATE_NEEDS_REDRAW;
 	pCtl->pFont = pFont;
 	pCtl->pBfr = pBfr;
+	pCtl->uwEntrySel = 0;
 
 	pCtl->pEntries =  memAllocFastClear(uwEntryMaxCnt * sizeof(char*));
 
@@ -64,11 +65,6 @@ void listCtlRemoveEntry(tListCtl *pCtl, UWORD uwIdx) {
 }
 
 void listCtlDraw(tListCtl *pCtl) {
-	// const UWORD uwCtlX = 10;
-	// const UWORD uwCtlY = 10;
-	// const UWORD uwCtlWidth = 100;
-	// const UWORD uwCtlHeight = 200;
-
 	// Draw border
 	blitRect(
 		pCtl->pBfr, pCtl->sRect.uwX, pCtl->sRect.uwY,
@@ -103,9 +99,40 @@ void listCtlDraw(tListCtl *pCtl) {
 
 	// Draw elements
 	for(UWORD i = uwFirstVisible; i != uwLastVisible; ++i) {
+		if(i == pCtl->uwEntrySel) {
+			blitRect(
+				pCtl->pBfr, pCtl->sRect.uwX+2, pCtl->sRect.uwY+2 + i* pCtl->ubEntryHeight,
+				pCtl->sRect.uwWidth - LISTCTL_BTN_WIDTH - 2 - 2 - 1, pCtl->ubEntryHeight, 7
+			);
+		}
 		fontDrawStr(
 			pCtl->pBfr, pCtl->pFont,
-			pCtl->sRect.uwX+2, pCtl->sRect.uwY+2 + i*pCtl->ubEntryHeight, pCtl->pEntries[i],
+			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + i*pCtl->ubEntryHeight, pCtl->pEntries[i],
+			13, FONT_LEFT| FONT_TOP | FONT_COOKIE
+		);
+	}
+}
+
+void listCtlDrawEntry(tListCtl *pCtl, UWORD uwIdx) {
+	UWORD uwFirstVisible = 0;
+	UWORD uwLastVisible = MIN(
+		pCtl->uwEntryCnt,
+		uwFirstVisible + (pCtl->sRect.uwHeight - 4) / pCtl->ubEntryHeight
+	);
+	UBYTE ubBgColor;
+	if(uwIdx >= uwFirstVisible && uwIdx <= uwLastVisible) {
+		if(uwIdx == pCtl->uwEntrySel)
+			ubBgColor = 7;
+		else
+			ubBgColor = 0;
+		blitRect(
+			pCtl->pBfr, pCtl->sRect.uwX+2, pCtl->sRect.uwY+2 + uwIdx* pCtl->ubEntryHeight,
+			pCtl->sRect.uwWidth - LISTCTL_BTN_WIDTH - 2 - 2 - 1, pCtl->ubEntryHeight,
+			ubBgColor
+		);
+		fontDrawStr(
+			pCtl->pBfr, pCtl->pFont,
+			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + uwIdx*pCtl->ubEntryHeight, pCtl->pEntries[uwIdx],
 			13, FONT_LEFT| FONT_TOP | FONT_COOKIE
 		);
 	}
@@ -113,7 +140,11 @@ void listCtlDraw(tListCtl *pCtl) {
 
 FUBYTE listCtlProcessClick(tListCtl *pCtl, UWORD uwMouseX, UWORD uwMouseY) {
 	if(inRect(uwMouseX, uwMouseY, pCtl->sRect)) {
-		// TODO process click
+		UWORD uwPrevSel = pCtl->uwEntrySel;
+		UWORD uwFirstVisible = 0;
+		pCtl->uwEntrySel = uwFirstVisible + (uwMouseY - pCtl->sRect.uwX - 2) / pCtl->ubEntryHeight;
+		listCtlDrawEntry(pCtl, uwPrevSel);
+		listCtlDrawEntry(pCtl, pCtl->uwEntrySel);
 		return 1;
 	}
 	return 0;
