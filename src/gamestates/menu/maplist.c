@@ -11,6 +11,7 @@
 #include "gamestates/menu/menu.h"
 #include "gamestates/menu/button.h"
 #include "gamestates/menu/listctl.h"
+#include "gamestates/game/game.h"
 
 #define MAPLIST_FILENAME_MAX 108
 #define MAP_NAME_MAX 30
@@ -26,7 +27,7 @@ typedef struct _tMapList {
 } tMapList;
 
 tMapList s_sMapList;
-
+tListCtl *s_pListCtl;
 
 void mapListPrepareList(void) {
 	// Get map count
@@ -76,7 +77,15 @@ void mapListPrepareList(void) {
 	UnLock(pLock);
 }
 
-tListCtl *s_pListCtl;
+void mapListOnBtnStart(void) {
+	g_isLocalBot = 0;
+	gamePopState(); // From menu substate
+	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
+}
+
+void mapListOnBtnBack(void) {
+	gameChangeState(menuMainCreate, menuLoop, menuMainDestroy);
+}
 
 void mapListCreate(void) {
 	// Clear bg
@@ -100,8 +109,10 @@ void mapListCreate(void) {
 		listCtlAddEntry(s_pListCtl, s_sMapList.pMaps[i].szFileName);
 		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = '.';
 	}
-
 	listCtlDraw(s_pListCtl);
+
+	buttonAdd(220, 200, 80, 16, "Play", mapListOnBtnStart);
+	buttonAdd(220, 220, 80, 16, "Back", mapListOnBtnBack);
 	buttonDrawAll();
 }
 

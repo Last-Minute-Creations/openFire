@@ -20,7 +20,6 @@ tSimpleBufferManager *g_pMenuBuffer;
 tFont *g_pMenuFont;
 
 void menuMainOnStartGame(void) {
-	g_isLocalBot = 0;
 	gameChangeState(mapListCreate, mapListLoop, mapListDestroy);
 }
 
@@ -30,7 +29,7 @@ void menuMainOnQuit(void) {
 
 void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
-	gamePopState(); // From current menu state
+	gamePopState(); // From current menu substate
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }
 
