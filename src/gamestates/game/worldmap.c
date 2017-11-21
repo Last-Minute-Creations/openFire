@@ -1,17 +1,14 @@
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include <ace/managers/log.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/extview.h>
+#include "map.h"
+#include "mapjson.h"
 #include "gamestates/game/team.h"
 #include "gamestates/game/building.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/control.h"
-#include "gamestates/game/mapjson.h"
-
-tTile **g_pMap;
-FUBYTE g_fubMapTileWidth, g_fubMapTileHeight;
-char g_szMapName[256];
 
 tTileCoord g_pTilesToRedraw[9] = {{0, 0}};
 UBYTE g_ubPendingTileCount;
@@ -19,16 +16,16 @@ UBYTE g_ubPendingTileCount;
 tBitMap *g_pMapTileset;
 tBitMap *s_pBuffer;
 
-void mapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
+void worldMapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
 	g_pMapTileset = pTileset;
 	s_pBuffer = pDst;
 }
 
-UBYTE mapIsWater(UBYTE ubMapTile) {
+UBYTE worldMapIsWater(UBYTE ubMapTile) {
 	return ubMapTile == MAP_LOGIC_WATER;
 }
 
-UBYTE mapIsWall(UBYTE ubMapTile) {
+UBYTE worldMapIsWall(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_WALL    ||
 		ubMapTile == MAP_LOGIC_SENTRY0 ||
@@ -38,7 +35,7 @@ UBYTE mapIsWall(UBYTE ubMapTile) {
 	);
 }
 
-UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
+UBYTE worldMapIsRoadFriend(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_ROAD     ||
 		// ubMapTile == MAP_LOGIC_SPAWN0   ||
@@ -57,34 +54,34 @@ UBYTE mapIsRoadFriend(UBYTE ubMapTile) {
 	);
 }
 
-UBYTE mapCheckWater(UBYTE ubX, UBYTE ubY) {
+UBYTE worldMapCheckWater(UBYTE ubX, UBYTE ubY) {
 	UBYTE ubOut;
-	if(ubX && g_pMap[ubX-1][ubY].ubIdx == MAP_LOGIC_WATER) {
-		if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+	if(ubX && g_sMap.pData[ubX-1][ubY].ubIdx == MAP_LOGIC_WATER) {
+		if(ubY && g_sMap.pData[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
 			ubOut = 1;
-		else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+		else if(ubY < g_sMap.fubHeight-1 && g_sMap.pData[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
 			ubOut = 2;
 		else
 			ubOut = 5 + (ubY & 1);
 	}
-	else if(ubX < g_fubMapTileWidth-1 && g_pMap[ubX+1][ubY].ubIdx == MAP_LOGIC_WATER) {
-		if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+	else if(ubX < g_sMap.fubWidth-1 && g_sMap.pData[ubX+1][ubY].ubIdx == MAP_LOGIC_WATER) {
+		if(ubY && g_sMap.pData[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
 			ubOut = 3;
-		else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+		else if(ubY < g_sMap.fubHeight-1 && g_sMap.pData[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
 			ubOut = 4;
 		else
 			ubOut = 7 + (ubY & 1);
 	}
-	else if(ubY && g_pMap[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
+	else if(ubY && g_sMap.pData[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
 		ubOut = 9 + (ubX & 1);
-	else if(ubY < g_fubMapTileHeight-1 && g_pMap[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
+	else if(ubY < g_sMap.fubHeight-1 && g_sMap.pData[ubX][ubY+1].ubIdx == MAP_LOGIC_WATER)
 		ubOut = 11 + (ubX & 1);
 	else
 		ubOut = 0;
 	return ubOut;
 }
 
-UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
+UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	UBYTE ubTileType;
 	UBYTE ubOut;
 	const UBYTE ubE = 8;
@@ -93,64 +90,46 @@ UBYTE mapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	const UBYTE ubN = 1;
 
 	ubOut = 0;
-	ubTileType = g_pMap[ubX][ubY].ubIdx;
-	if(ubX && checkFn(g_pMap[ubX+1][ubY].ubIdx))
+	ubTileType = g_sMap.pData[ubX][ubY].ubIdx;
+	if(ubX && checkFn(g_sMap.pData[ubX+1][ubY].ubIdx))
 		ubOut |= ubE;
-	if(ubX-1 < g_fubMapTileWidth && checkFn(g_pMap[ubX-1][ubY].ubIdx))
+	if(ubX-1 < g_sMap.fubWidth && checkFn(g_sMap.pData[ubX-1][ubY].ubIdx))
 		ubOut |= ubW;
-	if(ubY && checkFn(g_pMap[ubX][ubY-1].ubIdx))
+	if(ubY && checkFn(g_sMap.pData[ubX][ubY-1].ubIdx))
 		ubOut |= ubN;
-	if(ubY-1 < g_fubMapTileHeight && checkFn(g_pMap[ubX][ubY+1].ubIdx))
+	if(ubY-1 < g_sMap.fubHeight && checkFn(g_sMap.pData[ubX][ubY+1].ubIdx))
 		ubOut |= ubS;
 	return ubOut;
 }
 
-void mapCreate(char *szPath) {
+void worldMapCreate() {
 	UBYTE ubTileIdx;
 	tSimpleBufferManager *pManager;
 
-	logBlockBegin("mapCreate(szPath: %s)", szPath);
+	logBlockBegin("mapCreate()");
 	g_ubPendingTileCount = 0;
 
-	tJson *pMapJson = mapJsonCreate(szPath);
-
-	// Objects may have properties passed in random order
-	// so 1st pass will extract only general data
-	FUBYTE fubControlPointCount;
-	mapJsonGetMeta(
-		pMapJson,
-		&g_fubMapTileWidth, &g_fubMapTileHeight, &fubControlPointCount
-	);
-
-	logWrite(
-		"Dimensions: %" PRI_FUBYTE "x%" PRI_FUBYTE ", control pts: %"PRI_FUBYTE"\n",
-		g_fubMapTileWidth, g_fubMapTileHeight, fubControlPointCount
-	);
-
-	g_pMap = memAllocFast(sizeof(tTile*) * g_fubMapTileWidth);
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		g_pMap[x] = memAllocFast(sizeof(tTile) * g_fubMapTileHeight);
-
 	buildingManagerReset();
-	controlManagerCreate(fubControlPointCount);
-	FUBYTE fubSpawnCount;
-	mapJsonReadTiles(pMapJson, &fubSpawnCount);
-	spawnManagerCreate(fubSpawnCount);
-	mapGenerateLogic();
-	mapJsonReadControlPoints(pMapJson);
+	controlManagerCreate(g_sMap.fubControlPointCount);
+	spawnManagerCreate(g_sMap.fubSpawnCount);
+	worldMapGenerateLogic();
 
+	// Read remaining JSON data
+	tJson *pMapJson = mapJsonCreate(g_sMap.szPath);
+	mapJsonReadControlPoints(pMapJson);
 	mapJsonDestroy(pMapJson);
+
 	logBlockEnd("mapCreate()");
 }
 
-void mapGenerateLogic(void) {
+void worldMapGenerateLogic(void) {
 	FUBYTE x, y, ubTileIdx;
 	logBlockBegin("mapGenerateLogic()");
 	turretListCreate();
 	// 2nd data pass - generate additional logic
-	for(x = 0; x != g_fubMapTileWidth; ++x) {
-		for(y = 0; y != g_fubMapTileHeight; ++y) {
-			ubTileIdx = g_pMap[x][y].ubIdx;
+	for(x = 0; x != g_sMap.fubWidth; ++x) {
+		for(y = 0; y != g_sMap.fubHeight; ++y) {
+			ubTileIdx = g_sMap.pData[x][y].ubIdx;
 			switch(ubTileIdx) {
 				case MAP_LOGIC_WATER:
 					break;
@@ -166,13 +145,13 @@ void mapGenerateLogic(void) {
 				case MAP_LOGIC_ROAD:
 					break;
 				case MAP_LOGIC_WALL_VERTICAL:
-					g_pMap[x][y].ubIdx = MAP_LOGIC_WALL;
+					g_sMap.pData[x][y].ubIdx = MAP_LOGIC_WALL;
 				case MAP_LOGIC_WALL:
-					g_pMap[x][y].ubData = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
+					g_sMap.pData[x][y].ubData = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
 					break;
 				case MAP_LOGIC_FLAG1:
 				case MAP_LOGIC_FLAG2:
-					g_pMap[x][y].ubData = buildingAdd(
+					g_sMap.pData[x][y].ubData = buildingAdd(
 						x, y,
 						BUILDING_TYPE_FLAG,
 						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_BLUE : TEAM_RED
@@ -183,8 +162,8 @@ void mapGenerateLogic(void) {
 				case MAP_LOGIC_SENTRY2:
 					// Change logic type so that projectiles will threat turret walls
 					// in same way as any other
-					g_pMap[x][y].ubIdx = MAP_LOGIC_WALL;
-					g_pMap[x][y].ubData = buildingAdd(
+					g_sMap.pData[x][y].ubIdx = MAP_LOGIC_WALL;
+					g_sMap.pData[x][y].ubData = buildingAdd(
 						x, y,
 						BUILDING_TYPE_TURRET,
 						ubTileIdx == MAP_LOGIC_SENTRY0? TEAM_NONE
@@ -201,7 +180,7 @@ void mapGenerateLogic(void) {
 	logBlockEnd("mapGenerateLogic()");
 }
 
-void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
+void worldMapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 	blitCopyAligned(
 		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
 		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
@@ -209,19 +188,19 @@ void mapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 	);
 }
 
-void mapRedraw(void) {
+void worldMapRedraw(void) {
 	UBYTE ubTileIdx, ubOutTile;
 
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x) {
-		for(FUBYTE y = 0; y != g_fubMapTileHeight; ++y) {
-			ubTileIdx = g_pMap[x][y].ubIdx;
-			mapDrawTile(x, y, mapTileFromLogic(x, y));
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x) {
+		for(FUBYTE y = 0; y != g_sMap.fubHeight; ++y) {
+			ubTileIdx = g_sMap.pData[x][y].ubIdx;
+			worldMapDrawTile(x, y, worldMapTileFromLogic(x, y));
 		}
 	}
 }
 
-UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
-	FUBYTE fubLogicIdx = g_pMap[fubTileX][fubTileY].ubIdx;
+UBYTE worldMapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
+	FUBYTE fubLogicIdx = g_sMap.pData[fubTileX][fubTileY].ubIdx;
 	switch(fubLogicIdx) {
 		case MAP_LOGIC_WATER:
 			return MAP_TILE_WATER;
@@ -232,9 +211,9 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 		case MAP_LOGIC_SPAWN2:
 			return MAP_TILE_SPAWN_RED;
 		case MAP_LOGIC_ROAD:
-			return MAP_TILE_ROAD + mapCheckNeighbours(fubTileX, fubTileY, mapIsRoadFriend);
+			return MAP_TILE_ROAD + worldMapCheckNeighbours(fubTileX, fubTileY, worldMapIsRoadFriend);
 		case MAP_LOGIC_WALL:
-			return MAP_TILE_WALL + mapCheckNeighbours(fubTileX, fubTileY, mapIsWall);
+			return MAP_TILE_WALL + worldMapCheckNeighbours(fubTileX, fubTileY, worldMapIsWall);
 		case MAP_LOGIC_FLAG1:
 			return MAP_TILE_FLAG1L;
 		case MAP_LOGIC_FLAG2:
@@ -251,26 +230,20 @@ UBYTE mapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 			return MAP_TILE_CAPTURE_RED;
 		case MAP_LOGIC_DIRT:
 		default:
-			return MAP_TILE_DIRT + mapCheckWater(fubTileX, fubTileY);
+			return MAP_TILE_DIRT + worldMapCheckWater(fubTileX, fubTileY);
 	}
 }
 
-void mapDestroy(void) {
+void worldMapDestroy(void) {
 	logBlockBegin("mapDestroy()");
 	controlManagerDestroy();
 	spawnManagerDestroy();
-	FUBYTE x;
 
-	for(x = 0; x != g_fubMapTileWidth; ++x) {
-		memFree(g_pMap[x], sizeof(tTile) * g_fubMapTileHeight);
-	}
-	memFree(g_pMap, sizeof(tTile*) * g_fubMapTileWidth);
 	turretListDestroy();
 	logBlockEnd("mapDestroy()");
-
 }
 
-void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
+void worldMapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
 	// TODO omit if not visible
 	// TODO when scrolling trick: omit if not yet drawn on redraw margin
 	++g_ubPendingTileCount;
@@ -281,16 +254,16 @@ void mapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
 /**
  * @todo Redraw proper tile type.
  */
-void mapUpdateTiles(void) {
+void worldMapUpdateTiles(void) {
 	while(g_ubPendingTileCount) {
 		FUBYTE fubTileX = g_pTilesToRedraw[g_ubPendingTileCount].ubX;
 		FUBYTE fubTileY = g_pTilesToRedraw[g_ubPendingTileCount].ubY;
-		mapDrawTile(fubTileX, fubTileY, mapTileFromLogic(fubTileX, fubTileY));
+		worldMapDrawTile(fubTileX, fubTileY, worldMapTileFromLogic(fubTileX, fubTileY));
 		--g_ubPendingTileCount;
 	}
 }
 
-void mapChangeTile(UBYTE ubX,	UBYTE ubY, UBYTE ubLogicTileIdx) {
-	g_pMap[ubX][ubY].ubIdx = ubLogicTileIdx;
-	mapRequestUpdateTile(ubX, ubY);
+void worldMapChangeTile(UBYTE ubX,	UBYTE ubY, UBYTE ubLogicTileIdx) {
+	g_sMap.pData[ubX][ubY].ubIdx = ubLogicTileIdx;
+	worldMapRequestUpdateTile(ubX, ubY);
 }

@@ -18,6 +18,7 @@ typedef struct _tListCtl {
 	char **pEntries;
 	tFont *pFont;
 	tBitMap *pBfr;
+	void (*onChange)(void);
 } tListCtl;
 
 tListCtl *listCtlCreate(
@@ -27,7 +28,8 @@ tListCtl *listCtlCreate(
 	IN UWORD uwWidth,
 	IN UWORD uwHeight,
 	IN tFont *pFont,
-	IN UWORD uwEntryMaxCnt
+	IN UWORD uwEntryMaxCnt,
+	IN void (*onChange)(void)
 );
 
 void listCtlDestroy(

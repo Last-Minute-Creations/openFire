@@ -3,7 +3,7 @@
 
 #include <ace/utils/bitmap.h>
 #include "vehicletypes.h"
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/game/projectile.h"
 

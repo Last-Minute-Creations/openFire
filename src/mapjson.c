@@ -1,7 +1,7 @@
-#include "gamestates/game/mapjson.h"
+#include "mapjson.h"
 #include <ace/macros.h>
 #include <ace/managers/log.h>
-#include "gamestates/game/map.h"
+#include "map.h"
 #include "gamestates/game/control.h"
 #include "gamestates/game/building.h"
 
@@ -57,10 +57,10 @@ void mapJsonDestroy(tJson *pJson) {
 	memFree(pJson, sizeof(tJson));
 }
 
-void mapJsonGetMeta(tJson *pJson, FUBYTE *pWidth, FUBYTE *pHeight, FUBYTE *pControlPointCount) {
+void mapJsonGetMeta(tJson *pJson, tMap *pMap) {
 	logBlockBegin(
-		"mapJsonGetMeta(pJson: %p, pWidth: %p, pHeight: %p, pControlPointCount: %p)",
-		pJson, pWidth, pHeight, pControlPointCount
+		"mapJsonGetMeta(pJson: %p, pMap: %p",
+		pJson, pMap
 	);
 	for(FUWORD i = 1; i < pJson->fwTokenCount; ++i) { // Skip first gigantic obj
 		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
@@ -68,16 +68,16 @@ void mapJsonGetMeta(tJson *pJson, FUBYTE *pWidth, FUBYTE *pHeight, FUBYTE *pCont
 			continue;
 		// Read property name
 		if(!memcmp(pJson->szData + pJson->pTokens[i].start, "width", fuwWidth))
-			*pWidth = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
+			pMap->fubWidth = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
 		else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "height", fuwWidth))
-			*pHeight = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
+			pMap->fubHeight = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
 		else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "controlPoints", fuwWidth))
-			*pControlPointCount = pJson->pTokens[++i].size;
+			pMap->fubControlPointCount = pJson->pTokens[++i].size;
 	}
 	logBlockEnd("mapJsonGetMeta()");
 }
 
-void mapJsonReadTiles(tJson *pJson,	FUBYTE *pSpawnCount) {
+void mapJsonReadTiles(tJson *pJson,	tMap *pMap) {
 	// Find 'tiles' in JSON
 	FUBYTE fubFound = 0;
 	FUWORD i;
@@ -94,17 +94,17 @@ void mapJsonReadTiles(tJson *pJson,	FUBYTE *pSpawnCount) {
 	}
 
 	// Tiles found - check row count
-	if(pJson->pTokens[i].size != g_fubMapTileHeight) {
+	if(pJson->pTokens[i].size != pMap->fubHeight) {
 		logWrite(
 			"ERR: Only %d rows provided, %"PRI_FUBYTE"expected\n",
-			pJson->pTokens[i].size, g_fubMapTileHeight
+			pJson->pTokens[i].size, pMap->fubHeight
 		);
 		return;
 	}
 
 	// Do some reading
-	*pSpawnCount = 0;
-	for(FUBYTE y = 0; y < g_fubMapTileHeight; ++y) {
+	pMap->fubSpawnCount = 0;
+	for(FUBYTE y = 0; y < pMap->fubHeight; ++y) {
 		++i;
 		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
 
@@ -113,24 +113,26 @@ void mapJsonReadTiles(tJson *pJson,	FUBYTE *pSpawnCount) {
 			logWrite("ERR: Unexpected row type @y %"PRI_FUBYTE": %d\n", y, pJson->pTokens[i].type);
 			return;
 		}
-		if(fuwWidth != g_fubMapTileWidth) {
+		if(fuwWidth != pMap->fubWidth) {
 			logWrite(
 				"ERR: Row @y %"PRI_FUBYTE" is too short: %"PRI_FUWORD", expected %"PRI_FUBYTE"\n",
-				y, fuwWidth, g_fubMapTileWidth
+				y, fuwWidth, pMap->fubWidth
 			);
 			return;
 		}
 
 		// Read row
 		for(FUBYTE x = 0; x < fuwWidth; ++x) {
-			g_pMap[x][y].ubIdx = (UBYTE)pJson->szData[pJson->pTokens[i].start + x];
-			g_pMap[x][y].ubData = BUILDING_IDX_INVALID;
+			pMap->pData[x][y].ubIdx = (UBYTE)pJson->szData[pJson->pTokens[i].start + x];
+			pMap->pData[x][y].ubData = BUILDING_IDX_INVALID;
 			if(
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN2
+				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
+				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
+				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN2
 			)
-				++*pSpawnCount;
+				++pMap->fubSpawnCount;
+			else if(pMap->pData[x][y].ubIdx == MAP_LOGIC_WALL_VERTICAL)
+				pMap->pData[x][y].ubIdx = MAP_LOGIC_WALL;
 		}
 	}
 }

@@ -8,7 +8,8 @@
 tListCtl *listCtlCreate(
 	tBitMap *pBfr,
 	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight,
-	tFont *pFont, UWORD uwEntryMaxCnt
+	tFont *pFont, UWORD uwEntryMaxCnt,
+	void (*onChange)(void)
 ) {
 	logBlockBegin(
 		"listCtlCreate(uwX: %hu, uwY: %hu, uwWidth: %hu, uwHeight: %hu, pFont: %p)",
@@ -27,6 +28,7 @@ tListCtl *listCtlCreate(
 	pCtl->pFont = pFont;
 	pCtl->pBfr = pBfr;
 	pCtl->uwEntrySel = 0;
+	pCtl->onChange = onChange;
 
 	pCtl->pEntries =  memAllocFastClear(uwEntryMaxCnt * sizeof(char*));
 
@@ -142,9 +144,14 @@ FUBYTE listCtlProcessClick(tListCtl *pCtl, UWORD uwMouseX, UWORD uwMouseY) {
 	if(inRect(uwMouseX, uwMouseY, pCtl->sRect)) {
 		UWORD uwPrevSel = pCtl->uwEntrySel;
 		UWORD uwFirstVisible = 0;
-		pCtl->uwEntrySel = uwFirstVisible + (uwMouseY - pCtl->sRect.uwX - 2) / pCtl->ubEntryHeight;
+		pCtl->uwEntrySel = MIN(
+			uwFirstVisible + (uwMouseY - pCtl->sRect.uwX - 2) / pCtl->ubEntryHeight,
+			pCtl->uwEntryCnt-1
+		);
 		listCtlDrawEntry(pCtl, uwPrevSel);
 		listCtlDrawEntry(pCtl, pCtl->uwEntrySel);
+		if(pCtl->onChange)
+			pCtl->onChange();
 		return 1;
 	}
 	return 0;

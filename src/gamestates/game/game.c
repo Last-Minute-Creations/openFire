@@ -11,7 +11,7 @@
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include "cursor.h"
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/team.h"
@@ -126,7 +126,7 @@ void gsGameCreate(void) {
 
 	teamsInit();
 
-	mapCreate("data/maps/fubar.json");
+	worldMapCreate();
 	// Create viewports
 	s_pWorldMainVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, g_pWorldView,
@@ -136,8 +136,8 @@ void gsGameCreate(void) {
 	);
 	g_pWorldMainBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
-		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_fubMapTileWidth << MAP_TILE_SIZE,
-		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_fubMapTileHeight << MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_sMap.fubWidth << MAP_TILE_SIZE,
+		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_sMap.fubHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
 		TAG_DONE
@@ -148,7 +148,7 @@ void gsGameCreate(void) {
 		return;
 	}
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
-	mapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
+	worldMapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
@@ -220,7 +220,7 @@ void gsGameCreate(void) {
 	// }
 
 	// Now that world buffer is created, do the first draw
-	mapRedraw();
+	worldMapRedraw();
 
 	// Get some speed out of unnecessary DMA
 	custom.dmacon = BITCLR | DMAF_DISK;
@@ -313,7 +313,7 @@ void gsGameLoop(void) {
 	vPortWaitForEnd(s_pWorldMainVPort);
 	worldUndraw(); // This will take almost whole HUD time
 
-	mapUpdateTiles();
+	worldMapUpdateTiles();
 
 	logAvgBegin(s_pAvgRedrawControl);
 	controlRedrawPoints();
@@ -406,7 +406,7 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pProcessAvgHud);
 	#endif
 
-	mapDestroy();
+	worldMapDestroy();
 	playerListDestroy();
 
 	logBlockEnd("gsGameDestroy()");

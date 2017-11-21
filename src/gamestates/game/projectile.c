@@ -2,7 +2,7 @@
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
 #include "gamestates/game/game.h"
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include "gamestates/game/building.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
@@ -174,18 +174,18 @@ void projectileSim(void) {
 		// Check collistion with buildings
 		UBYTE ubMapX = fix16_to_int(pProjectile->fX) >> MAP_TILE_SIZE;
 		UBYTE ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
-		UBYTE ubBuildingIdx = g_pMap[ubMapX][ubMapY].ubData;
+		UBYTE ubBuildingIdx = g_sMap.pData[ubMapX][ubMapY].ubData;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
 			if(
 				pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
-				&& g_pMap[ubMapX][ubMapY].ubIdx == MAP_LOGIC_WALL
+				&& g_sMap.pData[ubMapX][ubMapY].ubIdx == MAP_LOGIC_WALL
 			) {
 				continue;
 			}
 			if(buildingDamage(ubBuildingIdx, PROJECTILE_DAMAGE) == BUILDING_DESTROYED) {
-				g_pMap[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
-				g_pMap[ubMapX][ubMapY].ubData = 0;
-				mapRequestUpdateTile(ubMapX, ubMapY);
+				g_sMap.pData[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
+				g_sMap.pData[ubMapX][ubMapY].ubData = 0;
+				worldMapRequestUpdateTile(ubMapX, ubMapY);
 				explosionsAdd(ubMapX << MAP_TILE_SIZE, ubMapY << MAP_TILE_SIZE);
 			}
 			projectileDestroy(pProjectile);

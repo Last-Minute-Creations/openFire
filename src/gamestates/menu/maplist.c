@@ -8,13 +8,17 @@
 #include <ace/managers/game.h>
 #include <ace/managers/mouse.h>
 #include "cursor.h"
+#include "map.h"
 #include "gamestates/menu/menu.h"
 #include "gamestates/menu/button.h"
 #include "gamestates/menu/listctl.h"
+#include "gamestates/menu/minimap.h"
 #include "gamestates/game/game.h"
 
 #define MAPLIST_FILENAME_MAX 108
 #define MAP_NAME_MAX 30
+
+#define MAPLIST_MINIMAP_BORDER 1
 
 typedef struct _tMapListEntry {
 	char szFileName[MAPLIST_FILENAME_MAX];
@@ -77,6 +81,11 @@ void mapListPrepareList(void) {
 	UnLock(pLock);
 }
 
+void mapListSelect(UWORD uwIdx) {
+	mapInit(s_sMapList.pMaps[uwIdx].szFileName);
+	minimapDraw(g_pMenuBuffer->pBuffer, &g_sMap);
+}
+
 void mapListOnBtnStart(void) {
 	g_isLocalBot = 0;
 	gamePopState(); // From menu substate
@@ -85,6 +94,10 @@ void mapListOnBtnStart(void) {
 
 void mapListOnBtnBack(void) {
 	gameChangeState(menuMainCreate, menuLoop, menuMainDestroy);
+}
+
+void mapListOnMapChange(void) {
+	mapListSelect(s_pListCtl->uwEntrySel);
 }
 
 void mapListCreate(void) {
@@ -102,18 +115,27 @@ void mapListCreate(void) {
 
 	s_pListCtl = listCtlCreate(
 		g_pMenuBuffer->pBuffer, 10, 10, 100, 200,
-		g_pMenuFont, s_sMapList.uwMapCount
+		g_pMenuFont, s_sMapList.uwMapCount,
+		mapListOnMapChange
 	);
 	for(UWORD i = 0; i != s_sMapList.uwMapCount; ++i) {
 		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = 0;
 		listCtlAddEntry(s_pListCtl, s_sMapList.pMaps[i].szFileName);
-		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = '.';
+		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)] = '.';
 	}
 	listCtlDraw(s_pListCtl);
 
 	buttonAdd(220, 200, 80, 16, "Play", mapListOnBtnStart);
 	buttonAdd(220, 220, 80, 16, "Back", mapListOnBtnBack);
 	buttonDrawAll();
+
+	blitRect(
+		g_pMenuBuffer->pBuffer,
+		MAPLIST_MINIMAP_X - 1, MAPLIST_MINIMAP_Y - 1,
+		MAPLIST_MINIMAP_WIDTH + 2, MAPLIST_MINIMAP_WIDTH + 2,
+		MAPLIST_MINIMAP_BORDER
+	);
+	mapListSelect(s_pListCtl->uwEntrySel);
 }
 
 void mapListLoop(void) {

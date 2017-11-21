@@ -1,7 +1,7 @@
 #include "gamestates/game/control.h"
 #include <ace/macros.h>
 #include <ace/managers/blit.h>
-#include "gamestates/game/map.h"
+#include "map.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/game.h"
 #include "gamestates/game/console.h"
@@ -48,10 +48,10 @@ UBYTE ** controlPolygonMaskCreate(
 		pPoint, fubPolyPtCnt, pPolyPts, pX1, pY1, pX2, pY2
 	);
 	UBYTE **pMask;
-	pMask = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x) {
-		pMask[x] = memAllocFastClear(sizeof(UBYTE) * g_fubMapTileHeight);
-	}
+	pMask = memAllocFast(g_sMap.fubWidth * sizeof(UBYTE*));
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+		pMask[x] = memAllocFastClear(sizeof(UBYTE) * g_sMap.fubHeight);
+
 	*pX1 = 0xFF; *pY1 = 0xFF; *pX2 = 0; *pY2 = 0;
 	for(FUBYTE i = 1; i != fubPolyPtCnt; ++i) {
 		FUBYTE x1 = pPolyPts[i-1].sUbCoord.ubX;
@@ -85,9 +85,9 @@ UBYTE ** controlPolygonMaskCreate(
 }
 
 void controlPolygonMaskDestroy(UBYTE **pMask) {
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		memFree(pMask[x], sizeof(UBYTE) * g_fubMapTileHeight);
-	memFree(pMask, g_fubMapTileWidth * sizeof(UBYTE*));
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+		memFree(pMask[x], sizeof(UBYTE) * g_sMap.fubHeight);
+	memFree(pMask, g_sMap.fubWidth * sizeof(UBYTE*));
 }
 
 UBYTE s_ubAllocSpawnCount;

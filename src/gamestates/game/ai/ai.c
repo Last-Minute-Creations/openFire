@@ -1,5 +1,5 @@
 #include "gamestates/game/ai/ai.h"
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include "gamestates/game/turret.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/gamemath.h"
@@ -52,44 +52,44 @@ void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 
 static FUBYTE aiGraphGenerateMapNodes(void) {
 	// Get all nodes on map
-	for(FUBYTE x = 0; x < g_fubMapTileWidth; ++x) {
-		for(FUBYTE y = 0; y < g_fubMapTileHeight; ++y) {
+	for(FUBYTE x = 0; x < g_sMap.fubWidth; ++x) {
+		for(FUBYTE y = 0; y < g_sMap.fubHeight; ++y) {
 			if(
-				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE0 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE1 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_CAPTURE2
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_CAPTURE0 ||
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_CAPTURE1 ||
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_CAPTURE2
 			) {
 				// Capture points
 				aiGraphAddNode(x,y, AI_NODE_TYPE_CAPTURE);
 			}
 			else if(
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
-				g_pMap[x][y].ubIdx == MAP_LOGIC_SPAWN2
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_SPAWN2
 			) {
 				// Spawn points
 				aiGraphAddNode(x,y, AI_NODE_TYPE_SPAWN);
 			}
 			else if(
-				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
-				mapIsWall(g_pMap[x-1][y].ubIdx) &&
-				mapIsWall(g_pMap[x+1][y].ubIdx)
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_ROAD &&
+				worldMapIsWall(g_sMap.pData[x-1][y].ubIdx) &&
+				worldMapIsWall(g_sMap.pData[x+1][y].ubIdx)
 			) {
 				// Gate with horizontal walls
-				if(!mapIsWall(g_pMap[x-1][y-1].ubIdx) && !mapIsWall(g_pMap[x+1][y-1].ubIdx))
+				if(!worldMapIsWall(g_sMap.pData[x-1][y-1].ubIdx) && !worldMapIsWall(g_sMap.pData[x+1][y-1].ubIdx))
 					aiGraphAddNode(x,y-1, AI_NODE_TYPE_ROAD);
-				if(!mapIsWall(g_pMap[x-1][y+1].ubIdx) && !mapIsWall(g_pMap[x+1][y+1].ubIdx))
+				if(!worldMapIsWall(g_sMap.pData[x-1][y+1].ubIdx) && !worldMapIsWall(g_sMap.pData[x+1][y+1].ubIdx))
 					aiGraphAddNode(x,y+1, AI_NODE_TYPE_ROAD);
 			}
 			else if(
-				g_pMap[x][y].ubIdx == MAP_LOGIC_ROAD &&
-				mapIsWall(g_pMap[x][y-1].ubIdx) &&
-				mapIsWall(g_pMap[x][y+1].ubIdx)
+				g_sMap.pData[x][y].ubIdx == MAP_LOGIC_ROAD &&
+				worldMapIsWall(g_sMap.pData[x][y-1].ubIdx) &&
+				worldMapIsWall(g_sMap.pData[x][y+1].ubIdx)
 			) {
 				// Gate with vertical walls
-				if(!mapIsWall(g_pMap[x-1][y-1].ubIdx) && !mapIsWall(g_pMap[x-1][y+1].ubIdx))
+				if(!worldMapIsWall(g_sMap.pData[x-1][y-1].ubIdx) && !worldMapIsWall(g_sMap.pData[x-1][y+1].ubIdx))
 					aiGraphAddNode(x-1,y, AI_NODE_TYPE_ROAD);
-				if(!mapIsWall(g_pMap[x+1][y-1].ubIdx) && !mapIsWall(g_pMap[x+1][y+1].ubIdx))
+				if(!worldMapIsWall(g_sMap.pData[x+1][y-1].ubIdx) && !worldMapIsWall(g_sMap.pData[x+1][y+1].ubIdx))
 					aiGraphAddNode(x+1,y, AI_NODE_TYPE_ROAD);
 			}
 			// TODO this won't work if e.g. horizontal gate is adjacent to vertical wall
@@ -170,11 +170,11 @@ void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 	for(FUBYTE x = fubX1; x <= fubX2; ++x) {
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
 			// Check for walls
-			if(g_pMap[x][y].ubIdx == MAP_LOGIC_WATER) {
+			if(g_sMap.pData[x][y].ubIdx == MAP_LOGIC_WATER) {
 				s_pTileCosts[x][y] = 0xFF;
 				continue;
 			}
-			if(mapIsWall(g_pMap[x][y].ubIdx)) {
+			if(worldMapIsWall(g_sMap.pData[x][y].ubIdx)) {
 				s_pTileCosts[x][y] = 0xFF;
 				continue;
 			}
@@ -184,8 +184,8 @@ void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 			}
 			// Check for turret in range of fire
 			FUBYTE fubTileRange = TURRET_MAX_PROCESS_RANGE_Y >> MAP_TILE_SIZE;
-			for(FUBYTE i = MAX(0, x - fubTileRange); i != MIN(g_fubMapTileWidth, x+fubTileRange); ++i)
-				for(FUBYTE j = MAX(0, y - fubTileRange); j != MIN(g_fubMapTileHeight, y+fubTileRange); ++j)
+			for(FUBYTE i = MAX(0, x - fubTileRange); i != MIN(g_sMap.fubWidth, x+fubTileRange); ++i)
+				for(FUBYTE j = MAX(0, y - fubTileRange); j != MIN(g_sMap.fubHeight, y+fubTileRange); ++j)
 					if(g_pTurretTiles[i][j])
 						s_pTileCosts[x][y] += MIN(s_pTileCosts[x][y]+10, 255);
 		}
@@ -194,7 +194,7 @@ void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 
 void aiCalcTileCosts(void) {
 	logBlockBegin("aiCalcTileCosts()");
-	aiCalcTileCostsFrag(0, 0, g_fubMapTileWidth-1, g_fubMapTileHeight-1);
+	aiCalcTileCostsFrag(0, 0, g_sMap.fubWidth-1, g_sMap.fubHeight-1);
 	logBlockEnd("aiCalcTileCosts()");
 }
 
@@ -223,9 +223,9 @@ void aiManagerCreate(void) {
 	botManagerCreate(g_ubPlayerLimit);
 
 	// Calculate tile costs
-	s_pTileCosts = memAllocFast(g_fubMapTileWidth * sizeof(UBYTE*));
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		s_pTileCosts[x] = memAllocFastClear(g_fubMapTileHeight * sizeof(UBYTE));
+	s_pTileCosts = memAllocFast(g_sMap.fubWidth * sizeof(UBYTE*));
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+		s_pTileCosts[x] = memAllocFastClear(g_sMap.fubHeight * sizeof(UBYTE));
 	aiCalcTileCosts();
 
 	// Create node network
@@ -237,8 +237,8 @@ void aiManagerDestroy(void) {
 	logBlockBegin("aiManagerDestroy()");
 	aiGraphDestroy();
 	botManagerDestroy();
-	for(FUBYTE x = 0; x != g_fubMapTileWidth; ++x)
-		memFree(s_pTileCosts[x], g_fubMapTileHeight * sizeof(UBYTE));
-	memFree(s_pTileCosts, g_fubMapTileWidth * sizeof(UBYTE*));
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+		memFree(s_pTileCosts[x], g_sMap.fubHeight * sizeof(UBYTE));
+	memFree(s_pTileCosts, g_sMap.fubWidth * sizeof(UBYTE*));
 	logBlockEnd("aiManagerDestroy()");
 }

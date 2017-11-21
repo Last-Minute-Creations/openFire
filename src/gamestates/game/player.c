@@ -277,7 +277,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	uwVy = pVehicle->uwY;
 	uwVTileX = uwVx >> MAP_TILE_SIZE;
 	uwVTileY = uwVy >> MAP_TILE_SIZE;
-	ubTileType = g_pMap[uwVTileX][uwVTileY].ubIdx;
+	ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
 	g_ubDoSiloHighlight = 0;
 
 	// Drowning

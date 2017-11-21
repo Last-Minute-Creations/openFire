@@ -4,7 +4,7 @@
 #include <ace/utils/bitmap.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/team.h"
-#include "gamestates/game/map.h"
+#include "gamestates/game/worldmap.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/spawn.h"
 #include "gamestates/game/player.h"
@@ -137,7 +137,7 @@ UBYTE vehicleCollidesWithWall(UWORD uwX, fix16_t uwY, tBCoordYX *pCollisionPoint
 	for(p = 0; p != 9; ++p) {
 		uwPX = uwX + pCollisionPoints[p].bX;
 		uwPY = uwY + pCollisionPoints[p].bY;
-		ubLogicTile = g_pMap[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
+		ubLogicTile = g_sMap.pData[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
 			ubLogicTile == MAP_LOGIC_SENTRY1 ||

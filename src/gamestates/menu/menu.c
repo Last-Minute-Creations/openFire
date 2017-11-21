@@ -7,11 +7,10 @@
 #include <ace/managers/game.h>
 #include "config.h"
 #include "cursor.h"
+#include "map.h"
 #include "gamestates/menu/button.h"
 #include "gamestates/menu/maplist.h"
 #include "gamestates/game/game.h"
-
-#define MENU_BPP 4
 
 static tView *s_pView;
 static tVPort *s_pVPort;
@@ -29,6 +28,7 @@ void menuMainOnQuit(void) {
 
 void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
+	mapInit("fubar.json");
 	gamePopState(); // From current menu substate
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }

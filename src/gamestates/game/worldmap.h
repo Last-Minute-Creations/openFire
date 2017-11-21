@@ -1,31 +1,13 @@
-#ifndef GUARD_OF_GAMESTATES_GAME_MAP_H
-#define GUARD_OF_GAMESTATES_GAME_MAP_H
+#ifndef GUARD_OF_GAMESTATES_GAME_WORLDMAP_H
+#define GUARD_OF_GAMESTATES_GAME_WORLDMAP_H
 
 #include <ace/utils/extview.h>
 #include <ace/utils/bitmap.h>
+#include "map.h"
 
 #define MAP_TILE_SIZE 5
 #define MAP_FULL_TILE (1 << MAP_TILE_SIZE)
 #define MAP_HALF_TILE (MAP_FULL_TILE >> 1)
-
-#define MAP_LOGIC_WATER   '.'
-#define MAP_LOGIC_DIRT    ' '
-#define MAP_LOGIC_ROAD    '#'
-#define MAP_LOGIC_WALL    '-'
-#define MAP_LOGIC_WALL_VERTICAL '|' /* Convenience */
-#define MAP_LOGIC_SPAWN0  '0'
-#define MAP_LOGIC_SPAWN1  '1'
-#define MAP_LOGIC_SPAWN2  '2'
-#define MAP_LOGIC_SENTRY0 '$'
-#define MAP_LOGIC_SENTRY1 's'
-#define MAP_LOGIC_SENTRY2 'S'
-#define MAP_LOGIC_FLAG1   'f'
-#define MAP_LOGIC_FLAG2   'F'
-#define MAP_LOGIC_GATE1   'g'
-#define MAP_LOGIC_GATE2   'G'
-#define MAP_LOGIC_CAPTURE0 'o'
-#define MAP_LOGIC_CAPTURE1 'c'
-#define MAP_LOGIC_CAPTURE2 'C'
 
 #define MAP_TILE_WATER      0
 #define MAP_TILE_SPAWN_BLUE 1
@@ -57,57 +39,46 @@
 #define MAP_TILE_WALL     48
 #define MAP_TILE_TURRET   64
 
-typedef struct _tTile {
-	UBYTE ubIdx;  ///< Tileset idx
-	UBYTE ubData; ///< Data field. For buildings/gates/spawns used as array idx.
-} tTile;
 
 typedef struct _tTileCoord {
 	UBYTE ubX;
 	UBYTE ubY;
 } tTileCoord;
 
-extern FUBYTE g_fubMapTileWidth, g_fubMapTileHeight;
-extern char g_szMapName[256];
-extern tTile **g_pMap;
+void worldMapCreate();
 
-void mapCreate(
-	IN char *szPath
-);
+void worldMapDestroy(void);
 
-void mapDestroy(void);
+void worldMapRedraw(void);
+void worldMapGenerateLogic(void);
 
-void mapRedraw(void);
-void mapGenerateLogic(void);
-
-void mapChangeTile(
+void worldMapChangeTile(
 	IN UBYTE ubX,
 	IN UBYTE ubY,
 	IN UBYTE ubLogicTileIdx
 );
 
-void mapSetSrcDst(
+void worldMapSetSrcDst(
 	IN tBitMap *pTileset,
 	IN tBitMap *pDst
 );
 
-void mapRequestUpdateTile(
+void worldMapRequestUpdateTile(
 	IN UBYTE ubX,
 	IN UBYTE ubY
 );
 
-UBYTE mapTileFromLogic(
+UBYTE worldMapTileFromLogic(
 	IN FUBYTE ubTileX,
 	IN FUBYTE ubTileY
 );
 
-UBYTE mapIsWall(
+UBYTE worldMapIsWall(
 	IN UBYTE ubMapTile
 );
 
-void mapUpdateTiles(void);
+void worldMapUpdateTiles(void);
 
-extern tTile **g_pMap;
 extern tBitMap *g_pMapTileset;
 
-#endif
+#endif // GUARD_OF_GAMESTATES_GAME_WORLDMAP_H

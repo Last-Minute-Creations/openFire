@@ -49,7 +49,7 @@ UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 
 void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 	g_pSpawns[ubSpawnIdx].ubTeam = ubTeam;
-	mapChangeTile(
+	worldMapChangeTile(
 		g_pSpawns[ubSpawnIdx].ubTileX, g_pSpawns[ubSpawnIdx].ubTileY,
 		ubTeam == TEAM_BLUE ? MAP_LOGIC_SPAWN1
 		: ubTeam == TEAM_RED ? MAP_LOGIC_SPAWN2
@@ -76,9 +76,9 @@ UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 
 UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY) {
 	if(
-		g_pMap[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN0 &&
-		g_pMap[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN1 &&
-		g_pMap[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN2
+		g_sMap.pData[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN0 &&
+		g_sMap.pData[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN1 &&
+		g_sMap.pData[ubTileX][ubTileY].ubIdx != MAP_LOGIC_SPAWN2
 	)
 		return SPAWN_INVALID;
 	for(FUBYTE i = g_ubSpawnCount; i--;) {
@@ -111,7 +111,7 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
 	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
-		mapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
+		worldMapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
 	else {
 		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
 		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)

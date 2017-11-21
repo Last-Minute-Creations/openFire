@@ -1,7 +1,6 @@
 #include "gamestates/game/building.h"
 
 #include <ace/managers/log.h>
-#include "gamestates/game/map.h"
 
 #define BUILDING_IDX_FIRST 1
 #define BUILDING_IDX_LAST  255

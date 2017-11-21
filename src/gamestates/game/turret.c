@@ -27,14 +27,14 @@ void turretListCreate(void) {
 	logBlockBegin("turretListCreate()");
 
 	g_uwTurretCount = 0;
-	s_uwMaxTurrets = (g_fubMapTileWidth/2 + 1) * g_fubMapTileHeight;
+	s_uwMaxTurrets = (g_sMap.fubWidth/2 + 1) * g_sMap.fubHeight;
 	g_pTurrets = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	g_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_fubMapTileWidth);
-	for(i = 0; i != g_fubMapTileWidth; ++i) {
-		g_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_fubMapTileHeight);
-		memset(g_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_fubMapTileHeight);
+	g_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_sMap.fubWidth);
+	for(i = 0; i != g_sMap.fubWidth; ++i) {
+		g_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_sMap.fubHeight);
+		memset(g_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_sMap.fubHeight);
 	}
 
 	// Attach sprites
@@ -80,9 +80,9 @@ void turretListDestroy(void) {
 	memFree(g_pTurrets, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	for(int i = 0; i != g_fubMapTileWidth; ++i)
-		memFree(g_pTurretTiles[i], sizeof(UWORD) * g_fubMapTileHeight);
-	memFree(g_pTurretTiles, sizeof(UWORD*) * g_fubMapTileWidth);
+	for(int i = 0; i != g_sMap.fubWidth; ++i)
+		memFree(g_pTurretTiles[i], sizeof(UWORD) * g_sMap.fubHeight);
+	memFree(g_pTurretTiles, sizeof(UWORD*) * g_sMap.fubWidth);
 
 	logAvgDestroy(s_pAvg);
 

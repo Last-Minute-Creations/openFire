@@ -1,7 +1,8 @@
-#ifndef GUARD_OF_GAMESTATES_GAME_MAPJSON_H
-#define GUARD_OF_GAMESTATES_GAME_MAPJSON_H
+#ifndef GUARD_OF_MAPJSON_H
+#define GUARD_OF_MAPJSON_H
 
 #include <ace/types.h>
+#include "map.h"
 #define JSMN_STRICT       /* Strict JSON parsing */
 // JSMN_PARENT_LINKS breaks things up!
 // #define JSMN_PARENT_LINKS /* Speeds things up */
@@ -19,18 +20,16 @@ void mapJsonDestroy(tJson *pJson);
 
 void mapJsonGetMeta(
 	IN tJson *pJson,
-	OUT FUBYTE *pWidth,
-	OUT FUBYTE *pHeight,
-	OUT FUBYTE *pControlPointCount
+	IN tMap *pMap
 );
 
 void mapJsonReadTiles(
 	IN tJson *pJson,
-	OUT FUBYTE *pSpawnCount
+	IN tMap *pMap
 );
 
 void mapJsonReadControlPoints(
 	IN tJson *pJson
 );
 
-#endif // GUARD_OF_GAMESTATES_GAME_MAPJSON_H
+#endif // GUARD_OF_MAPJSON_H

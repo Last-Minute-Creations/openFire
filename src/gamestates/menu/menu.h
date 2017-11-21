@@ -5,6 +5,8 @@
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/font.h>
 
+#define MENU_BPP 4
+
 void menuCreate(void);
 
 void menuLoop(void);
