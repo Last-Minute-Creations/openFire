@@ -53,34 +53,39 @@ ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 ace: $(ACE_OBJS)
 	make -C $(ACE_DIR) all
 	@echo.
-	@echo Copying ACE objs:
-	$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR)
+	@echo Copying ACE objs...
 	@echo.
+	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) > NUL
 
 of: $(OF_OBJS)
 	@echo.
 	@echo Linking...
-	$(CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
+	@$(CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
 
 # Main files
 $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	@echo Building $<
+	@$(CC) $(CC_FLAGS) -c -o $@ $<
 
 # Game
 $(TMP_DIR)$(SL)gsgame_%.o: $(SRC_DIR)/gamestates/game/%.c
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	@echo Building $<
+	@$(CC) $(CC_FLAGS) -c -o $@ $<
 
 # Game AI
 $(TMP_DIR)$(SL)gsgame_ai_%.o: $(SRC_DIR)/gamestates/game/ai/%.c
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	@echo Building $<
+	@$(CC) $(CC_FLAGS) -c -o $@ $<
 
 # Menu
 $(TMP_DIR)$(SL)gsmenu_%.o: $(SRC_DIR)/gamestates/menu/%.c
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	@echo Building $<
+	@$(CC) $(CC_FLAGS) -c -o $@ $<
 
 # Precalc
 $(TMP_DIR)$(SL)gsprecalc_%.o: $(SRC_DIR)/gamestates/precalc/%.c
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+	@echo Building $<
+	@$(CC) $(CC_FLAGS) -c -o $@ $<
 
 all: clear ace of
 
