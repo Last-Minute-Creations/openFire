@@ -41,7 +41,7 @@ void playerListCreate(
 void playerListDestroy(void);
 
 tPlayer *playerAdd(
-	IN char *szName,
+	IN const char *szName,
 	IN UBYTE ubTeam
 );
 

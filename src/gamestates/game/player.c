@@ -80,7 +80,7 @@ void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
  *  @todo Vehicle count from server rules
  *  @todo Vehicle global for whole team
  */
-tPlayer *playerAdd(char *szName, UBYTE ubTeam) {
+tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 	for(FUBYTE i = 0; i != g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].szName[0])
 			continue;
