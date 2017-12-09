@@ -116,7 +116,6 @@ void menuCreate(void) {
 void menuDestroy(void) {
 	viewLoad(0);
 	cursorDestroy();
-	buttonListDestroy();
 	fontDestroy(g_pMenuFont);
 	viewDestroy(s_pView);
 }
