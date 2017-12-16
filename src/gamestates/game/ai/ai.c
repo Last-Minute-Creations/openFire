@@ -109,12 +109,14 @@ UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
 	if(ABS(bDeltaX) > ABS(bDeltaY)) {
 		BYTE bDirX = SGN(bDeltaX);
 		FUBYTE fubPrevY = pFrom->fubY;
-		for(FUBYTE x = pFrom->fubX; x < pTo->fubX; x += bDirX) {
+		for(FUBYTE x = pFrom->fubX; x != pTo->fubX; x += bDirX) {
 			FUBYTE y = pFrom->fubY + ((bDeltaY * (x - pFrom->fubX) + bDeltaX/2) / bDeltaX);
-			uwCost += s_pTileCosts[x][y];
-			if(y != fubPrevY) {
-				uwCost += s_pTileCosts[x][fubPrevY];
-				uwCost += s_pTileCosts[x-bDirX][y];
+			if(x != pFrom->fubX) {
+				uwCost += s_pTileCosts[x][y];
+				if(y != fubPrevY) {
+					uwCost += s_pTileCosts[x][fubPrevY];
+					uwCost += s_pTileCosts[x-bDirX][y];
+				}
 			}
 			fubPrevY = y;
 		}
@@ -122,12 +124,14 @@ UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
 	else {
 		BYTE bDirY = SGN(bDeltaY);
 		FUBYTE fubPrevX = pFrom->fubX;
-		for(FUBYTE y = pFrom->fubY; y < pTo->fubY; y += bDirY) {
+		for(FUBYTE y = pFrom->fubY; y != pTo->fubY; y += bDirY) {
 			FUBYTE x = pFrom->fubX + ((bDeltaX * (y - pFrom->fubY) + bDeltaY/2) / bDeltaY);
-			uwCost += s_pTileCosts[x][y];
-			if(x != fubPrevX) {
-				uwCost += s_pTileCosts[x][y-bDirY];
-				uwCost += s_pTileCosts[fubPrevX][y];
+			if(y != pFrom->fubY) {
+				uwCost += s_pTileCosts[x][y];
+				if(x != fubPrevX) {
+					uwCost += s_pTileCosts[x][y-bDirY];
+					uwCost += s_pTileCosts[fubPrevX][y];
+				}
 			}
 			fubPrevX = x;
 		}
@@ -144,14 +148,21 @@ void aiGraphCreate(void) {
 	}
 
 	// Create array for connections & calculate costs between nodes
+	logWrite("     ");
+	for(FUBYTE fubTo = g_fubNodeCount; fubTo--;)
+		logWrite("%5hu ", fubTo);
+	logWrite("\n");
 	s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
 	for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
 		s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
+		logWrite("%3hu ", fubFrom);
 		for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
 			s_pNodeConnectionCosts[fubFrom][fubTo] = aiCalcCostBetweenNodes(
 				&g_pNodes[fubFrom], &g_pNodes[fubTo]
 			);
+			logWrite("%5hu ", s_pNodeConnectionCosts[fubFrom][fubTo]);
 		}
+		logWrite("\n");
 	}
 	logBlockEnd("aiGraphCreate()");
 }

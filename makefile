@@ -51,7 +51,7 @@ ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 
 #
 ace: $(ACE_OBJS)
-	make -C $(ACE_DIR) all
+	$(MAKE) -C $(ACE_DIR) all
 	@echo.
 	@echo Copying ACE objs...
 	@echo.

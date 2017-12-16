@@ -101,8 +101,11 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 				UWORD uwCost = routeGetCostWithNode(pBaseRoute, &g_pNodes[fubNode]);
 				if(uwCost > pBaseRoute->uwCost) {
 					logWrite(
-						"Going to %hu,%hu too costly (%hu)\n",
-						g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY, uwCost
+						"Going from %hu,%hu thru %hu,%hu to %hu,%hu too costly (%hu)\n",
+						pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubX, pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubY,
+						g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY,
+						pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubX, pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubY,
+						uwCost
 					);
 					continue;
 				}
@@ -117,7 +120,30 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 						pSubCandidates[fubSub].pBaseRoute = pBaseRoute;
 						pSubCandidates[fubSub].pNextNode = &g_pNodes[fubNode];
 						pSubCandidates[fubSub].uwCost = uwCost;
-						logWrite("Added %hu,%hu - cost %hu\n", g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY, uwCost);
+						logWrite(
+							"Added %hu,%hu (%hu) -> %hu,%hu (%hu) -> %hu,%hu (%hu) - cost %hu\n",
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubX,
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubY,
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubIdx,
+
+							g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY, g_pNodes[fubNode].fubIdx,
+
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubX,
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubY,
+							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubIdx,
+
+							uwCost
+						);
+						logWrite(
+							"Cost: %hu - %hu + %hu + %hu\n\n",
+							pBaseRoute->uwCost,
+							aiGetCostBetweenNodes(
+								pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2],
+								pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]
+							),
+							aiGetCostBetweenNodes(pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2], &g_pNodes[fubNode]),
+							aiGetCostBetweenNodes(&g_pNodes[fubNode], pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1])
+						);
 						isDone = 0;
 						break;
 					}
