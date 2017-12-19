@@ -107,7 +107,7 @@ void mapListCreate(void) {
 		bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3, g_pMenuBuffer->pBuffer->Rows,
 		0
 	);
-	WaitBlit();
+	blitWait();
 
 	buttonListCreate(10, g_pMenuBuffer->pBuffer, g_pMenuFont);
 
