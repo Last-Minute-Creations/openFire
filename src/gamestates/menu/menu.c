@@ -38,6 +38,7 @@ void menuMainOnDemo(void) {
 #define MENU_BUTTON_OFFS_X 32
 
 void menuMainCreate(void) {
+	logBlockBegin("menuMainCreate()");
 	// Display logo
 	blitRect(
 		g_pMenuBuffer->pBuffer, 0, 0,
@@ -80,13 +81,17 @@ void menuMainCreate(void) {
 		"Remaining authors are listed on project page.",
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);
+	logBlockEnd("menuMainCreate()");
 }
 
 void menuMainDestroy(void) {
+	logBlockBegin("menuMainDestroy()");
 	buttonListDestroy();
+	logBlockEnd("menuMainDestroy()");
 }
 
 void menuCreate(void) {
+	logBlockBegin("menuCreate()");
 	// Create View & VPort
 	s_pView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
@@ -111,19 +116,21 @@ void menuCreate(void) {
 	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
 
 	viewLoad(s_pView);
+	logBlockEnd("menuCreate()");
 }
 
 void menuDestroy(void) {
+	logBlockBegin("menuDestroy()");
 	viewLoad(0);
 	cursorDestroy();
 	fontDestroy(g_pMenuFont);
 	viewDestroy(s_pView);
+	logBlockEnd("menuDestroy()");
 }
 
 void menuLoop() {
 	if(keyUse(KEY_ESCAPE)) {
-		gamePopState(); // From whichever menu state game is in
-		gamePopState(); // From menu
+		gameClose();
 		return;
 	}
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))

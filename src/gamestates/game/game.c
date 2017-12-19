@@ -372,8 +372,8 @@ void gsGameLoop(void) {
 
 void gsGameDestroy(void) {
 	// Return DMA to correct state
-	custom.dmacon = BITSET | DMAF_DISK;
 	logBlockBegin("gsGameDestroy()");
+	custom.dmacon = BITSET | DMAF_DISK;
 
 	aiManagerDestroy();
 

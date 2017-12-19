@@ -101,6 +101,7 @@ void mapListOnMapChange(void) {
 }
 
 void mapListCreate(void) {
+	logBlockBegin("mapListCreate()");
 	// Clear bg
 	blitRect(
 		g_pMenuBuffer->pBuffer, 0, 0,
@@ -136,6 +137,7 @@ void mapListCreate(void) {
 		MAPLIST_MINIMAP_BORDER
 	);
 	mapListSelect(s_pListCtl->uwEntrySel);
+	logBlockEnd("mapListCreate()");
 }
 
 void mapListLoop(void) {
@@ -152,7 +154,9 @@ void mapListLoop(void) {
 }
 
 void mapListDestroy(void) {
+	logBlockBegin("mapListDestroy()");
 	memFree(s_sMapList.pMaps, s_sMapList.uwMapCount * sizeof(tMapListEntry));
 	listCtlDestroy(s_pListCtl);
 	buttonListDestroy();
+	logBlockEnd("mapListDestroy()");
 }
