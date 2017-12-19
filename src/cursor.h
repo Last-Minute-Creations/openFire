@@ -32,20 +32,6 @@ void cursorCreate(
 void cursorDestroy(void);
 
 /**
- * Set on-screen constraints for cursor.
- * @param uwXLo Minimum cursor X position.
- * @param uwYLo Minimum cursor Y position.
- * @param uwXHi Maximum cursor X position.
- * @param uwYHi Maximum cursor Y position.
- */
-void cursorSetConstraints(
-	IN UWORD uwXLo,
-	IN UWORD uwYLo,
-	IN UWORD uwXHi,
-	IN UWORD uwYHi
-);
-
-/**
  * Updates cursor position.
  */
 void cursorUpdate(void);

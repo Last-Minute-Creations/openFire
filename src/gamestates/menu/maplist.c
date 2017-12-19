@@ -144,7 +144,7 @@ void mapListLoop(void) {
 		return;
 	}
 
-	if(mouseUse(MOUSE_LMB))
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
 		if(!buttonProcessClick(g_uwMouseX, g_uwMouseY))
 			listCtlProcessClick(s_pListCtl, g_uwMouseX, g_uwMouseY);
 

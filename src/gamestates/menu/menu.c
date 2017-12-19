@@ -126,7 +126,7 @@ void menuLoop() {
 		gamePopState(); // From menu
 		return;
 	}
-	if(mouseUse(MOUSE_LMB))
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
 		buttonProcessClick(g_uwMouseX, g_uwMouseY);
 
 	menuProcess();

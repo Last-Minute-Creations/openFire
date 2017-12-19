@@ -1,11 +1,14 @@
 #include "input.h"
+#include <ace/managers/mouse.h>
+#include <ace/managers/joy.h>
 
 /* Globals */
 
 /* Functions */
 void inputOpen() {
-	mouseOpen();
+	mouseCreate(MOUSE_PORT_1);
 	joyOpen();
+	keyCreate();
 }
 
 void inputProcess() {
@@ -17,35 +20,17 @@ void inputProcess() {
 	ulSignals = SetSignal(0L, 0L);
 
 	joyProcess();
+	mouseProcess();
 
 	if (!(ulSignals & ulWindowSignal))
 		return;
 	while (pMsg = (struct IntuiMessage *) GetMsg(g_sWindowManager.pWindow->UserPort)) {
-		switch (pMsg->Class) {
-			// Keyboard
-			case IDCMP_RAWKEY:
-				if (pMsg->Code & IECODE_UP_PREFIX) {
-					pMsg->Code -= IECODE_UP_PREFIX;
-					keySetState(pMsg->Code, KEY_NACTIVE);
-				}
-				else if (!keyCheck(pMsg->Code))
-					keySetState(pMsg->Code, KEY_ACTIVE);
-				break;
-			// Mouse
-			case IDCMP_MOUSEBUTTONS:
-				if (pMsg->Code & IECODE_UP_PREFIX) {
-					pMsg->Code -= IECODE_UP_PREFIX;
-					mouseSetState(pMsg->Code, MOUSE_NACTIVE);
-				}
-				else if (!mouseCheck(pMsg->Code))
-					mouseSetState(pMsg->Code, MOUSE_ACTIVE);
-				break;
-		}
 		ReplyMsg((struct Message *) pMsg);
 	}
 }
 
 void inputClose() {
-	mouseClose();
+	mouseDestroy();
+	keyDestroy();
 	joyClose();
 }

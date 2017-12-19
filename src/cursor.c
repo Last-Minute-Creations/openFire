@@ -5,20 +5,11 @@
 
 UWORD g_uwMouseX, g_uwMouseY;
 static tBitMap *s_pCrosshair;
-static s_uwXLo, s_uwYLo, s_uwXHi, s_uwYHi;
-
-void cursorSetConstraints(UWORD uwXLo, UWORD uwYLo, UWORD uwXHi, UWORD uwYHi) {
-	s_uwXLo = uwXLo;
-	s_uwYLo = uwYLo;
-	s_uwXHi = uwXHi;
-	s_uwYHi = uwYHi;
-}
 
 void cursorUpdate(void) {
 	// Destination angle from mouse
-	g_uwMouseX = CLAMP(mouseGetX(), s_uwXLo, s_uwXHi);
-	g_uwMouseY = CLAMP(mouseGetY(), s_uwYLo, s_uwYHi);
-	mouseSetPosition(g_uwMouseX, g_uwMouseY);
+	g_uwMouseX = mouseGetX(MOUSE_PORT_1);
+	g_uwMouseY = mouseGetY(MOUSE_PORT_1);
 	const UWORD uwCrossHeight = 11;
 	UWORD uwVStart =0x2B-4 + g_uwMouseY;
 	UWORD uwVStop = uwVStart + uwCrossHeight;
@@ -32,7 +23,7 @@ void cursorUpdate(void) {
 }
 
 void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCopPos) {
-	cursorSetConstraints(0, 0, 320, 255);
+	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320, 255);
 	s_pCrosshair = bitmapCreateFromFile(szPath);
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
 	cursorUpdate();

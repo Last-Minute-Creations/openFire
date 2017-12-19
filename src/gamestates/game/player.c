@@ -198,8 +198,8 @@ void playerLocalProcessInput(void) {
 				pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
 				pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
 			}
-			pReq->ubAction1 = mouseCheck(MOUSE_LMB);
-			pReq->ubAction2 = mouseCheck(MOUSE_RMB);
+			pReq->ubAction1 = mouseCheck(MOUSE_PORT_1, MOUSE_LMB);
+			pReq->ubAction2 = mouseCheck(MOUSE_PORT_2, MOUSE_RMB);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				g_pLocalPlayer->sVehicle.uwX,
@@ -213,7 +213,7 @@ void playerLocalProcessInput(void) {
 				if(keyUse(g_sKeyManager.ubLastKey))
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
 			}
-			else if(mouseUse(MOUSE_LMB)) {
+			else if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
 				tUwRect sTankRect = {
 					.uwX = 2 + 4, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
@@ -221,7 +221,7 @@ void playerLocalProcessInput(void) {
 				tUwRect sJeepRect = {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
-				UWORD uwMouseX = mouseGetX(), uwMouseY = mouseGetY();
+				UWORD uwMouseX = mouseGetX(MOUSE_PORT_1), uwMouseY = mouseGetY(MOUSE_PORT_1);
 				if(inRect(uwMouseX, uwMouseY, sTankRect))
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
 				else if(inRect(uwMouseX, uwMouseY, sJeepRect))

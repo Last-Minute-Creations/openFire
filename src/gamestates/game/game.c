@@ -74,12 +74,12 @@ tFont *g_pSmallFont;
 UBYTE g_isLocalBot;
 
 void displayPrepareLimbo(void) {
-	cursorSetConstraints(0,0, 320, 255);
+	mouseSetBounds(MOUSE_PORT_1, 0,0, 320, 255);
 	hudChangeState(HUD_STATE_SELECTING);
 }
 
 void displayPrepareDriving(void) {
-	cursorSetConstraints(0, 0, 320, 191);
+	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320, 191);
 	hudChangeState(HUD_STATE_DRIVING);
 }
 
@@ -230,7 +230,7 @@ void gsGameCreate(void) {
 }
 
 void gameSummaryLoop(void) {
-	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_LMB)) {
+	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}
