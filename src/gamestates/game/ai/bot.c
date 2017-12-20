@@ -1,6 +1,7 @@
 #include "gamestates/game/ai/bot.h"
 #include <fixmath/fix16.h>
 #include "gamestates/game/spawn.h"
+#include "gamestates/game/ai/heap.h"
 
 #define AI_BOT_STATE_IDLE           0
 #define AI_BOT_STATE_MOVING_TO_NODE 1
@@ -11,6 +12,8 @@
 static tBot *s_pBots;
 static FUBYTE s_fubBotCount;
 static FUBYTE s_fubBotLimit;
+
+static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode);
 
 static void botSay(tBot *pBot, char *szFmt, ...) {
 #ifdef AI_BOT_DEBUG
@@ -71,116 +74,11 @@ typedef struct _tBotRouteSubcandidate {
 
 void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 	logBlockBegin("botSetupRoute()");
-	// Setup direct roads as candidates
-	tRoute pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
-	for(FUBYTE fubRoute = AI_BOT_ROUTE_CANDIDATE_COUNT; fubRoute--;)
-		routeInit(&pCandidates[fubRoute], pNodeStart, pNodeEnd);
-	logWrite("Finding route from %hu,%hu to %hu,%hu\n", pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY);
-	logWrite("Initial route cost: %hu\n", pCandidates[0].uwCost);
-
-	// Reset subcandidates
-	tBotRouteSubcandidate pSubCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT];
-	for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
-		pSubCandidates[fubSub].pBaseRoute = &pCandidates[0];
-		pSubCandidates[fubSub].uwCost = pCandidates[0].uwCost+1;
-		pSubCandidates[fubSub].pNextNode = 0;
-	}
-
-	UBYTE isDone;
-	UBYTE ubCandidateCount = 1;
-	do {
-		isDone = 1;
-
-		for(FUBYTE fubRoute = ubCandidateCount; fubRoute--;) {
-			tRoute *pBaseRoute = &pCandidates[fubRoute];
-
-			// Find subcandidates
-			for(FUBYTE fubNode = g_fubNodeCount; fubNode--;) {
-				if(routeHasNode(pBaseRoute, &g_pNodes[fubNode]))
-					continue;
-				UWORD uwCost = routeGetCostWithNode(pBaseRoute, &g_pNodes[fubNode]);
-				if(uwCost > pBaseRoute->uwCost) {
-					logWrite(
-						"Going from %hu,%hu thru %hu,%hu to %hu,%hu too costly (%hu)\n",
-						pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubX, pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubY,
-						g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY,
-						pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubX, pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubY,
-						uwCost
-					);
-					continue;
-				}
-
-				// Check with subcandidates
-				for(FUBYTE fubSub = AI_BOT_ROUTE_CANDIDATE_COUNT; fubSub--;) {
-					if(pSubCandidates[fubSub].uwCost > uwCost) {
-						// for(FUBYTE i = 1; i <= fubSub; ++i)
-						// 	memcpy(&pSubCandidates[i-1], &pSubCandidates[i], sizeof(tBotRouteSubcandidate));
-						if(fubSub)
-							memcpy(&pSubCandidates[0], &pSubCandidates[1], sizeof(tBotRouteSubcandidate) * fubSub);
-						pSubCandidates[fubSub].pBaseRoute = pBaseRoute;
-						pSubCandidates[fubSub].pNextNode = &g_pNodes[fubNode];
-						pSubCandidates[fubSub].uwCost = uwCost;
-						logWrite(
-							"Added %hu,%hu (%hu) -> %hu,%hu (%hu) -> %hu,%hu (%hu) - cost %hu\n",
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubX,
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubY,
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2]->fubIdx,
-
-							g_pNodes[fubNode].fubX, g_pNodes[fubNode].fubY, g_pNodes[fubNode].fubIdx,
-
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubX,
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubY,
-							pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]->fubIdx,
-
-							uwCost
-						);
-						logWrite(
-							"Cost: %hu - %hu + %hu + %hu\n\n",
-							pBaseRoute->uwCost,
-							aiGetCostBetweenNodes(
-								pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2],
-								pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1]
-							),
-							aiGetCostBetweenNodes(pBaseRoute->pNodes[pBaseRoute->ubNodeCount-2], &g_pNodes[fubNode]),
-							aiGetCostBetweenNodes(&g_pNodes[fubNode], pBaseRoute->pNodes[pBaseRoute->ubNodeCount-1])
-						);
-						isDone = 0;
-						break;
-					}
-				}
-			}
-		}
-		if(isDone)
-			break;
-		ubCandidateCount = AI_BOT_ROUTE_CANDIDATE_COUNT;
-
-		// Set candidates as top 5 subcandidates
-		tRoute pTmp[5];
-		for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;)
-			routeCopy(pSubCandidates[i].pBaseRoute, &pTmp[i]);
-		for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;) {
-			routeCopy(&pTmp[i], &pCandidates[i]);
-			if(pSubCandidates[i].pNextNode) {
-				routePushNode(&pCandidates[i], pSubCandidates[i].pNextNode);
-				pSubCandidates[i].pNextNode = 0;
-			}
-		}
-
-		logWrite("Top 5 costs:\n");
-		for(FUBYTE i = AI_BOT_ROUTE_CANDIDATE_COUNT; i--;) {
-			for(FUBYTE n = 0; n != pCandidates[i].ubNodeCount; ++n) {
-				logWrite(
-					"%hu,%hu --> ",
-					pCandidates[i].pNodes[n]->fubX, pCandidates[i].pNodes[n]->fubY
-				);
-			}
-			logWrite("%hu\n", pCandidates[i].uwCost);
-		}
-		logWrite("\n");
-	} while(!isDone);
-
-	// Set route to best candidate
-	routeCopy(&pCandidates[AI_BOT_ROUTE_CANDIDATE_COUNT-1], &pBot->sRoute);
+	logWrite(
+		"From: %hu,%hu to %hu,%hu\n",
+		pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY
+	);
+	astar(&pBot->sRoute, pNodeStart, pNodeEnd);
 	logBlockEnd("botSetupRoute()");
 }
 
@@ -217,8 +115,7 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 		botSetupRoute(pBot, pRouteStart, pRouteEnd);
 
 		// Set first node of route as next to reach
-		pBot->sRoute.ubCurrNode = 0;
-		pBot->pNextNode = pBot->sRoute.pNodes[0];
+		pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
 		pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 		pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	}
@@ -292,8 +189,7 @@ void botProcessDriving(tBot *pBot) {
 			pBot->pPlayer->sSteerRequest.ubForward = 1;
 			break;
 		case AI_BOT_STATE_NODE_REACHED:
-			++pBot->sRoute.ubCurrNode;
-			if(pBot->sRoute.ubCurrNode == pBot->sRoute.ubNodeCount) {
+			if(!pBot->sRoute.ubCurrNode) {
 				// Last node from route - hold pos
 				pBot->ubTick = 0;
 				pBot->ubState = AI_BOT_STATE_HOLDING_POS;
@@ -301,6 +197,7 @@ void botProcessDriving(tBot *pBot) {
 			}
 			else {
 				// Get next node from route
+				--pBot->sRoute.ubCurrNode;
 				pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
 				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
@@ -313,7 +210,7 @@ void botProcessDriving(tBot *pBot) {
 			// Move to tile next to it to prevent blocking other players/bots
 			// If point has been captured start measuring ticks
 			if(pBot->ubTick >= 200) {
-				tAiNode *pLastNode = pBot->sRoute.pNodes[pBot->sRoute.ubNodeCount-1];
+				tAiNode *pLastNode = pBot->sRoute.pNodes[0];
 				// After some ticks check if work is done on this point
 				if(pLastNode->pControlPoint->fubTeam == pBot->pPlayer->ubTeam) {
 					// If so, go to next point
@@ -389,4 +286,58 @@ void botProcess(void) {
 				break;
 		}
 	}
+}
+
+static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
+	tHeap *pFrontier = heapCreate(100);
+	tAiNode *pCameFrom[AI_MAX_NODES];
+	UWORD pCostSoFar[AI_MAX_NODES];
+	memset(pCostSoFar, 0xFFFF, AI_MAX_NODES);
+
+	pCameFrom[pSrcNode - g_pNodes] = 0;
+	pCostSoFar[pSrcNode - g_pNodes] = 0;
+
+	heapPush(pFrontier, pSrcNode, 0);
+
+	while(pFrontier->uwCount) {
+		tAiNode *pCurrNode = heapPop(pFrontier);
+		if(pCurrNode == pDstNode) {
+			break;
+		}
+
+		for(UWORD i = 0; i <= AI_MAX_NODES; ++i) {
+			tAiNode *pNextNode = &g_pNodes[i];
+			if(pNextNode == pCurrNode)
+				continue;
+			// new_cost = cost_so_far[current] + graph.cost(current, next)
+			UWORD uwCost = pCostSoFar[pCurrNode - g_pNodes] + aiGetCostBetweenNodes(pCurrNode, pNextNode);
+			// if next not in cost_so_far or new_cost < cost_so_far[next]:
+			if(uwCost < pCostSoFar[pNextNode - g_pNodes]) {
+				// cost_so_far[next] = new_cost
+				pCostSoFar[pNextNode - g_pNodes] = uwCost;
+				// priority = new_cost + heuristic(goal, next)
+				UWORD uwPriority = uwCost + aiGetCostBetweenNodes(pNextNode, pDstNode);
+				// frontier.put(next, priority)
+				heapPush(pFrontier, pNextNode, uwPriority);
+				// came_from[next] = current
+				pCameFrom[pNextNode - g_pNodes] = pCurrNode;
+			}
+		}
+	}
+
+	pRoute->uwCost = pCostSoFar[pDstNode - g_pNodes];
+	pRoute->pNodes[0] = pDstNode;
+	pRoute->ubNodeCount = 1;
+	tAiNode *pPrev = pCameFrom[pDstNode - g_pNodes];
+	logWrite("Astar: %hu,%hu", pDstNode->fubX, pDstNode->fubY);
+	while(pPrev) {
+		logWrite(" <- %hu,%hu", pPrev->fubX, pPrev->fubY);
+		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
+		++pRoute->ubNodeCount;
+		pPrev = pCameFrom[pPrev - g_pNodes];
+	}
+	logWrite(" (count: %hu)\n", pRoute->ubNodeCount);
+	pRoute->ubCurrNode = pRoute->ubNodeCount-1;
+
+	heapDestroy(pFrontier);
 }
