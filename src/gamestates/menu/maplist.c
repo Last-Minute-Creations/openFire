@@ -147,8 +147,8 @@ void mapListLoop(void) {
 	}
 
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
-		if(!buttonProcessClick(g_uwMouseX, g_uwMouseY))
-			listCtlProcessClick(s_pListCtl, g_uwMouseX, g_uwMouseY);
+		if(!buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1)))
+			listCtlProcessClick(s_pListCtl, mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
 
 	menuProcess();
 }

@@ -36,6 +36,4 @@ void cursorDestroy(void);
  */
 void cursorUpdate(void);
 
-extern UWORD g_uwMouseX, g_uwMouseY; ///< Cursor position, read only
-
 #endif // GUARD_OF_GAMESTATES_GAME_CURSOR_H

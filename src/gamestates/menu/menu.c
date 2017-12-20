@@ -134,7 +134,7 @@ void menuLoop() {
 		return;
 	}
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
-		buttonProcessClick(g_uwMouseX, g_uwMouseY);
+		buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
 
 	menuProcess();
 }

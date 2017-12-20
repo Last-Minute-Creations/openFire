@@ -3,23 +3,22 @@
 #include <ace/managers/mouse.h>
 #include <ace/utils/bitmap.h>
 
-UWORD g_uwMouseX, g_uwMouseY;
 static tBitMap *s_pCrosshair;
 
 void cursorUpdate(void) {
 	// Destination angle from mouse
-	g_uwMouseX = mouseGetX(MOUSE_PORT_1);
-	g_uwMouseY = mouseGetY(MOUSE_PORT_1);
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 	const UWORD uwCrossHeight = 11;
-	UWORD uwVStart =0x2B-4 + g_uwMouseY;
+	UWORD uwVStart =0x2B-4 + uwMouseY;
 	UWORD uwVStop = uwVStart + uwCrossHeight;
 
 	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	pSpriteBfr[0] = (uwVStart << 8) | (64-(4>>1) + (g_uwMouseX >> 1));
+	pSpriteBfr[0] = (uwVStart << 8) | (64-(4>>1) + (uwMouseX >> 1));
 	pSpriteBfr[1] = (uwVStop << 8)
 		| (((uwVStart & (1 << 8)) >> 8) << 2)
 		| (((uwVStop  & (1 << 8)) >> 8) << 1)
-		| (g_uwMouseX & 1);
+		| (uwMouseX & 1);
 }
 
 void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCopPos) {
