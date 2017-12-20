@@ -26,7 +26,7 @@ void aiGraphAddNode(FUBYTE fubX, FUBYTE fubY, FUBYTE fubNodeType) {
 		return;
 	}
 
-	// Check for doubles
+	// Check for duplicates
 	for(FUBYTE i = 0; i != g_fubNodeCount; ++i)
 		if(g_pNodes[i].fubX == fubX && g_pNodes[i].fubY == fubY)
 			return;

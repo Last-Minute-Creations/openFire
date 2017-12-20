@@ -17,6 +17,11 @@
 #define VEHICLE_TURRET_WIDTH 32
 #define VEHICLE_TURRET_HEIGHT 32
 
+/**
+ * 0--1--2
+ * 3 --> 4
+ * 5--6--7
+ */
 typedef struct _tCollisionPoints {
 	tBCoordYX pPts[8]; ///< Collision points
 	BYTE bTopmost;
