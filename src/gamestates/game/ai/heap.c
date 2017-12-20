@@ -5,7 +5,7 @@ tHeap *heapCreate(UWORD uwMaxEntries) {
 	tHeap *pHeap = memAllocFast(sizeof(tHeap));
 	pHeap->uwMaxEntries = uwMaxEntries;
 	pHeap->uwCount = 0;
-	pHeap->pEntries = memAllocFast(sizeof(tHeapEntry) * uwMaxEntries);
+	pHeap->pEntries = memAllocFastClear(sizeof(tHeapEntry) * uwMaxEntries);
 	return pHeap;
 }
 

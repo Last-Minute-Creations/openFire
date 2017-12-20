@@ -290,7 +290,7 @@ void botProcess(void) {
 
 static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
 	tHeap *pFrontier = heapCreate(100);
-	tAiNode *pCameFrom[AI_MAX_NODES];
+	tAiNode *pCameFrom[AI_MAX_NODES] = {0};
 	UWORD pCostSoFar[AI_MAX_NODES];
 	memset(pCostSoFar, 0xFFFF, AI_MAX_NODES);
 
@@ -329,9 +329,9 @@ static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
 	pRoute->pNodes[0] = pDstNode;
 	pRoute->ubNodeCount = 1;
 	tAiNode *pPrev = pCameFrom[pDstNode - g_pNodes];
-	logWrite("Astar: %hu,%hu", pDstNode->fubX, pDstNode->fubY);
+	logWrite("Astar: (%p) %hu,%hu", pDstNode, pDstNode->fubX, pDstNode->fubY);
 	while(pPrev) {
-		logWrite(" <- %hu,%hu", pPrev->fubX, pPrev->fubY);
+		logWrite(" <- (%p) %hu,%hu", pPrev, pPrev->fubX, pPrev->fubY);
 		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
 		++pRoute->ubNodeCount;
 		pPrev = pCameFrom[pPrev - g_pNodes];
