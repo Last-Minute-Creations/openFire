@@ -47,6 +47,4 @@ WORD getDeltaAngleDirection(
 	IN WORD wUnit
 );
 
-void generateSine(void);
-
 #endif // GUARD_OF_GAMESTATES_GAME_GAMEMATH_H

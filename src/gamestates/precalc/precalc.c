@@ -81,10 +81,6 @@ void precalcLoop(void) {
 	}
 	logBlockBegin("precalcLoop()");
 
-	// Generate math table
-	precalcIncreaseProgress(5, "Calculating sine table");
-	generateSine();
-
 	precalcIncreaseProgress(5, "Initializing vehicle types");
 	vehicleTypesCreate();
 
