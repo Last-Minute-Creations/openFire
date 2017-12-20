@@ -148,23 +148,34 @@ void aiGraphCreate(void) {
 	}
 
 	// Create array for connections & calculate costs between nodes
-	logWrite("     ");
-	for(FUBYTE fubTo = g_fubNodeCount; fubTo--;)
-		logWrite("%5hu ", fubTo);
-	logWrite("\n");
 	s_pNodeConnectionCosts = memAllocFast(sizeof(UWORD*) * g_fubNodeCount);
 	for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
 		s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
-		logWrite("%3hu ", fubFrom);
 		for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
+			logWrite("[%hu -> %hu]\n", fubFrom, fubTo);
 			s_pNodeConnectionCosts[fubFrom][fubTo] = aiCalcCostBetweenNodes(
 				&g_pNodes[fubFrom], &g_pNodes[fubTo]
 			);
-			logWrite("%5hu ", s_pNodeConnectionCosts[fubFrom][fubTo]);
 		}
+	}
+
+	aiGraphDump();
+	logBlockEnd("aiGraphCreate()");
+}
+
+void aiGraphDump(void) {
+	logBlockBegin("aiGraphDump()");
+	logWrite("    ");
+	for(FUBYTE fubTo = 0; fubTo < g_fubNodeCount; ++fubTo)
+		logWrite("%5hu ", fubTo);
+	logWrite("\n");
+	for(FUBYTE fubFrom = 0; fubFrom < g_fubNodeCount; ++fubFrom) {
+		logWrite("%3hu ", fubFrom);
+		for(FUBYTE fubTo = 0; fubTo < g_fubNodeCount; ++fubTo)
+			logWrite("%5hu ", s_pNodeConnectionCosts[fubFrom][fubTo]);
 		logWrite("\n");
 	}
-	logBlockEnd("aiGraphCreate()");
+	logBlockEnd("aiGraphDump()");
 }
 
 void aiGraphDestroy(void) {
@@ -201,6 +212,22 @@ void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2)
 						s_pTileCosts[x][y] += MIN(s_pTileCosts[x][y]+10, 255);
 		}
 	}
+}
+
+void aiDumpTileCosts(void) {
+	logBlockBegin("aiDumpTileCosts()");
+	logWrite("Tile costs:\n");
+	logWrite("    ");
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+		logWrite("%3hu ", x);
+	logWrite("\n");
+	for(FUBYTE y = 0; y != g_sMap.fubHeight; ++y) {
+		logWrite("%3hu ", y);
+		for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+			logWrite("%3hhu ", s_pTileCosts[x][y]);
+		logWrite("\n");
+	}
+	logBlockEnd("aiDumpTileCosts()");
 }
 
 void aiCalcTileCosts(void) {
