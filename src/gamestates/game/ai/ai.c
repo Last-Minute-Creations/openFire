@@ -171,7 +171,7 @@ void aiGraphCreate(void) {
 	for(FUBYTE fubFrom = g_fubNodeCount; fubFrom--;) {
 		s_pNodeConnectionCosts[fubFrom] = memAllocFastClear(sizeof(UWORD) * g_fubNodeCount);
 		for(FUBYTE fubTo = g_fubNodeCount; fubTo--;) {
-			logWrite("[%hu -> %hu]\n", fubFrom, fubTo);
+			// logWrite("[%hu -> %hu]\n", fubFrom, fubTo);
 			s_pNodeConnectionCosts[fubFrom][fubTo] = aiCalcCostBetweenNodes(
 				&g_pNodes[fubFrom], &g_pNodes[fubTo]
 			);
