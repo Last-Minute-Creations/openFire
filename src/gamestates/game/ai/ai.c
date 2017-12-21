@@ -105,36 +105,55 @@ static FUBYTE aiGraphGenerateMapNodes(void) {
 UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
 	BYTE bDeltaX = pTo->fubX - pFrom->fubX;
 	BYTE bDeltaY = pTo->fubY - pFrom->fubY;
-	UWORD uwCost = 0;
+	if(!bDeltaX && !bDeltaY)
+		return 0;
+	fix16_t fFineX = fix16_from_int((pFrom->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
+	fix16_t fFineY = fix16_from_int((pFrom->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
+	UBYTE ubAngle = getAngleBetweenPoints(
+		pFrom->fubX << MAP_TILE_SIZE, pFrom->fubY << MAP_TILE_SIZE,
+		pTo->fubX << MAP_TILE_SIZE, pTo->fubY << MAP_TILE_SIZE
+	);
+	tBCoordYX sPtA, sPtB;
+	sPtA.bX = fix16_to_int(10 * csin(ubAngle));
+	sPtA.bY = fix16_to_int(10 * ccos(ubAngle));
+	sPtB.bX = fix16_to_int(-10 * csin(ubAngle));
+	sPtB.bY = fix16_to_int(-10 * ccos(ubAngle));
+	FUBYTE fubStart, fubStop;
+	BYTE bDir;
+	fix16_t fDx, fDy;
 	if(ABS(bDeltaX) > ABS(bDeltaY)) {
-		BYTE bDirX = SGN(bDeltaX);
-		FUBYTE fubPrevY = pFrom->fubY;
-		for(FUBYTE x = pFrom->fubX; x != pTo->fubX; x += bDirX) {
-			FUBYTE y = pFrom->fubY + ((bDeltaY * (x - pFrom->fubX) + bDeltaX/2) / bDeltaX);
-			if(x != pFrom->fubX) {
-				uwCost += s_pTileCosts[x][y];
-				if(y != fubPrevY) {
-					uwCost += s_pTileCosts[x][fubPrevY];
-					uwCost += s_pTileCosts[x-bDirX][y];
-				}
-			}
-			fubPrevY = y;
-		}
+		bDir = SGN(bDeltaX);
+		fDx = fix16_from_int(bDir*MAP_FULL_TILE);
+		fDy = fix16_div(fix16_from_int(bDeltaY*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaX)));
+		fubStart = pFrom->fubX;
+		fubStop = pTo->fubX;
 	}
 	else {
-		BYTE bDirY = SGN(bDeltaY);
-		FUBYTE fubPrevX = pFrom->fubX;
-		for(FUBYTE y = pFrom->fubY; y != pTo->fubY; y += bDirY) {
-			FUBYTE x = pFrom->fubX + ((bDeltaX * (y - pFrom->fubY) + bDeltaY/2) / bDeltaY);
-			if(y != pFrom->fubY) {
-				uwCost += s_pTileCosts[x][y];
-				if(x != fubPrevX) {
-					uwCost += s_pTileCosts[x][y-bDirY];
-					uwCost += s_pTileCosts[fubPrevX][y];
-				}
-			}
-			fubPrevX = x;
-		}
+		bDir = SGN(bDeltaY);
+		fDx = fix16_div(fix16_from_int(bDeltaX*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaY)));
+		fDy = fix16_from_int(bDir*MAP_FULL_TILE);
+		fubStart = pFrom->fubY;
+		fubStop = pTo->fubY;
+	}
+	UWORD uwCost = 0;
+	// logWrite("Line from %hu,%hu to %hu,%hu\n",	pFrom->fubX, pFrom->fubY, pTo->fubX, pTo->fubY);
+	// logWrite("dir: %hhd, dx: %hd, dy: %hd\n", bDir, fix16_to_int(fDx), fix16_to_int(fDy));
+	// logWrite("Point offsets: %hhd,%hhd; %hhd,%hhd,", sPtA.bX, sPtA.bY, sPtB.bX, sPtB.bY);
+	fix16_t fHalf = fix16_one>>1;
+	for(FUBYTE i = fubStart+bDir; i != fubStop; i += bDir) {
+		fFineX += fDx;
+		fFineY += fDy;
+		// Process point A
+		FUBYTE fubChkAX = (fix16_to_int(fFineX+fHalf) + sPtA.bX) >> MAP_TILE_SIZE;
+		FUBYTE fubChkAY = (fix16_to_int(fFineY+fHalf) + sPtA.bY) >> MAP_TILE_SIZE;
+		uwCost += s_pTileCosts[fubChkAX][fubChkAY];
+		// logWrite("ptA: %hu,%hu -> %hhu", fubChkAX, fubChkAY, s_pTileCosts[fubChkAX][fubChkAY]);
+		// Process point B
+		FUBYTE fubChkBX = (fix16_to_int(fFineX+fHalf) + sPtB.bX) >> MAP_TILE_SIZE;
+		FUBYTE fubChkBY = (fix16_to_int(fFineY+fHalf) + sPtB.bY) >> MAP_TILE_SIZE;
+		if(fubChkBX != fubChkAX || fubChkBY != fubChkAY)
+			uwCost += s_pTileCosts[fubChkBX][fubChkBY];
+		// logWrite(", ptB: %hu,%hu -> %hhu\n", fubChkBX, fubChkBY, s_pTileCosts[fubChkBX][fubChkBY]);
 	}
 	return uwCost;
 }
@@ -159,7 +178,7 @@ void aiGraphCreate(void) {
 		}
 	}
 
-	aiGraphDump();
+	// aiGraphDump();
 	logBlockEnd("aiGraphCreate()");
 }
 
