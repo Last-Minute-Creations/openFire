@@ -389,4 +389,5 @@ void turretUpdateSprites(void) {
 
 void turretCapture(UWORD uwIdx, FUBYTE fubTeam) {
 	g_pTurrets[uwIdx].ubTeam = fubTeam;
+	g_pTurrets[uwIdx].isTargeting = 0;
 }
