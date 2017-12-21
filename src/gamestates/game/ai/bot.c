@@ -14,6 +14,7 @@ static FUBYTE s_fubBotCount;
 static FUBYTE s_fubBotLimit;
 
 static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode);
+static inline void dijkstra(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode);
 
 static void botSay(tBot *pBot, char *szFmt, ...) {
 #ifdef AI_BOT_DEBUG
@@ -78,7 +79,8 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 		"From: %hu,%hu to %hu,%hu\n",
 		pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY
 	);
-	astar(&pBot->sRoute, pNodeStart, pNodeEnd);
+	dijkstra(&pBot->sRoute, pNodeStart, pNodeEnd);
+	// astar(&pBot->sRoute, pNodeStart, pNodeEnd);
 	logBlockEnd("botSetupRoute()");
 }
 
@@ -289,7 +291,7 @@ void botProcess(void) {
 }
 
 static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
-	tHeap *pFrontier = heapCreate(100);
+	tHeap *pFrontier = heapCreate(AI_MAX_NODES*AI_MAX_NODES);
 	tAiNode *pCameFrom[AI_MAX_NODES] = {0};
 	UWORD pCostSoFar[AI_MAX_NODES];
 	memset(pCostSoFar, 0xFFFF, AI_MAX_NODES);
@@ -334,6 +336,63 @@ static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
 		logWrite(" <- (%p) %hu,%hu", pPrev, pPrev->fubX, pPrev->fubY);
 		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
 		++pRoute->ubNodeCount;
+		pPrev = pCameFrom[pPrev - g_pNodes];
+	}
+	logWrite(" (count: %hu)\n", pRoute->ubNodeCount);
+	pRoute->ubCurrNode = pRoute->ubNodeCount-1;
+
+	heapDestroy(pFrontier);
+}
+
+static inline void dijkstra(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
+	tHeap *pFrontier = heapCreate(AI_MAX_NODES*AI_MAX_NODES);
+	tAiNode *pCameFrom[AI_MAX_NODES] = {0};
+	UWORD pCostSoFar[AI_MAX_NODES];
+	memset(pCostSoFar, 0xFFFF, AI_MAX_NODES);
+
+	pCameFrom[pSrcNode - g_pNodes] = 0;
+	pCostSoFar[pSrcNode - g_pNodes] = 0;
+
+	heapPush(pFrontier, pSrcNode, 0);
+
+	while(pFrontier->uwCount) {
+		tAiNode *pCurrNode = heapPop(pFrontier);
+		if(pCurrNode == pDstNode) {
+			break;
+		}
+
+		for(UWORD i = 0; i <= AI_MAX_NODES; ++i) {
+			tAiNode *pNextNode = &g_pNodes[i];
+			if(pNextNode == pCurrNode)
+				continue;
+
+			// new_cost = cost_so_far[current] + graph.cost(current, next)
+			UWORD uwCost = pCostSoFar[pCurrNode - g_pNodes] + aiGetCostBetweenNodes(pCurrNode, pNextNode);
+			// if next not in cost_so_far or new_cost < cost_so_far[next]:
+			if(uwCost < pCostSoFar[pNextNode - g_pNodes]) {
+				// cost_so_far[next] = new_cost
+				pCostSoFar[pNextNode - g_pNodes] = uwCost;
+				// priority = new_cost + heuristic(goal, next)
+				UWORD uwPriority = uwCost;
+				// frontier.put(next, priority)
+				heapPush(pFrontier, pNextNode, uwPriority);
+				// came_from[next] = current
+				pCameFrom[pNextNode - g_pNodes] = pCurrNode;
+			}
+		}
+	}
+
+	pRoute->uwCost = pCostSoFar[pDstNode - g_pNodes];
+	pRoute->pNodes[0] = pDstNode;
+	pRoute->ubNodeCount = 1;
+	tAiNode *pPrev = pCameFrom[pDstNode - g_pNodes];
+	logWrite("Dijkstra: (%p) %hu,%hu", pDstNode, pDstNode->fubX, pDstNode->fubY);
+	while(pPrev) {
+		logWrite(" <- (%p) %hu,%hu", pPrev, pPrev->fubX, pPrev->fubY);
+		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
+		++pRoute->ubNodeCount;
+		if(pPrev == pSrcNode)
+			break;
 		pPrev = pCameFrom[pPrev - g_pNodes];
 	}
 	logWrite(" (count: %hu)\n", pRoute->ubNodeCount);

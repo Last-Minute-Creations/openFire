@@ -1,4 +1,5 @@
 #include "gamestates/game/ai/heap.h"
+#include <ace/managers/log.h>
 #include <ace/managers/memory.h>
 
 tHeap *heapCreate(UWORD uwMaxEntries) {
@@ -17,6 +18,12 @@ void heapDestroy(tHeap *pHeap) {
 void heapPush(tHeap *pHeap, void *pData, UWORD uwPriority) {
 	UWORD uwIdx = pHeap->uwCount++;
 	tHeapEntry * const pEntries = pHeap->pEntries;
+
+	if(pHeap->uwCount > pHeap->uwMaxEntries) {
+		logWrite(
+			"ERR: too much entries: %hu > %hu\n", pHeap->uwCount, pHeap->uwMaxEntries
+		);
+	}
 
 	// Add the element to the bottom level of the heap.
 	pEntries[uwIdx].uwPriority = uwPriority;
