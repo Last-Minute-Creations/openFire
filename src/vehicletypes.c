@@ -80,12 +80,10 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 
 	for(FUBYTE fubFrame = 1; fubFrame != VEHICLE_BODY_ANGLE_COUNT; ++fubFrame) {
 		// Rotate chunky source
-		fix16_t fAngle = fix16_div(
-			-2*fubFrame * fix16_pi,
-			fix16_from_int(VEHICLE_BODY_ANGLE_COUNT)
-		);
+		UBYTE ubAngle = ANGLE_360 - (fubFrame<<1);
 		chunkyRotate(
-			pChunkySrc, pChunkyRotated,	fAngle, 0, uwFrameWidth, uwFrameWidth
+			pChunkySrc, pChunkyRotated,	csin(ubAngle), ccos(ubAngle),
+			0, uwFrameWidth, uwFrameWidth
 		);
 
 		// Convert rotated chunky frame to planar on huge-ass bitmap
@@ -150,44 +148,45 @@ void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockBegin(
 		"vehicleTypeGenerateRotatedCollisions(pFrameCollisions: %p)", pFrameCollisions
 	);
+	fix16_t fHalf = fix16_one >> 1;
 	for(FUBYTE fubFrame = VEHICLE_BODY_ANGLE_COUNT; fubFrame--;) {
 		FUBYTE fubAngle = fubFrame << 1;
+		tCollisionPts *pNewCollisions = &pFrameCollisions[fubFrame];
 		for(FUBYTE fubPoint = 0; fubPoint != 8; ++fubPoint) {
-			tCollisionPts *pNewCollisions = &pFrameCollisions[fubFrame];
 			pNewCollisions->pPts[fubPoint].bX = fix16_to_int(fix16_sub(
 				pFrameCollisions[0].pPts[fubPoint].bX * ccos(fubAngle),
 				pFrameCollisions[0].pPts[fubPoint].bY * csin(fubAngle)
-			));
+			) + fHalf);
 			pNewCollisions->pPts[fubPoint].bY = fix16_to_int(fix16_add(
 				pFrameCollisions[0].pPts[fubPoint].bX * csin(fubAngle),
 				pFrameCollisions[0].pPts[fubPoint].bY * ccos(fubAngle)
-			));
-
-			pNewCollisions->bLeftmost = MIN(
-				pNewCollisions->pPts[0].bX, MIN(
-					pNewCollisions->pPts[2].bX, MIN(
-						pNewCollisions->pPts[5].bX,
-						pNewCollisions->pPts[7].bX))
-			);
-			pNewCollisions->bRightmost = MAX(
-				pNewCollisions->pPts[0].bX, MAX(
-					pNewCollisions->pPts[2].bX, MAX(
-						pNewCollisions->pPts[5].bX,
-						pNewCollisions->pPts[7].bX))
-			);
-			pNewCollisions->bTopmost = MIN(
-				pNewCollisions->pPts[0].bY, MIN(
-					pNewCollisions->pPts[2].bY, MIN(
-						pNewCollisions->pPts[5].bY,
-						pNewCollisions->pPts[7].bY))
-			);
-			pNewCollisions->bBottommost = MAX(
-				pNewCollisions->pPts[0].bY, MAX(
-					pNewCollisions->pPts[2].bY, MAX(
-						pNewCollisions->pPts[5].bY,
-						pNewCollisions->pPts[7].bY))
-			);
+			) + fHalf);
 		}
+
+		pNewCollisions->bLeftmost = MIN(
+			pNewCollisions->pPts[0].bX, MIN(
+				pNewCollisions->pPts[2].bX, MIN(
+					pNewCollisions->pPts[5].bX,
+					pNewCollisions->pPts[7].bX))
+		);
+		pNewCollisions->bRightmost = MAX(
+			pNewCollisions->pPts[0].bX, MAX(
+				pNewCollisions->pPts[2].bX, MAX(
+					pNewCollisions->pPts[5].bX,
+					pNewCollisions->pPts[7].bX))
+		);
+		pNewCollisions->bTopmost = MIN(
+			pNewCollisions->pPts[0].bY, MIN(
+				pNewCollisions->pPts[2].bY, MIN(
+					pNewCollisions->pPts[5].bY,
+					pNewCollisions->pPts[7].bY))
+		);
+		pNewCollisions->bBottommost = MAX(
+			pNewCollisions->pPts[0].bY, MAX(
+				pNewCollisions->pPts[2].bY, MAX(
+					pNewCollisions->pPts[5].bY,
+					pNewCollisions->pPts[7].bY))
+		);
 	}
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }

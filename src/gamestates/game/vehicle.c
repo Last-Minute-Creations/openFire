@@ -65,6 +65,9 @@ void vehicleUnset(tVehicle *pVehicle) {
 }
 
 UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
+	// Don't check AI since it stops before driving into vehicles
+	if(playerGetByVehicle(pVehicle) != g_pLocalPlayer)
+		return 0;
 	// Transform player's vehicle position so that it's plain rectangle
 	UWORD uwRotdX = fix16_to_int(fix16_sub(
 		pVehicle->uwX * ccos(ubAngle),
@@ -130,23 +133,25 @@ UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, 
 	return 0;
 }
 
-UBYTE vehicleCollidesWithWall(UWORD uwX, fix16_t uwY, tBCoordYX *pCollisionPoints) {
+UBYTE vehicleCollidesWithWall(UWORD uwX, UWORD uwY, tBCoordYX *pCollisionPoints) {
 	UBYTE p;
 	UBYTE ubLogicTile;
 	UWORD uwPX, uwPY;
-	for(p = 0; p != 9; ++p) {
+	for(p = 0; p != 8; ++p) {
 		uwPX = uwX + pCollisionPoints[p].bX;
 		uwPY = uwY + pCollisionPoints[p].bY;
 		ubLogicTile = g_sMap.pData[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
+			ubLogicTile == MAP_LOGIC_SENTRY0 ||
 			ubLogicTile == MAP_LOGIC_SENTRY1 ||
 			ubLogicTile == MAP_LOGIC_SENTRY2 ||
 			ubLogicTile == MAP_LOGIC_FLAG1   ||
 			ubLogicTile == MAP_LOGIC_FLAG2   ||
 			0
-		)
+		) {
 			return 1;
+		}
 	}
 	return 0;
 }
@@ -160,12 +165,12 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
 	if(pSteerRequest->ubForward) {
-		fNewPosX = fix16_add(fNewPosX, ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed);
-		fNewPosY = fix16_add(fNewPosY, csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed);
+		fNewPosX += ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed;
+		fNewPosY += csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubFwdSpeed;
 	}
 	else if(pSteerRequest->ubBackward) {
-		fNewPosX = fix16_sub(fNewPosX, ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
-		fNewPosY = fix16_sub(fNewPosY, csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosX -= ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
+		fNewPosY -= csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
 	}
 	UWORD uwNewPosX = fix16_to_int(fNewPosX);
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
@@ -186,8 +191,6 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 				ubNewTurretAngle += ANGLE_360 - pVehicle->pType->ubRotSpeed;
 			else
 				ubNewTurretAngle -= pVehicle->pType->ubRotSpeed;
-			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
-			bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ubNewTurretAngle));
 		}
 	}
 	else if(pSteerRequest->ubRight) {
@@ -201,25 +204,23 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 			ubNewTurretAngle += pVehicle->pType->ubRotSpeed;
 			if(ubNewTurretAngle >= ANGLE_360)
 				ubNewTurretAngle -= ANGLE_360;
-			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
-			bobChangeFrame(pVehicle->pAuxBob, angleToFrame(ubNewTurretAngle));
 		}
 	}
 
 	// Check collision
 	if(
-		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1].pPts) &&
-		(
-			pVehicle == &g_pLocalPlayer->sVehicle &&
-			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
-		)
+		!vehicleCollidesWithWall(
+			uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts
+		) &&
+		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
 	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
-		pVehicle->uwX = fix16_to_int(fNewPosX);
-		pVehicle->uwY = fix16_to_int(fNewPosY);
+		pVehicle->uwX = uwNewPosX;
+		pVehicle->uwY = uwNewPosY;
 		pVehicle->ubBodyAngle = ubNewAngle;
 		pVehicle->ubTurretAngle = ubNewTurretAngle;
+		bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 	}
 
 	pVehicle->ubTurretAngle += ANGLE_360 + getDeltaAngleDirection(
@@ -258,7 +259,6 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 				ubNewAngle += ANGLE_360 - pVehicle->pType->ubRotSpeed;
 			else
 				ubNewAngle -= pVehicle->pType->ubRotSpeed;
-			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 		}
 	}
 	else if(pSteerRequest->ubRight) {
@@ -271,35 +271,34 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 			ubNewAngle += pVehicle->pType->ubRotSpeed;
 			if(ubNewAngle >= ANGLE_360)
 				ubNewAngle -= ANGLE_360;
-			bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 		}
 	}
 
 	fNewPosX = pVehicle->fX;
 	fNewPosY = pVehicle->fY;
 	if(pSteerRequest->ubForward) {
-		fNewPosX = fix16_add(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubFwdSpeed);
-		fNewPosY = fix16_add(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubFwdSpeed);
+		fNewPosX += ccos(ubNewAngle) * pVehicle->pType->ubFwdSpeed;
+		fNewPosY += csin(ubNewAngle) * pVehicle->pType->ubFwdSpeed;
 	}
 	else if(pSteerRequest->ubBackward) {
-		fNewPosX = fix16_sub(fNewPosX, ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed);
-		fNewPosY = fix16_sub(fNewPosY, csin(ubNewAngle) * pVehicle->pType->ubBwSpeed);
+		fNewPosX -= ccos(ubNewAngle) * pVehicle->pType->ubBwSpeed;
+		fNewPosY -= csin(ubNewAngle) * pVehicle->pType->ubBwSpeed;
 	}
 	UWORD uwNewPosX = fix16_to_int(fNewPosX);
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 
 	if(
-		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[ubNewAngle>>1].pPts) &&
-		(
-			pVehicle == &g_pLocalPlayer->sVehicle &&
-			!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
-		)
+		!vehicleCollidesWithWall(
+			uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts
+		) &&
+		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
 	) {
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
 		pVehicle->uwX = fix16_to_int(fNewPosX);
 		pVehicle->uwY = fix16_to_int(fNewPosY);
 		pVehicle->ubBodyAngle = ubNewAngle;
+		bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
 	}
 }
 
