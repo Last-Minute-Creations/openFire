@@ -73,15 +73,18 @@ tProjectile *projectileCreate(
 ) {
 	// Find free projectile
 	tProjectile *pProjectile = 0;
-	for(FUBYTE i = s_fubPrevProjectileAdded+1; i != s_fubPrevProjectileAdded; ++i) {
+	FUBYTE i = s_fubPrevProjectileAdded+1;
+	do {
 		if(i == s_fubProjectileMaxCount)
 			i = 0;
+		logWrite("Checking %hhu\n", i);
 		if(s_pProjectiles[i].ubType == PROJECTILE_TYPE_OFF) {
 			pProjectile = &s_pProjectiles[i];
 			s_fubPrevProjectileAdded = i;
+			logWrite("Added projectile at index %hu\n", i);
 			break;
 		}
-	}
+	} while(i++ != s_fubPrevProjectileAdded);
 	if(!pProjectile)
 		return 0;
 
