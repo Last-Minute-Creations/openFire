@@ -79,8 +79,8 @@ void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
 		"From: %hu,%hu to %hu,%hu\n",
 		pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY
 	);
-	dijkstra(&pBot->sRoute, pNodeStart, pNodeEnd);
-	// astar(&pBot->sRoute, pNodeStart, pNodeEnd);
+	// dijkstra(&pBot->sRoute, pNodeStart, pNodeEnd);
+	astar(&pBot->sRoute, pNodeStart, pNodeEnd);
 	logBlockEnd("botSetupRoute()");
 }
 
@@ -313,7 +313,7 @@ static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
 			UWORD uwCost = pCostSoFar[pCurrNode - g_pNodes] + aiGetCostBetweenNodes(pCurrNode, pNextNode);
 			if(uwCost < pCostSoFar[pNextNode - g_pNodes]) {
 				pCostSoFar[pNextNode - g_pNodes] = uwCost;
-				UWORD uwPriority = uwCost + aiGetCostBetweenNodes(pNextNode, pDstNode);
+				UWORD uwPriority = uwCost + ABS(pNextNode->fubX - pDstNode->fubX) + ABS(pNextNode->fubY - pDstNode->fubY); //aiGetCostBetweenNodes(pNextNode, pDstNode);
 				heapPush(pFrontier, pNextNode, uwPriority);
 				pCameFrom[pNextNode - g_pNodes] = pCurrNode;
 			}
