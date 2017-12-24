@@ -424,6 +424,30 @@ void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam) {
 	// TODO send to server
 }
 
+tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTeam) {
+	tPlayer *pClosest = 0;
+	UWORD uwClosestDist = uwRange*uwRange;
+	for(FUBYTE fubPlayerIdx = g_ubPlayerCount; fubPlayerIdx--;) {
+		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
+
+		// Ignore players of same team or not on map
+		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam)
+			continue;
+
+		// Calculate distance between turret & player
+		WORD wDx = ABS(pPlayer->sVehicle.uwX - uwX);
+		WORD wDy = ABS(pPlayer->sVehicle.uwY - uwY);
+		if(wDx > uwRange || wDy > uwRange)
+			continue; // If too far, don't do costly multiplications
+		UWORD uwDist = wDx*wDx + wDy*wDy;
+		if(uwDist <= uwClosestDist) {
+			pClosest = pPlayer;
+			uwClosestDist = uwDist;
+		}
+	}
+	return pClosest;
+}
+
 tPlayer *g_pPlayers;
 UBYTE g_ubPlayerLimit;
 UBYTE g_ubPlayerCount;

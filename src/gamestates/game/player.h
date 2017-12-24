@@ -105,6 +105,13 @@ UBYTE playerAnyNearPoint(
 	IN UWORD uwDist
 );
 
+tPlayer *playerGetClosestInRange(
+	IN UWORD uwX,
+	IN UWORD uwY,
+	IN UWORD uwRange,
+	IN UBYTE ubTeam
+);
+
 extern tPlayer *g_pPlayers;
 extern tPlayer *g_pLocalPlayer;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
