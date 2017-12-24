@@ -22,6 +22,10 @@
 #define OF_KEY_ACTION2      KEY_R
 #define OF_KEY_ACTION3      KEY_V
 
+// TODO players as cyclic buffer?
+// Iterating other player's position during targeting could be done with:
+// for(p = next; p != self; ++p)
+
 void playerListCreate(UBYTE ubPlayerLimit) {
 	UBYTE i;
 
