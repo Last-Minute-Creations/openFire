@@ -32,4 +32,8 @@ void *heapPop(
 	IN tHeap *pHeap
 );
 
+static inline void heapClear(tHeap *pHeap) {
+	pHeap->uwCount = 0;
+}
+
 #endif // GUARD_OF_GAMESTATES_GAME_AI_HEAP_H
