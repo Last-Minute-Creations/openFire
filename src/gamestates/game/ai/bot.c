@@ -57,59 +57,6 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 	pBot->pNavData = astarCreate();
 
 	botSay(pBot, "Ich bin ein computer");
-
-	tAiNode *pBenchNodes[16];
-	for(UBYTE i = 0; i != g_fubNodeCount; ++i) {
-		if(g_pNodes[i].fubX == 7 && g_pNodes[i].fubY == 3)
-			pBenchNodes[0] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 8 && g_pNodes[i].fubY == 11)
-			pBenchNodes[1] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 8 && g_pNodes[i].fubY == 11)
-			pBenchNodes[2] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 9 && g_pNodes[i].fubY == 21)
-			pBenchNodes[3] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 9 && g_pNodes[i].fubY == 21)
-			pBenchNodes[4] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 16 && g_pNodes[i].fubY == 16)
-			pBenchNodes[5] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 4 && g_pNodes[i].fubY == 22)
-			pBenchNodes[6] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 16 && g_pNodes[i].fubY == 16)
-			pBenchNodes[7] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 12 && g_pNodes[i].fubY == 11)
-			pBenchNodes[8] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 16 && g_pNodes[i].fubY == 16)
-			pBenchNodes[9] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 16 && g_pNodes[i].fubY == 16)
-			pBenchNodes[10] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 23 && g_pNodes[i].fubY == 12)
-			pBenchNodes[11] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 23 && g_pNodes[i].fubY == 3)
-			pBenchNodes[12] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 23 && g_pNodes[i].fubY == 12)
-			pBenchNodes[13] = &g_pNodes[i];
-
-		if(g_pNodes[i].fubX == 23 && g_pNodes[i].fubY == 12)
-			pBenchNodes[14] = &g_pNodes[i];
-		if(g_pNodes[i].fubX == 24 && g_pNodes[i].fubY == 22)
-			pBenchNodes[15] = &g_pNodes[i];
-	}
-
-	// Benchmark
-	botSetupRoute(pBot, pBenchNodes[0], pBenchNodes[1]); // 7,3 to 8,11
-	botSetupRoute(pBot, pBenchNodes[2], pBenchNodes[3]); // 8,11 to 9,21
-	botSetupRoute(pBot, pBenchNodes[4], pBenchNodes[5]); // 9,21 to 16,16
-	botSetupRoute(pBot, pBenchNodes[6], pBenchNodes[7]); // 4,22 to 16,16
-	botSetupRoute(pBot, pBenchNodes[8], pBenchNodes[9]); // 12,11 to 16,16
-	botSetupRoute(pBot, pBenchNodes[10], pBenchNodes[11]); // 16,16 to 23,12
-	botSetupRoute(pBot, pBenchNodes[12], pBenchNodes[13]); // 23,3 to 23,12
-	botSetupRoute(pBot, pBenchNodes[14], pBenchNodes[15]); // 23,12 to 24,22
 }
 
 void botRemoveByPtr(tBot *pBot) {
