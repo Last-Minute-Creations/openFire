@@ -1,7 +1,7 @@
 #include "gamestates/game/ai/bot.h"
 #include <fixmath/fix16.h>
 #include "gamestates/game/spawn.h"
-#include "gamestates/game/ai/heap.h"
+#include "gamestates/game/ai/astar.h"
 
 #define AI_BOT_STATE_IDLE           0
 #define AI_BOT_STATE_MOVING_TO_NODE 1
@@ -12,9 +12,6 @@
 static tBot *s_pBots;
 static FUBYTE s_fubBotCount;
 static FUBYTE s_fubBotLimit;
-
-static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode);
-static inline void dijkstra(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode);
 
 static void botSay(tBot *pBot, char *szFmt, ...) {
 #ifdef AI_BOT_DEBUG
@@ -37,11 +34,13 @@ void botManagerCreate(FUBYTE fubBotLimit) {
 
 void botManagerDestroy(void) {
 	logBlockBegin("botManagerDestroy()");
+	for(UBYTE i = s_fubBotCount; i--;)
+		astarDestroy(s_pBots[i].pNavData);
 	memFree(s_pBots, sizeof(tBot) * s_fubBotLimit);
 	logBlockEnd("botManagerDestroy()");
 }
 
-void botAdd(char *szName, UBYTE ubTeam) {
+void botAdd(const char *szName, UBYTE ubTeam) {
 	tBot *pBot = &s_pBots[s_fubBotCount];
 	pBot->pPlayer = playerAdd(szName, ubTeam);
 	if(!pBot->pPlayer) {
@@ -55,81 +54,70 @@ void botAdd(char *szName, UBYTE ubTeam) {
 	pBot->uwNextY = 0;
 	pBot->ubNextAngle = 0;
 	++s_fubBotCount;
+	pBot->pNavData = astarCreate();
 
 	botSay(pBot, "Ich bin ein computer");
 }
 
-void botRemoveByName(char *szName) {
-
-}
-
 void botRemoveByPtr(tBot *pBot) {
-
+	astarDestroy(pBot->pNavData);
 }
 
-typedef struct _tBotRouteSubcandidate {
-	tRoute *pBaseRoute;
-	tAiNode *pNextNode;
-	UWORD uwCost;
-} tBotRouteSubcandidate;
-
-void botSetupRoute(tBot *pBot, tAiNode *pNodeStart, tAiNode *pNodeEnd) {
-	logBlockBegin("botSetupRoute()");
-	logWrite(
-		"From: %hu,%hu to %hu,%hu\n",
-		pNodeStart->fubX, pNodeStart->fubY, pNodeEnd->fubX, pNodeEnd->fubY
-	);
-	// dijkstra(&pBot->sRoute, pNodeStart, pNodeEnd);
-	astar(&pBot->sRoute, pNodeStart, pNodeEnd);
-	logBlockEnd("botSetupRoute()");
+void botRemoveByName(const char *szName) {
+	for(UBYTE i = 0; i < s_fubBotCount; ++i) {
+		if(!strcmp(s_pBots[i].pPlayer->szName, szName)) {
+			botRemoveByPtr(&s_pBots[i]);
+			return;
+		}
+	}
 }
 
 void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
-
 	// Find capture point which is neutral or needs defending or being
 	// attacked or nearest to attack
 	// TODO remaining variants, prioritize
-	tAiNode *pRouteEnd = 0;
 	for(FUBYTE i = 0; i != g_fubCaptureNodeCount; ++i) {
 		if(
 			g_pCaptureNodes[i]->pControlPoint->fubTeam != pBot->pPlayer->ubTeam &&
 			g_pCaptureNodes[i] != pNodeToEvade
 		) {
-			pRouteEnd = g_pCaptureNodes[i];
-			break;
+			tAiNode *pRouteEnd = g_pCaptureNodes[i];
+			botSay(
+				pBot, "New target at %"PRI_FUBYTE",%"PRI_FUBYTE,
+				pRouteEnd->fubX, pRouteEnd->fubY
+			);
+			tAiNode *pRouteStart = aiFindClosestNode(
+				pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
+				pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
+			);
+			astarStart(pBot->pNavData, pRouteStart, pRouteEnd);
+			return;
 		}
 	}
-	if(!pRouteEnd)
-		return;
 
-	botSay(pBot, "New target at %"PRI_FUBYTE",%"PRI_FUBYTE,	pRouteEnd->fubX, pRouteEnd->fubY);
-	logWrite(
-		"Bot pos: %hu, %hu (%d,%d)\n",
-		pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
-		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE, pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
-	);
-	tAiNode *pRouteStart = aiFindClosestNode(
-		pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
-		pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
-	);
-	if(pRouteStart) {
-		// Find best route
-		botSetupRoute(pBot, pRouteStart, pRouteEnd);
-
-		// Set first node of route as next to reach
-		pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
-		pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-		pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
-	}
 }
 
 void botProcessDriving(tBot *pBot) {
+	static UWORD uwCnt = 0;
 	switch(pBot->ubState) {
 		case AI_BOT_STATE_IDLE:
-			botFindNewTarget(pBot, pBot->pNextNode);
-			botSay(pBot, "Going to %hu,%hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
-			pBot->ubTick = 10;
-			pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+			if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
+				uwCnt = 0;
+				botFindNewTarget(pBot, pBot->pNextNode);
+			}
+			else {
+				if(!astarProcess(pBot->pNavData))
+					break;
+				pBot->pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
+				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				botSay(
+					pBot, "Going to %hu,%hu\n",
+					pBot->pNextNode->fubX, pBot->pNextNode->fubY
+				);
+				pBot->ubTick = 10;
+				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+			}
 			break;
 		case AI_BOT_STATE_MOVING_TO_NODE:
 			// Update target angle
@@ -191,7 +179,7 @@ void botProcessDriving(tBot *pBot) {
 			pBot->pPlayer->sSteerRequest.ubForward = 1;
 			break;
 		case AI_BOT_STATE_NODE_REACHED:
-			if(!pBot->sRoute.ubCurrNode) {
+			if(!pBot->pNavData->sRoute.ubCurrNode) {
 				// Last node from route - hold pos
 				pBot->ubTick = 0;
 				pBot->ubState = AI_BOT_STATE_HOLDING_POS;
@@ -199,8 +187,8 @@ void botProcessDriving(tBot *pBot) {
 			}
 			else {
 				// Get next node from route
-				--pBot->sRoute.ubCurrNode;
-				pBot->pNextNode = pBot->sRoute.pNodes[pBot->sRoute.ubCurrNode];
+				--pBot->pNavData->sRoute.ubCurrNode;
+				pBot->pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
 				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->ubTick = 10;
@@ -212,13 +200,12 @@ void botProcessDriving(tBot *pBot) {
 			// Move to tile next to it to prevent blocking other players/bots
 			// If point has been captured start measuring ticks
 			if(pBot->ubTick >= 200) {
-				tAiNode *pLastNode = pBot->sRoute.pNodes[0];
+				tAiNode *pLastNode = pBot->pNavData->sRoute.pNodes[0];
 				// After some ticks check if work is done on this point
 				if(pLastNode->pControlPoint->fubTeam == pBot->pPlayer->ubTeam) {
 					// If so, go to next point
 					botFindNewTarget(pBot, 0);
-					if(pBot->pNextNode)
-						pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
+					pBot->ubState = AI_BOT_STATE_IDLE;
 				}
 				else
 					botSay(pBot, "capturing...");
@@ -257,20 +244,20 @@ void botProcessDriving(tBot *pBot) {
 }
 
 void botProcessLimbo(tBot *pBot) {
-	if(pBot->pPlayer->uwCooldown)
-		return;
-	// Find some place to go - e.g. capture point
-	botFindNewTarget(pBot, 0);
-	// Find nearest spawn point
-	pBot->pPlayer->ubSpawnIdx = spawnGetNearest(
-		pBot->pNextNode->fubX, pBot->pNextNode->fubY,
-		pBot->pPlayer->ubTeam
-	);
-	// After arriving at surface, recalculate where bot is going
-	pBot->ubState = AI_BOT_STATE_IDLE;
+	if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
+		// Find some place to go - e.g. capture point
+		botFindNewTarget(pBot, 0);
+		// Find nearest spawn point
+		pBot->pPlayer->ubSpawnIdx = spawnGetNearest(
+			pBot->pNavData->pNodeSrc->fubX, pBot->pNavData->pNodeSrc->fubY,
+			pBot->pPlayer->ubTeam
+		);
+		// After arriving at surface, recalculate where bot is going
+		pBot->ubState = AI_BOT_STATE_IDLE;
+	}
 	// Make sure noone from own team stands at spawn
 	// TODO: spawn kill ppl from other team
-	if(!spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
+	if(!pBot->pPlayer->uwCooldown && !spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
 		playerSelectVehicle(pBot->pPlayer, VEHICLE_TYPE_TANK);
 		botSay(pBot, "Surfacing...");
 	}
@@ -288,99 +275,4 @@ void botProcess(void) {
 				break;
 		}
 	}
-}
-
-static inline void astar(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
-	tHeap *pFrontier = heapCreate(AI_MAX_NODES*AI_MAX_NODES);
-	tAiNode *pCameFrom[AI_MAX_NODES] = {0};
-	UWORD pCostSoFar[AI_MAX_NODES];
-	memset(pCostSoFar, 0xFF, sizeof(UWORD)*AI_MAX_NODES);
-
-	pCameFrom[pSrcNode - g_pNodes] = 0;
-	pCostSoFar[pSrcNode - g_pNodes] = 0;
-
-	heapPush(pFrontier, pSrcNode, 0);
-
-	while(pFrontier->uwCount) {
-		tAiNode *pCurrNode = heapPop(pFrontier);
-		if(pCurrNode == pDstNode)
-			break;
-
-		for(UWORD i = 0; i <= g_fubNodeCount; ++i) {
-			tAiNode *pNextNode = &g_pNodes[i];
-			if(pNextNode == pCurrNode)
-				continue;
-			UWORD uwCost = pCostSoFar[pCurrNode - g_pNodes] + aiGetCostBetweenNodes(pCurrNode, pNextNode);
-			if(uwCost < pCostSoFar[pNextNode - g_pNodes]) {
-				pCostSoFar[pNextNode - g_pNodes] = uwCost;
-				UWORD uwPriority = uwCost + ABS(pNextNode->fubX - pDstNode->fubX) + ABS(pNextNode->fubY - pDstNode->fubY); //aiGetCostBetweenNodes(pNextNode, pDstNode);
-				heapPush(pFrontier, pNextNode, uwPriority);
-				pCameFrom[pNextNode - g_pNodes] = pCurrNode;
-			}
-		}
-	}
-
-	pRoute->uwCost = pCostSoFar[pDstNode - g_pNodes];
-	pRoute->pNodes[0] = pDstNode;
-	pRoute->ubNodeCount = 1;
-	tAiNode *pPrev = pCameFrom[pDstNode - g_pNodes];
-	logWrite("Astar: (%p) %hu,%hu", pDstNode, pDstNode->fubX, pDstNode->fubY);
-	while(pPrev) {
-		logWrite(" <- (%p) %hu,%hu", pPrev, pPrev->fubX, pPrev->fubY);
-		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
-		++pRoute->ubNodeCount;
-		pPrev = pCameFrom[pPrev - g_pNodes];
-	}
-	logWrite(" (count: %hu)\n", pRoute->ubNodeCount);
-	pRoute->ubCurrNode = pRoute->ubNodeCount-1;
-
-	heapDestroy(pFrontier);
-}
-
-static inline void dijkstra(tRoute *pRoute, tAiNode *pSrcNode, tAiNode *pDstNode) {
-	tHeap *pFrontier = heapCreate(AI_MAX_NODES*AI_MAX_NODES);
-	tAiNode *pCameFrom[AI_MAX_NODES] = {0};
-	UWORD pCostSoFar[AI_MAX_NODES];
-	memset(pCostSoFar, 0xFF, sizeof(UWORD)*AI_MAX_NODES);
-
-	pCameFrom[pSrcNode - g_pNodes] = 0;
-	pCostSoFar[pSrcNode - g_pNodes] = 0;
-
-	heapPush(pFrontier, pSrcNode, 0);
-
-	while(pFrontier->uwCount) {
-		tAiNode *pCurrNode = heapPop(pFrontier);
-		if(pCurrNode == pDstNode)
-			break;
-
-		for(UWORD i = 0; i <= g_fubNodeCount; ++i) {
-			tAiNode *pNextNode = &g_pNodes[i];
-			if(pNextNode == pCurrNode)
-				continue;
-
-			UWORD uwCost = pCostSoFar[pCurrNode - g_pNodes] + aiGetCostBetweenNodes(pCurrNode, pNextNode);
-			if(uwCost < pCostSoFar[pNextNode - g_pNodes]) {
-				pCostSoFar[pNextNode - g_pNodes] = uwCost;
-				UWORD uwPriority = uwCost;
-				heapPush(pFrontier, pNextNode, uwPriority);
-				pCameFrom[pNextNode - g_pNodes] = pCurrNode;
-			}
-		}
-	}
-
-	pRoute->uwCost = pCostSoFar[pDstNode - g_pNodes];
-	pRoute->pNodes[0] = pDstNode;
-	pRoute->ubNodeCount = 1;
-	tAiNode *pPrev = pCameFrom[pDstNode - g_pNodes];
-	logWrite("Dijkstra: (%p) %hu,%hu", pDstNode, pDstNode->fubX, pDstNode->fubY);
-	while(pPrev) {
-		logWrite(" <- (%p) %hu,%hu", pPrev, pPrev->fubX, pPrev->fubY);
-		pRoute->pNodes[pRoute->ubNodeCount] = pPrev;
-		++pRoute->ubNodeCount;
-		pPrev = pCameFrom[pPrev - g_pNodes];
-	}
-	logWrite(" (count: %hu)\n", pRoute->ubNodeCount);
-	pRoute->ubCurrNode = pRoute->ubNodeCount-1;
-
-	heapDestroy(pFrontier);
 }

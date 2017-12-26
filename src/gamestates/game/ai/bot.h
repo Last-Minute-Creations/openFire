@@ -4,24 +4,13 @@
 #include <ace/types.h>
 #include "gamestates/game/player.h"
 #include "gamestates/game/ai/ai.h"
+#include "gamestates/game/ai/astar.h"
 
 #define AI_BOT_DEBUG
 
-#define AI_BOT_ROUTE_CANDIDATE_COUNT 5
-#define AI_BOT_ROUTE_SUBCANDIDATE_COUNT 5
-
-#define AI_ROUTE_NODE_MAX 20
-
-typedef struct _tRoute {
-	UBYTE ubNodeCount;
-	UBYTE ubCurrNode;
-	tAiNode *pNodes[AI_ROUTE_NODE_MAX];
-	UWORD uwCost;
-} tRoute;
-
 typedef struct _tBot {
 	tPlayer *pPlayer;
-	tRoute sRoute;
+	tAstarData *pNavData;
 	tAiNode *pNextNode;
 	UBYTE ubState;
 	UBYTE ubTick;
@@ -37,7 +26,7 @@ void botManagerCreate(
 
 void botManagerDestroy(void);
 
-void botAdd(char *szName, UBYTE ubTeam);
+void botAdd(const char *szName, UBYTE ubTeam);
 
 void botProcess(void);
 
