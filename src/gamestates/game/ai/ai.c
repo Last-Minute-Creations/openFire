@@ -107,46 +107,49 @@ UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
 	BYTE bDeltaY = pTo->fubY - pFrom->fubY;
 	if(!bDeltaX && !bDeltaY)
 		return 0;
-	fix16_t fFineX = fix16_from_int((pFrom->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
-	fix16_t fFineY = fix16_from_int((pFrom->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
+	const fix16_t fHalf = fix16_one>>1;
+	fix16_t fFineX = fix16_from_int((pFrom->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE) + fHalf;
+	fix16_t fFineY = fix16_from_int((pFrom->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE) + fHalf;
 	UBYTE ubAngle = getAngleBetweenPoints(
 		pFrom->fubX << MAP_TILE_SIZE, pFrom->fubY << MAP_TILE_SIZE,
 		pTo->fubX << MAP_TILE_SIZE, pTo->fubY << MAP_TILE_SIZE
 	);
-	tBCoordYX sPtA, sPtB;
-	sPtA.bX = fix16_to_int(10 * csin(ubAngle));
-	sPtA.bY = fix16_to_int(10 * ccos(ubAngle));
-	sPtB.bX = fix16_to_int(-10 * csin(ubAngle));
-	sPtB.bY = fix16_to_int(-10 * ccos(ubAngle));
+	tBCoordYX sPtA = {
+		.bX = fix16_to_int(10 * csin(ubAngle)),
+		.bY = fix16_to_int(10 * ccos(ubAngle))
+	};
+	tBCoordYX sPtB = {
+		.bX = fix16_to_int(-10 * csin(ubAngle)),
+		.bY = fix16_to_int(-10 * ccos(ubAngle))
+	};
 	FUBYTE fubStart, fubStop;
 	fix16_t fDx, fDy;
 	if(ABS(bDeltaX) > ABS(bDeltaY)) {
 		fDx = fix16_from_int(SGN(bDeltaX)*MAP_FULL_TILE);
-		fDy = fix16_div(fix16_from_int(bDeltaY*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaX)));
+		fDy = fix16_from_int(bDeltaY*MAP_FULL_TILE) / ABS(bDeltaX);
 		fubStart = MIN(pFrom->fubX, pTo->fubX);
 		fubStop = MAX(pFrom->fubX, pTo->fubX);
 	}
 	else {
-		fDx = fix16_div(fix16_from_int(bDeltaX*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaY)));
+		fDx = fix16_from_int(bDeltaX*MAP_FULL_TILE) / ABS(bDeltaY);
 		fDy = fix16_from_int(SGN(bDeltaY)*MAP_FULL_TILE);
 		fubStart = MIN(pFrom->fubY, pTo->fubY);
 		fubStop = MAX(pFrom->fubY, pTo->fubY);
 	}
 	UWORD uwCost = 0;
-	fix16_t fHalf = fix16_one>>1;
 	for(FUBYTE i = fubStart+1; i != fubStop; ++i) {
 		// Do a step forward
 		fFineX += fDx;
 		fFineY += fDy;
 
 		// Process point A
-		FUBYTE fubChkAX = (fix16_to_int(fFineX+fHalf) + sPtA.bX) >> MAP_TILE_SIZE;
-		FUBYTE fubChkAY = (fix16_to_int(fFineY+fHalf) + sPtA.bY) >> MAP_TILE_SIZE;
+		FUBYTE fubChkAX = (fix16_to_int(fFineX) + sPtA.bX) >> MAP_TILE_SIZE;
+		FUBYTE fubChkAY = (fix16_to_int(fFineY) + sPtA.bY) >> MAP_TILE_SIZE;
 		uwCost += s_pTileCosts[fubChkAX][fubChkAY];
 
 		// Process point B
-		FUBYTE fubChkBX = (fix16_to_int(fFineX+fHalf) + sPtB.bX) >> MAP_TILE_SIZE;
-		FUBYTE fubChkBY = (fix16_to_int(fFineY+fHalf) + sPtB.bY) >> MAP_TILE_SIZE;
+		FUBYTE fubChkBX = (fix16_to_int(fFineX) + sPtB.bX) >> MAP_TILE_SIZE;
+		FUBYTE fubChkBY = (fix16_to_int(fFineY) + sPtB.bY) >> MAP_TILE_SIZE;
 		if(fubChkBX != fubChkAX || fubChkBY != fubChkAY)
 			uwCost += s_pTileCosts[fubChkBX][fubChkBY];
 	}
