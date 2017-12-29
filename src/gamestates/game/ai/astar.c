@@ -56,7 +56,7 @@ UBYTE astarProcess(tAstarData *pNav) {
 				}
 			}
 			++pNav->uwCurrNeighbour;
-		} while(timerGetDelta(ulStart, timerGetPrec()) >= ulMaxTime);
+		} while(timerGetDelta(ulStart, timerGetPrec()) <= ulMaxTime);
 	}
 	else {
 		// ASTAR_STATE_DONE
