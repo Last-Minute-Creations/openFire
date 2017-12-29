@@ -119,41 +119,36 @@ UWORD aiCalcCostBetweenNodes(tAiNode *pFrom, tAiNode *pTo) {
 	sPtB.bX = fix16_to_int(-10 * csin(ubAngle));
 	sPtB.bY = fix16_to_int(-10 * ccos(ubAngle));
 	FUBYTE fubStart, fubStop;
-	BYTE bDir;
 	fix16_t fDx, fDy;
 	if(ABS(bDeltaX) > ABS(bDeltaY)) {
-		bDir = SGN(bDeltaX);
-		fDx = fix16_from_int(bDir*MAP_FULL_TILE);
+		fDx = fix16_from_int(SGN(bDeltaX)*MAP_FULL_TILE);
 		fDy = fix16_div(fix16_from_int(bDeltaY*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaX)));
-		fubStart = pFrom->fubX;
-		fubStop = pTo->fubX;
+		fubStart = MIN(pFrom->fubX, pTo->fubX);
+		fubStop = MAX(pFrom->fubX, pTo->fubX);
 	}
 	else {
-		bDir = SGN(bDeltaY);
 		fDx = fix16_div(fix16_from_int(bDeltaX*MAP_FULL_TILE), fix16_from_int(ABS(bDeltaY)));
-		fDy = fix16_from_int(bDir*MAP_FULL_TILE);
-		fubStart = pFrom->fubY;
-		fubStop = pTo->fubY;
+		fDy = fix16_from_int(SGN(bDeltaY)*MAP_FULL_TILE);
+		fubStart = MIN(pFrom->fubY, pTo->fubY);
+		fubStop = MAX(pFrom->fubY, pTo->fubY);
 	}
 	UWORD uwCost = 0;
-	// logWrite("Line from %hu,%hu to %hu,%hu\n",	pFrom->fubX, pFrom->fubY, pTo->fubX, pTo->fubY);
-	// logWrite("dir: %hhd, dx: %hd, dy: %hd\n", bDir, fix16_to_int(fDx), fix16_to_int(fDy));
-	// logWrite("Point offsets: %hhd,%hhd; %hhd,%hhd,", sPtA.bX, sPtA.bY, sPtB.bX, sPtB.bY);
 	fix16_t fHalf = fix16_one>>1;
-	for(FUBYTE i = fubStart+bDir; i != fubStop; i += bDir) {
+	for(FUBYTE i = fubStart+1; i != fubStop; ++i) {
+		// Do a step forward
 		fFineX += fDx;
 		fFineY += fDy;
+
 		// Process point A
 		FUBYTE fubChkAX = (fix16_to_int(fFineX+fHalf) + sPtA.bX) >> MAP_TILE_SIZE;
 		FUBYTE fubChkAY = (fix16_to_int(fFineY+fHalf) + sPtA.bY) >> MAP_TILE_SIZE;
 		uwCost += s_pTileCosts[fubChkAX][fubChkAY];
-		// logWrite("ptA: %hu,%hu -> %hhu", fubChkAX, fubChkAY, s_pTileCosts[fubChkAX][fubChkAY]);
+
 		// Process point B
 		FUBYTE fubChkBX = (fix16_to_int(fFineX+fHalf) + sPtB.bX) >> MAP_TILE_SIZE;
 		FUBYTE fubChkBY = (fix16_to_int(fFineY+fHalf) + sPtB.bY) >> MAP_TILE_SIZE;
 		if(fubChkBX != fubChkAX || fubChkBY != fubChkAY)
 			uwCost += s_pTileCosts[fubChkBX][fubChkBY];
-		// logWrite(", ptB: %hu,%hu -> %hhu\n", fubChkBX, fubChkBY, s_pTileCosts[fubChkBX][fubChkBY]);
 	}
 	return uwCost;
 }
