@@ -47,7 +47,6 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 		logWrite("ERR: No more room for bots\n");
 		return;
 	}
-	pBot->pNextNode = 0;
 	pBot->ubState = AI_BOT_STATE_IDLE;
 	pBot->ubTick = 0;
 	pBot->uwNextX = 0;
@@ -55,6 +54,7 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 	pBot->ubNextAngle = 0;
 	++s_fubBotCount;
 	pBot->pNavData = astarCreate();
+	pBot->pNavData->sRoute.ubCurrNode = 0;
 
 	botSay(pBot, "Ich bin ein computer");
 }
@@ -72,14 +72,20 @@ void botRemoveByName(const char *szName) {
 	}
 }
 
-void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
+/**
+ * Finds next destination for AI's vehicle and sets up pathfinding data.
+ * @param pBot: Pointer to bot.
+ * @param pDestToEvade: Node which shouldn't be used as next destination.
+ * @return Pointer to first node on new route.
+ */
+static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 	// Find capture point which is neutral or needs defending or being
 	// attacked or nearest to attack
 	// TODO remaining variants, prioritize
 	for(FUBYTE i = 0; i != g_fubCaptureNodeCount; ++i) {
 		if(
 			g_pCaptureNodes[i]->pControlPoint->fubTeam != pBot->pPlayer->ubTeam &&
-			g_pCaptureNodes[i] != pNodeToEvade
+			g_pCaptureNodes[i] != pDestToEvade
 		) {
 			tAiNode *pRouteEnd = g_pCaptureNodes[i];
 			botSay(
@@ -91,10 +97,10 @@ void botFindNewTarget(tBot *pBot, tAiNode *pNodeToEvade) {
 				pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
 			);
 			astarStart(pBot->pNavData, pRouteStart, pRouteEnd);
-			return;
+			return pRouteStart;
 		}
 	}
-
+	return 0;
 }
 
 UWORD botTargetNearbyTurret(tBot *pBot) {
@@ -132,18 +138,15 @@ void botProcessDriving(tBot *pBot) {
 		case AI_BOT_STATE_IDLE:
 			if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
 				uwCnt = 0;
-				botFindNewTarget(pBot, pBot->pNextNode);
+				botFindNewTarget(pBot, pBot->pNavData->sRoute.pNodes[0]);
 			}
 			else {
 				if(!astarProcess(pBot->pNavData))
 					break;
-				pBot->pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
-				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
-				botSay(
-					pBot, "Going to %hu,%hu\n",
-					pBot->pNextNode->fubX, pBot->pNextNode->fubY
-				);
+				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
+				pBot->uwNextX = (pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextY = (pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				botSay(pBot, "Going to %hu,%hu\n", pNextNode->fubX, pNextNode->fubY);
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			}
@@ -153,10 +156,8 @@ void botProcessDriving(tBot *pBot) {
 			if(pBot->ubTick == 10) {
 				pBot->ubTick = 0;
 				pBot->ubNextAngle = getAngleBetweenPoints(
-					pBot->pPlayer->sVehicle.uwX,
-					pBot->pPlayer->sVehicle.uwY,
-					(pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE,
-					(pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE
+					pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
+					pBot->uwNextX, pBot->uwNextY
 				);
 			}
 			else
@@ -217,12 +218,15 @@ void botProcessDriving(tBot *pBot) {
 			else {
 				// Get next node from route
 				--pBot->pNavData->sRoute.ubCurrNode;
-				pBot->pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
-				pBot->uwNextX = (pBot->pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-				pBot->uwNextY = (pBot->pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
+				pBot->uwNextX = (pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextY = (pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
-				botSay(pBot, "Moving to next pos: %hu, %hu\n", pBot->pNextNode->fubX, pBot->pNextNode->fubY);
+				botSay(
+					pBot, "Moving to next pos: %hu, %hu\n",
+					pNextNode->fubX, pNextNode->fubY
+				);
 			}
 			break;
 		case AI_BOT_STATE_HOLDING_POS:
@@ -253,12 +257,8 @@ void botProcessDriving(tBot *pBot) {
 			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_FULL_TILE)) {
 				if(pBot->ubTick == 50) {
 					// Change target & route
-					botFindNewTarget(pBot, pBot->pNextNode);
-					if(!pBot->pNextNode)
-						pBot->ubState = AI_BOT_STATE_IDLE;
-					else
-						pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
-					pBot->ubTick = 0;
+					botFindNewTarget(pBot, pBot->pNavData->sRoute.pNodes[0]);
+					pBot->ubState = AI_BOT_STATE_IDLE;
 				}
 				else
 					++pBot->ubTick;
@@ -275,10 +275,10 @@ void botProcessDriving(tBot *pBot) {
 void botProcessLimbo(tBot *pBot) {
 	if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
 		// Find some place to go - e.g. capture point
-		botFindNewTarget(pBot, 0);
+		tAiNode *pFirstNode = botFindNewTarget(pBot, 0);
 		// Find nearest spawn point
 		pBot->pPlayer->ubSpawnIdx = spawnGetNearest(
-			pBot->pNavData->pNodeSrc->fubX, pBot->pNavData->pNodeSrc->fubY,
+			pFirstNode->fubX, pFirstNode->fubY,
 			pBot->pPlayer->ubTeam
 		);
 		// After arriving at surface, recalculate where bot is going

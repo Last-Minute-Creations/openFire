@@ -11,7 +11,6 @@
 typedef struct _tBot {
 	tPlayer *pPlayer;
 	tAstarData *pNavData;
-	tAiNode *pNextNode;
 	UBYTE ubState;
 	UBYTE ubTick;
 	// Node-related fields
