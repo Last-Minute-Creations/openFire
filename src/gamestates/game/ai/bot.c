@@ -13,6 +13,35 @@ static tBot *s_pBots;
 static FUBYTE s_fubBotCount;
 static FUBYTE s_fubBotLimit;
 
+#define BOT_TARGETING_SIZE 5
+#define BOT_TARGETING_FLAT_SIZE 15
+
+// 0 - don't check, 1 is highest priority
+// TODO: this pattern could be bot-specific and be used in genethic algo
+// to hone bot skills
+static UBYTE s_ubTargetingOrderE[BOT_TARGETING_SIZE][BOT_TARGETING_SIZE] = {
+	{ 0,  0, 14,  9, 12},
+	{ 0,  0, 10,  3,  6},
+	{ 0,  0,  1,  2,  5},
+	{ 0,  0, 11,  4,  7},
+	{ 0,  0, 15,  8, 13}
+};
+
+// Octants: E, SE, S, SW, W, NW, N, NE
+static tBCoordYX s_pTargetingOrders[8][BOT_TARGETING_FLAT_SIZE] = {{{0}}};
+
+static void botTargetingOrderFlatten() {
+	for(UBYTE y = 0; y < BOT_TARGETING_SIZE; ++y) {
+		for (UBYTE x = 0; x < BOT_TARGETING_SIZE; ++x) {
+			if(s_ubTargetingOrderE[y][x]) {
+				UBYTE ubFoundOrder = s_ubTargetingOrderE[y][x]-1;
+				s_pTargetingOrders[0][ubFoundOrder].bX = x - 2;
+				s_pTargetingOrders[0][ubFoundOrder].bY = y - 2;
+			}
+		}
+	}
+}
+
 static void botSay(tBot *pBot, char *szFmt, ...) {
 #ifdef AI_BOT_DEBUG
 	char szBfr[100];
@@ -29,6 +58,7 @@ void botManagerCreate(FUBYTE fubBotLimit) {
 	s_fubBotCount = 0;
 	s_pBots = memAllocFastClear(sizeof(tBot) * fubBotLimit);
 	s_fubBotLimit = fubBotLimit;
+	botTargetingOrderFlatten();
 	logBlockEnd("botManagerCreate()");
 }
 
@@ -103,18 +133,32 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 	return 0;
 }
 
-UWORD botTargetNearbyTurret(tBot *pBot) {
-	// Octants: E, SE, S, SW, W, NW, N, NE
+tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 	UWORD uwBotTileX = pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE;
 	UWORD uwBotTileY = pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE;
-	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubTurretAngle+4) & 63) >> 3;
+	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubBodyAngle+4) & 63) >> 3;
 
+	tBCoordYX *pTargetingOrder = s_pTargetingOrders[0];
+	for(UBYTE i = 0; i != BOT_TARGETING_FLAT_SIZE; ++i) {
+		UWORD uwTurretX = uwBotTileX + pTargetingOrder[i].bX;
+		UWORD uwTurretY = uwBotTileY + pTargetingOrder[i].bY;
+		if(g_pTurretTiles[uwTurretX][uwTurretY] == TURRET_INVALID)
+			continue;
+		tTurret *pTurret = &g_pTurrets[g_pTurretTiles[uwTurretX][uwTurretY]];
+		if(pTurret->ubTeam != ubEnemyTeam)
+			continue;
+		return pTurret;
+	}
 
-	return TURRET_INVALID;
+	return 0;
 }
 
-void botTarget(tBot *pBot) {
+UBYTE botTarget(tBot *pBot) {
 	UBYTE ubEnemyTeam = pBot->pPlayer->ubTeam == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
+
+	// Should be checked quite often since player/turrent may fall out of range
+	// Also needs destination angle updates
+	// TODO: Don't target stuff through walls?
 
 	// Player, turret or wall
 	tPlayer *pTargetPlayer = playerGetClosestInRange(
@@ -122,14 +166,25 @@ void botTarget(tBot *pBot) {
 		PROJECTILE_RANGE, ubEnemyTeam
 	);
 	if(pTargetPlayer) {
-		return;
+		// botSay(pBot, "Player target");
+		pBot->pPlayer->sSteerRequest.ubDestAngle = getAngleBetweenPoints(
+			pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwX,
+			pTargetPlayer->sVehicle.uwX, pTargetPlayer->sVehicle.uwY
+		);
+		return 1;
 	}
 
-	UWORD uwTurretTargetIdx = botTargetNearbyTurret(pBot);
+	tTurret *pTurret = botTargetNearbyTurret(pBot, ubEnemyTeam);
+	if(pTurret) {
+		pBot->pPlayer->sSteerRequest.ubDestAngle = getAngleBetweenPoints(
+			pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
+			pTurret->uwX, pTurret->uwY
+		);
+		return 1;
+	}
 
-	// if(/* wall on course*/) {
-	// 	return;
-	// }
+	pBot->pPlayer->sSteerRequest.ubDestAngle = pBot->pPlayer->sVehicle.ubBodyAngle;
+	return 0;
 }
 
 void botProcessDriving(tBot *pBot) {
@@ -269,6 +324,19 @@ void botProcessDriving(tBot *pBot) {
 				pBot->ubTick = 0;
 			}
 		} break;
+	}
+
+	// Aiming
+	if(botTarget(pBot)) {
+		UBYTE ubAbsAngleDelta = ABS(
+			pBot->pPlayer->sVehicle.ubTurretAngle + ANGLE_360 - pBot->ubNextTargetAngle
+		);
+		if(ubAbsAngleDelta >= ANGLE_360) {
+			ubAbsAngleDelta -= ANGLE_360;
+		}
+		if(ubAbsAngleDelta < 2) {
+			// FIRE!
+		}
 	}
 }
 

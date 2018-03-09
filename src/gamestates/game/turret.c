@@ -128,7 +128,7 @@ void turretDestroy(UWORD uwIdx) {
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
 	UWORD uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
-	g_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
+	g_pTurretTiles[uwTileX][uwTileY] = TURRET_INVALID;
 
 	// Add explosion
 	explosionsAdd(

@@ -182,6 +182,8 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 }
 
 void playerLocalProcessInput(void) {
+	if(g_isLocalBot)
+		return;
 	switch(g_pLocalPlayer->ubState) {
 		case PLAYER_STATE_DRIVING: {
 			// Receive player's steer request

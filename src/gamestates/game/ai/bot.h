@@ -17,6 +17,8 @@ typedef struct _tBot {
 	UBYTE ubNextAngle;
 	UWORD uwNextX;
 	UWORD uwNextY;
+	// Targeting-related fields
+	UBYTE ubNextTargetAngle;
 } tBot;
 
 void botManagerCreate(
