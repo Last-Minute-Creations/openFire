@@ -155,7 +155,7 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 	UWORD uwBotTileX = pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE;
 	UWORD uwBotTileY = pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE;
-	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubTurretAngle+4) & 63) >> 3;
+	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubTurretAngle+8) & ANGLE_LAST) >> 4;
 
 	tBCoordYX *pTargetingOrder = s_pTargetingOrders[ubOctant];
 	for(UBYTE i = 0; i != BOT_TARGETING_FLAT_SIZE; ++i) {
@@ -344,8 +344,9 @@ void botProcessDriving(tBot *pBot) {
 			}
 		} break;
 	}
+}
 
-	// Aiming
+void botProcessAiming(tBot *pBot) {
 	if(botTarget(pBot)) {
 		pBot->pPlayer->sSteerRequest.ubAction1 = 1;
 	}
@@ -381,6 +382,7 @@ void botProcess(void) {
 		switch(pBot->pPlayer->ubState) {
 			case PLAYER_STATE_DRIVING:
 				botProcessDriving(pBot);
+				botProcessAiming(pBot);
 				break;
 			case PLAYER_STATE_LIMBO:
 				botProcessLimbo(pBot);
