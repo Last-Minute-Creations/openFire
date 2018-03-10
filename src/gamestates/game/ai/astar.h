@@ -11,11 +11,14 @@
 
 #define ASTAR_ROUTE_NODE_MAX 20
 
+/**
+ * Pathfinding route struct.
+ * TOOD implement as stack
+ */
 typedef struct _tRoute {
-	UBYTE ubNodeCount;
-	UBYTE ubCurrNode;
-	tAiNode *pNodes[ASTAR_ROUTE_NODE_MAX];
-	UWORD uwCost;
+	UBYTE ubNodeCount; ///< Number of nodes in route.
+	UBYTE ubCurrNode; ///< Currently processed route node idx.
+	tAiNode *pNodes[ASTAR_ROUTE_NODE_MAX]; ///< First is dest
 } tRoute;
 
 typedef struct {
@@ -23,25 +26,40 @@ typedef struct {
 	tHeap *pFrontier;
 	tAiNode *pCameFrom[AI_MAX_NODES];
 	UWORD pCostSoFar[AI_MAX_NODES];
-	tAiNode *pNodeSrc;
 	tAiNode *pNodeDst;
 	tAiNode *pNodeCurr;
-	UWORD uwCurrNeighbour;
+	UWORD uwCurrNeighbourIdx;
 	tRoute sRoute;
 } tAstarData;
 
+/**
+ * Allocates data for A* algorithm.
+ * @return Newly allocated A* data struct.
+ */
 tAstarData *astarCreate(void);
 
+/**
+ * Frees A* data structure.
+ * @param pNav: A* data structure to be freed.
+ */
 void astarDestroy(
 	IN tAstarData *pNav
 );
 
+/**
+ * Prepares A* initial conditions.
+ * @param pNav: A* data struct to be used.
+ * @param pNodeSrc: route's first node
+ */
 void astarStart(
 	IN tAstarData *pNav,
 	IN tAiNode *pNodeSrc,
 	IN tAiNode *pNodeDst
 );
 
+/**
+ *
+ */
 UBYTE astarProcess(
 	IN tAstarData *pNav
 );

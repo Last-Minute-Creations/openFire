@@ -92,6 +92,7 @@ tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
 		pPlayer->ubState = PLAYER_STATE_LIMBO;
+		pPlayer->isBot = 0;
 		pPlayer->ubCurrentVehicleType = 0xFF;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
@@ -182,6 +183,8 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 }
 
 void playerLocalProcessInput(void) {
+	if(g_isLocalBot)
+		return;
 	switch(g_pLocalPlayer->ubState) {
 		case PLAYER_STATE_DRIVING: {
 			// Receive player's steer request
@@ -422,6 +425,30 @@ void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam) {
 	consoleWrite(szBfr,	ubColor);
 
 	// TODO send to server
+}
+
+tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTeam) {
+	tPlayer *pClosest = 0;
+	UWORD uwClosestDist = uwRange*uwRange;
+	for(FUBYTE fubPlayerIdx = g_ubPlayerCount; fubPlayerIdx--;) {
+		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
+
+		// Ignore players of same team or not on map
+		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam)
+			continue;
+
+		// Calculate distance between turret & player
+		WORD wDx = ABS(pPlayer->sVehicle.uwX - uwX);
+		WORD wDy = ABS(pPlayer->sVehicle.uwY - uwY);
+		if(wDx > uwRange || wDy > uwRange)
+			continue; // If too far, don't do costly multiplications
+		UWORD uwDist = wDx*wDx + wDy*wDy;
+		if(uwDist <= uwClosestDist) {
+			pClosest = pPlayer;
+			uwClosestDist = uwDist;
+		}
+	}
+	return pClosest;
 }
 
 tPlayer *g_pPlayers;

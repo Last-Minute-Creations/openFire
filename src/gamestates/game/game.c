@@ -211,6 +211,7 @@ void gsGameCreate(void) {
 	}
 	else
 		g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+	botAdd("enemy", TEAM_RED);
 	displayPrepareLimbo();
 
 	// for(FUBYTE i = 0; i != 7; ++i) {

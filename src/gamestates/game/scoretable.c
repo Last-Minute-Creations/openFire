@@ -116,10 +116,10 @@ void scoreTableDestroy(void) {
 
 void scoreTableUpdate(void) {
 	const FUBYTE fubColorBot = 4;
-	for(FUBYTE i = 0; i != g_ubPlayerCount; ++i) {
-		if(&g_pPlayers[i] != g_pLocalPlayer) {
+	for(FUBYTE i = 0; i < g_ubPlayerCount; ++i) {
+		if(&g_pPlayers[i].isBot) {
 			fontDrawStr(
-				s_pBfr->pBuffer, s_pFont,	6, 16 + 7*i,	"[BOT]",
+				s_pBfr->pBuffer, s_pFont,	6, 16 + 7*i, "[BOT]",
 				fubColorBot,
 				FONT_TOP | FONT_LEFT | FONT_COOKIE
 			);

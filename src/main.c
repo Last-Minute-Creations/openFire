@@ -23,7 +23,6 @@ int main(void) {
 	copCreate();
 
 	inputOpen();
-	Forbid();
 	gameCreate();
 	gamePushState(precalcCreate, precalcLoop, precalcDestroy);
 	while (gameIsRunning()) {
@@ -32,7 +31,6 @@ int main(void) {
 		gameProcess();
 	}
 	gameDestroy();
-	Permit();
 	inputClose();
 
 	copDestroy();

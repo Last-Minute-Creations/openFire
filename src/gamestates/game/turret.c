@@ -128,7 +128,7 @@ void turretDestroy(UWORD uwIdx) {
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwX >> MAP_TILE_SIZE;
 	UWORD uwTileY = pTurret->uwY >> MAP_TILE_SIZE;
-	g_pTurretTiles[uwTileX][uwTileY] = 0xFFFF;
+	g_pTurretTiles[uwTileX][uwTileY] = TURRET_INVALID;
 
 	// Add explosion
 	explosionsAdd(
@@ -142,26 +142,10 @@ void turretDestroy(UWORD uwIdx) {
 void turretUpdateTarget(tTurret *pTurret) {
 	pTurret->isTargeting = 0;
 	// Scan nearby enemies
-	UWORD uwClosestDist = TURRET_MIN_DISTANCE*TURRET_MIN_DISTANCE;
-	tPlayer *pClosestPlayer = 0;
-	for(FUBYTE fubPlayerIdx = g_ubPlayerCount; fubPlayerIdx--;) {
-		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
-
-		// Ignore players of same team or not on map
-		if(pPlayer->ubTeam == pTurret->ubTeam || pPlayer->ubState != PLAYER_STATE_DRIVING)
-			continue;
-
-		// Calculate distance between turret & player
-		WORD wDx = ABS(pPlayer->sVehicle.uwX - pTurret->uwX);
-		WORD wDy = ABS(pPlayer->sVehicle.uwY - pTurret->uwY);
-		if(wDx > TURRET_MIN_DISTANCE || wDy > TURRET_MIN_DISTANCE)
-			continue; // If too far, don't do costly multiplications
-		UWORD uwDist = wDx*wDx + wDy*wDy;
-		if(uwDist <= uwClosestDist) {
-			pClosestPlayer = pPlayer;
-			uwClosestDist = uwDist;
-		}
-	}
+	UBYTE ubEnemyTeam = pTurret->ubTeam == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
+	tPlayer *pClosestPlayer = playerGetClosestInRange(
+		pTurret->uwX, pTurret->uwY, TURRET_MIN_DISTANCE, ubEnemyTeam
+	);
 
 	// Anything in range?
 	if(pClosestPlayer) {

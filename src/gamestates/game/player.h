@@ -21,6 +21,7 @@ typedef struct _tPlayer {
 	UBYTE ubTeam;
 	UBYTE ubCurrentVehicleType;
 	UBYTE ubState;
+	UBYTE isBot;
 	UWORD uwCooldown;
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;
@@ -103,6 +104,13 @@ UBYTE playerAnyNearPoint(
 	IN UWORD uwChkX,
 	IN UWORD uwChkY,
 	IN UWORD uwDist
+);
+
+tPlayer *playerGetClosestInRange(
+	IN UWORD uwX,
+	IN UWORD uwY,
+	IN UWORD uwRange,
+	IN UBYTE ubTeam
 );
 
 extern tPlayer *g_pPlayers;
