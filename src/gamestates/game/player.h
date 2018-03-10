@@ -21,6 +21,7 @@ typedef struct _tPlayer {
 	UBYTE ubTeam;
 	UBYTE ubCurrentVehicleType;
 	UBYTE ubState;
+	UBYTE isBot;
 	UWORD uwCooldown;
 	tVehicle sVehicle;
 	tSteerRequest sSteerRequest;

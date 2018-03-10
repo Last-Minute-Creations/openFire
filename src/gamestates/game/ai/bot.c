@@ -19,7 +19,7 @@ static FUBYTE s_fubBotLimit;
 // 0 - don't check, 1 is highest priority
 // TODO: this pattern could be bot-specific and be used in genethic algo
 // to hone bot skills
-// Only 90deg rotations are gonna be nice, so there need to be 90deg and 45deg sources
+// Only 90deg rotations are nice, so there's need to be 0deg and 45deg sources
 static UBYTE s_ubTargetingOrderE[BOT_TARGETING_SIZE][BOT_TARGETING_SIZE] = {
 	{ 0,  0, 14,  9, 10},
 	{ 0,  0, 12,  3,  6},
@@ -96,6 +96,7 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 		logWrite("ERR: No more room for bots\n");
 		return;
 	}
+	pBot->pPlayer->isBot = 1;
 	pBot->ubState = AI_BOT_STATE_IDLE;
 	pBot->ubTick = 0;
 	pBot->uwNextX = 0;
@@ -152,7 +153,7 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 	return 0;
 }
 
-tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
+static tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 	UWORD uwBotTileX = pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE;
 	UWORD uwBotTileY = pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE;
 	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubTurretAngle+8) & ANGLE_LAST) >> 4;
@@ -172,7 +173,7 @@ tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 	return 0;
 }
 
-UBYTE botTarget(tBot *pBot) {
+static UBYTE botTarget(tBot *pBot) {
 	UBYTE ubEnemyTeam = pBot->pPlayer->ubTeam == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
 
 	// Should be checked quite often since player/turrent may fall out of range
@@ -187,7 +188,7 @@ UBYTE botTarget(tBot *pBot) {
 	if(pTargetPlayer) {
 		// botSay(pBot, "Player target");
 		pBot->pPlayer->sSteerRequest.ubDestAngle = getAngleBetweenPoints(
-			pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwX,
+			pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
 			pTargetPlayer->sVehicle.uwX, pTargetPlayer->sVehicle.uwY
 		);
 		return 1;
@@ -207,11 +208,9 @@ UBYTE botTarget(tBot *pBot) {
 }
 
 void botProcessDriving(tBot *pBot) {
-	static UWORD uwCnt = 0;
 	switch(pBot->ubState) {
 		case AI_BOT_STATE_IDLE:
 			if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
-				uwCnt = 0;
 				botFindNewTarget(pBot, pBot->pNavData->sRoute.pNodes[0]);
 			}
 			else {
@@ -267,12 +266,12 @@ void botProcessDriving(tBot *pBot) {
 			pBot->pPlayer->sSteerRequest.ubLeft = 0;
 			pBot->pPlayer->sSteerRequest.ubRight = 0;
 			UWORD uwChkX = pBot->pPlayer->sVehicle.uwX + fix16_to_int(
-				(3*MAP_FULL_TILE)/2 * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
+				MAP_FULL_TILE * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
 			);
 			UWORD uwChkY = pBot->pPlayer->sVehicle.uwY + fix16_to_int(
-				(3*MAP_FULL_TILE)/2 * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
+				MAP_FULL_TILE * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
 			);
-			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_FULL_TILE)) {
+			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_HALF_TILE)) {
 				pBot->ubState = AI_BOT_STATE_BLOCKED;
 				pBot->ubTick = 0;
 				pBot->pPlayer->sSteerRequest.ubForward = 0;

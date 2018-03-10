@@ -92,6 +92,7 @@ tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
 		pPlayer->ubState = PLAYER_STATE_LIMBO;
+		pPlayer->isBot = 0;
 		pPlayer->ubCurrentVehicleType = 0xFF;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
