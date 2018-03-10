@@ -19,24 +19,43 @@ static FUBYTE s_fubBotLimit;
 // 0 - don't check, 1 is highest priority
 // TODO: this pattern could be bot-specific and be used in genethic algo
 // to hone bot skills
+// Only 90deg rotations are gonna be nice, so there need to be 90deg and 45deg sources
 static UBYTE s_ubTargetingOrderE[BOT_TARGETING_SIZE][BOT_TARGETING_SIZE] = {
-	{ 0,  0, 14,  9, 12},
-	{ 0,  0, 10,  3,  6},
+	{ 0,  0, 14,  9, 10},
+	{ 0,  0, 12,  3,  6},
 	{ 0,  0,  1,  2,  5},
-	{ 0,  0, 11,  4,  7},
-	{ 0,  0, 15,  8, 13}
+	{ 0,  0, 13,  4,  7},
+	{ 0,  0, 15,  8, 11}
+};
+static UBYTE s_ubTargetingOrderSE[BOT_TARGETING_SIZE][BOT_TARGETING_SIZE] = {
+	{ 0,  0,  0,  0, 14}, // TODO proper
+	{ 0,  0,  0, 12, 10},
+	{ 0,  0,  1,  3,  8},
+	{ 0, 13,  4,  2,  6},
+	{15, 11,  9,  7,  5}
 };
 
 // Octants: E, SE, S, SW, W, NW, N, NE
 static tBCoordYX s_pTargetingOrders[8][BOT_TARGETING_FLAT_SIZE] = {{{0}}};
 
 static void botTargetingOrderFlatten() {
+	const BYTE pZin[4] = {0, 1, 0, -1};
+	const BYTE pCoz[4] = {1, 0, -1, 0};
 	for(UBYTE y = 0; y < BOT_TARGETING_SIZE; ++y) {
 		for (UBYTE x = 0; x < BOT_TARGETING_SIZE; ++x) {
 			if(s_ubTargetingOrderE[y][x]) {
-				UBYTE ubFoundOrder = s_ubTargetingOrderE[y][x]-1;
-				s_pTargetingOrders[0][ubFoundOrder].bX = x - 2;
-				s_pTargetingOrders[0][ubFoundOrder].bY = y - 2;
+				UBYTE ubFoundOrderOdd = s_ubTargetingOrderE[y][x]-1;
+				for(UBYTE i = 0; i < 4; ++i) {
+					s_pTargetingOrders[i<<1][ubFoundOrderOdd].bX = pCoz[i]*(x-2) - pZin[i]*(y-2);
+					s_pTargetingOrders[i<<1][ubFoundOrderOdd].bY = pZin[i]*(x-2) + pCoz[i]*(y-2);
+				}
+			}
+			if(s_ubTargetingOrderSE[y][x]) {
+				UBYTE ubFoundOrderEven = s_ubTargetingOrderSE[y][x]-1;
+				for(UBYTE i = 0; i < 4; ++i) {
+					s_pTargetingOrders[(i<<1)+1][ubFoundOrderEven].bX = pCoz[i]*(x-2) - pZin[i]*(y-2);
+					s_pTargetingOrders[(i<<1)+1][ubFoundOrderEven].bY = pZin[i]*(x-2) + pCoz[i]*(y-2);
+				}
 			}
 		}
 	}
@@ -136,9 +155,9 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 	UWORD uwBotTileX = pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE;
 	UWORD uwBotTileY = pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE;
-	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubBodyAngle+4) & 63) >> 3;
+	UBYTE ubOctant = ((pBot->pPlayer->sVehicle.ubTurretAngle+4) & 63) >> 3;
 
-	tBCoordYX *pTargetingOrder = s_pTargetingOrders[0];
+	tBCoordYX *pTargetingOrder = s_pTargetingOrders[ubOctant];
 	for(UBYTE i = 0; i != BOT_TARGETING_FLAT_SIZE; ++i) {
 		UWORD uwTurretX = uwBotTileX + pTargetingOrder[i].bX;
 		UWORD uwTurretY = uwBotTileY + pTargetingOrder[i].bY;
@@ -328,15 +347,10 @@ void botProcessDriving(tBot *pBot) {
 
 	// Aiming
 	if(botTarget(pBot)) {
-		UBYTE ubAbsAngleDelta = ABS(
-			pBot->pPlayer->sVehicle.ubTurretAngle + ANGLE_360 - pBot->ubNextTargetAngle
-		);
-		if(ubAbsAngleDelta >= ANGLE_360) {
-			ubAbsAngleDelta -= ANGLE_360;
-		}
-		if(ubAbsAngleDelta < 2) {
-			// FIRE!
-		}
+		pBot->pPlayer->sSteerRequest.ubAction1 = 1;
+	}
+	else {
+		pBot->pPlayer->sSteerRequest.ubAction1 = 0;
 	}
 }
 
@@ -356,6 +370,7 @@ void botProcessLimbo(tBot *pBot) {
 	// TODO: spawn kill ppl from other team
 	if(!pBot->pPlayer->uwCooldown && !spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
 		playerSelectVehicle(pBot->pPlayer, VEHICLE_TYPE_TANK);
+		pBot->pPlayer->sSteerRequest.ubAction1 = 0;
 		botSay(pBot, "Surfacing...");
 	}
 }
