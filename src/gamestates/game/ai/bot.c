@@ -134,8 +134,8 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 	// TODO remaining variants, prioritize
 	for(FUBYTE i = 0; i != g_fubCaptureNodeCount; ++i) {
 		if(
-			g_pCaptureNodes[i]->pControlPoint->fubTeam != pBot->pPlayer->ubTeam &&
-			g_pCaptureNodes[i] != pDestToEvade
+			g_pCaptureNodes[i] != pDestToEvade &&
+			g_pCaptureNodes[i]->pControlPoint->fubTeam != pBot->pPlayer->ubTeam
 		) {
 			tAiNode *pRouteEnd = g_pCaptureNodes[i];
 			botSay(
@@ -149,6 +149,21 @@ static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
 			astarStart(pBot->pNavData, pRouteStart, pRouteEnd);
 			return pRouteStart;
 		}
+	}
+
+	// Found nothing else - try one to be evaded
+	if(pDestToEvade->pControlPoint->fubTeam != pBot->pPlayer->ubTeam) {
+		tAiNode *pRouteEnd = pDestToEvade;
+		botSay(
+			pBot, "New target at %"PRI_FUBYTE",%"PRI_FUBYTE,
+			pRouteEnd->fubX, pRouteEnd->fubY
+		);
+		tAiNode *pRouteStart = aiFindClosestNode(
+			pBot->pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
+			pBot->pPlayer->sVehicle.uwY >> MAP_TILE_SIZE
+		);
+		astarStart(pBot->pNavData, pRouteStart, pRouteEnd);
+		return pRouteStart;
 	}
 	return 0;
 }
