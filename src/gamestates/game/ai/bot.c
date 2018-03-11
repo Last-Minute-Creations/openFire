@@ -385,7 +385,7 @@ void botProcessLimbo(tBot *pBot) {
 	// TODO: spawn kill ppl from other team
 	if(!pBot->pPlayer->uwCooldown && !spawnIsCoveredByAnyPlayer(pBot->pPlayer->ubSpawnIdx)) {
 		playerSelectVehicle(pBot->pPlayer, VEHICLE_TYPE_TANK);
-		pBot->pPlayer->sSteerRequest.ubAction1 = 0;
+		memset(&pBot->pPlayer->sSteerRequest, 0, sizeof(tSteerRequest));
 		botSay(pBot, "Surfacing...");
 	}
 }
