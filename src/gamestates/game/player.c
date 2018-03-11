@@ -31,7 +31,7 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 
 	g_ubPlayerLimit = ubPlayerLimit;
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
-	for(i = 0; i != ubPlayerLimit; ++i) {
+	for(i = 0; i < ubPlayerLimit; ++i) {
 		g_pPlayers[i].sVehicle.pBob = bobCreate(
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask,
@@ -50,16 +50,15 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	}
 }
 
-void playerListDestroy() {
+void playerListDestroy(void) {
 	UBYTE i;
-
-	for(i = 0; i != g_ubPlayerLimit; ++i) {
-		if(g_pPlayers[i].ubState != PLAYER_STATE_OFF)
-			playerRemoveByPtr(&g_pPlayers[i]);
+	logBlockBegin("playerListDestroy()");
+	for(i = 0; i < g_ubPlayerLimit; ++i) {
 		bobDestroy(g_pPlayers[i].sVehicle.pBob);
 		bobDestroy(g_pPlayers[i].sVehicle.pAuxBob);
 	}
 	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
+	logBlockEnd("playerListDestroy()");
 }
 
 void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
@@ -85,7 +84,7 @@ void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
  *  @todo Vehicle global for whole team
  */
 tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
-	for(FUBYTE i = 0; i != g_ubPlayerLimit; ++i) {
+	for(FUBYTE i = 0; i < g_ubPlayerLimit; ++i) {
 		if(g_pPlayers[i].szName[0])
 			continue;
 		tPlayer *pPlayer = &g_pPlayers[i];
@@ -129,11 +128,11 @@ void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 void playerRemoveByPtr(tPlayer *pPlayer) {
 	if(pPlayer->sVehicle.ubLife)
 		vehicleUnset(&pPlayer->sVehicle);
-	if(!pPlayer->ubState == PLAYER_STATE_OFF) {
+	if(pPlayer->ubState == PLAYER_STATE_OFF) {
 		logWrite("ERR: Tried to remove offline player: %p\n", pPlayer);
 		return;
 	}
-	memset(pPlayer, 0, sizeof(tPlayer));
+	// Here was memset to 0 but it was bad idea 'cuz it zeroed vehicle bob ptrs
 	--g_ubPlayerCount;
 }
 

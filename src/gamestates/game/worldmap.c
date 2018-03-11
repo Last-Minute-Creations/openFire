@@ -235,12 +235,12 @@ UBYTE worldMapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 }
 
 void worldMapDestroy(void) {
-	logBlockBegin("mapDestroy()");
+	logBlockBegin("worldMapDestroy()");
 	controlManagerDestroy();
 	spawnManagerDestroy();
 
 	turretListDestroy();
-	logBlockEnd("mapDestroy()");
+	logBlockEnd("worldMapDestroy()");
 }
 
 void worldMapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
