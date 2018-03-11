@@ -274,38 +274,35 @@ void controlSim(void) {
 
 		// Determine destination team
 		if(pPoint->fubBrownCount == pPoint->fubGreenCount) {
-			if(!pPoint->fubBrownCount && pPoint->fubTeam == TEAM_NONE && pPoint->fuwLife != CONTROL_POINT_LIFE_NEUTRAL) {
+			if(
+				!pPoint->fubBrownCount && pPoint->fubTeam == TEAM_NONE &&
+				pPoint->fuwLife != CONTROL_POINT_LIFE_NEUTRAL
+			) {
 				// Abandoned neutral point
 				fbCaptureDir = SGN(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
 			}
 			else {
-				if(pPoint->fubTeam == TEAM_BLUE)
-					++fubControlledByBlue;
-				else if(pPoint->fubTeam == TEAM_RED)
-					++fubControlledByRed;
-				// Reset for next counting during player process
-				pPoint->fubBrownCount = 0;
-				pPoint->fubGreenCount = 0;
-				continue;
+				fbCaptureDir = 0;
 			}
 		}
-		else if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
-			// Brown taking over green
-			fbCaptureDir = -1;
-			if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL)
-				pPoint->fubDestTeam = TEAM_NONE;
-			else
-				pPoint->fubDestTeam = TEAM_RED;
-		}
 		else {
-			// Green taking over brown
-			fbCaptureDir = 1;
-			if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL)
-				pPoint->fubDestTeam = TEAM_NONE;
-			else
-				pPoint->fubDestTeam = TEAM_BLUE;
+			if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
+				// Brown taking over green
+				fbCaptureDir = -1;
+				if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL)
+					pPoint->fubDestTeam = TEAM_NONE;
+				else
+					pPoint->fubDestTeam = TEAM_RED;
+			}
+			else {
+				// Green taking over brown
+				fbCaptureDir = 1;
+				if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL)
+					pPoint->fubDestTeam = TEAM_NONE;
+				else
+					pPoint->fubDestTeam = TEAM_BLUE;
+			}
 		}
-
 		// Process takeover
 		pPoint->fuwLife = CLAMP(
 			pPoint->fuwLife+fbCaptureDir,
@@ -319,14 +316,18 @@ void controlSim(void) {
 		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL)
 			controlCapturePoint(pPoint, TEAM_NONE);
 
+		// Calc domination ratio for bleed
 		if(pPoint->fubTeam == TEAM_BLUE)
 			++fubControlledByBlue;
 		else if(pPoint->fubTeam == TEAM_RED)
 			++fubControlledByRed;
+
 		// Reset for next counting during player process
 		pPoint->fubBrownCount = 0;
 		pPoint->fubGreenCount = 0;
 	}
+
+	// Do some bleeding
 	if(s_uwFrameCounter >= 50*5) {
 		s_uwFrameCounter -= 50*5;
 		FUBYTE fubDelta = (ABS(fubControlledByRed - fubControlledByBlue)+1) >> 1;

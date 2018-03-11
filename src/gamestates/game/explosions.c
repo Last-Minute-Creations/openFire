@@ -26,6 +26,7 @@ void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
 			s_pExplosions[i].uwY = uwY;
 			s_pExplosions[i].pBob->ubState = BOB_STATE_START_DRAWING;
 			s_pExplosions[i].pBob->isDrawn = 0;
+			s_pExplosions[i].uwDuration = 0;
 			return;
 		}
 	}
@@ -56,18 +57,17 @@ void explosionsDestroy(void) {
 
 void explosionsUndraw(tSimpleBufferManager *pBfr) {
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
+		++s_pExplosions[i].uwDuration;
 		if(!bobUndraw(s_pExplosions[i].pBob, pBfr))
 			continue;
 		if(s_pExplosions[i].uwDuration >= EXPLOSION_DURATION) {
 			s_pExplosions[i].pBob->ubState = BOB_STATE_STOP_DRAWING;
-			s_pExplosions[i].uwDuration = 0;
 		}
 		else {
 			bobChangeFrame(
 				s_pExplosions[i].pBob,
 				s_pExplosions[i].uwDuration/EXPLOSION_FRAME_LENGTH
 			);
-			++s_pExplosions[i].uwDuration;
 		}
 	}
 }
