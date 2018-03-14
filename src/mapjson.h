@@ -14,22 +14,22 @@ typedef struct _tJson {
 	FWORD fwTokenCount;
 } tJson;
 
-tJson *mapJsonCreate(char *szFilePath);
+tJson *mapJsonCreate(const char *szFilePath);
 
 void mapJsonDestroy(tJson *pJson);
 
-void mapJsonGetMeta(
-	IN tJson *pJson,
+UBYTE mapJsonGetMeta(
+	IN const tJson *pJson,
 	IN tMap *pMap
 );
 
 void mapJsonReadTiles(
-	IN tJson *pJson,
+	IN const tJson *pJson,
 	IN tMap *pMap
 );
 
 void mapJsonReadControlPoints(
-	IN tJson *pJson
+	IN const tJson *pJson
 );
 
 #endif // GUARD_OF_MAPJSON_H
