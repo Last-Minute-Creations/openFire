@@ -8,7 +8,7 @@ tMap g_sMap = {.fubWidth = 0, .fubHeight = 0, .pData = 0};
 void mapInit(char *szFileName) {
 	logBlockBegin("mapInit(szPath: %s)", szFileName);
 	sprintf(g_sMap.szPath, "data/maps/%s", szFileName);
-	tJson *pMapJson = mapJsonCreate(g_sMap.szPath);
+	tJson *pMapJson = jsonCreate(g_sMap.szPath);
 
 	// Objects may have properties passed in random order
 	// so 1st pass will extract only general data
@@ -20,6 +20,6 @@ void mapInit(char *szFileName) {
 
 	mapJsonReadTiles(pMapJson, &g_sMap);
 
-	mapJsonDestroy(pMapJson);
+	jsonDestroy(pMapJson);
 	logBlockEnd("mapInit()");
 }
