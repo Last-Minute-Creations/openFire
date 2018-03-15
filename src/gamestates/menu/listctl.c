@@ -115,14 +115,14 @@ void listCtlDraw(tListCtl *pCtl) {
 	}
 }
 
-void listCtlDrawEntry(tListCtl *pCtl, UWORD uwIdx) {
+static void listCtlDrawEntry(tListCtl *pCtl, UWORD uwIdx) {
 	UWORD uwFirstVisible = 0;
 	UWORD uwLastVisible = MIN(
 		pCtl->uwEntryCnt,
 		uwFirstVisible + (pCtl->sRect.uwHeight - 4) / pCtl->ubEntryHeight
 	);
-	UBYTE ubBgColor;
 	if(uwIdx >= uwFirstVisible && uwIdx <= uwLastVisible) {
+		UBYTE ubBgColor;
 		if(uwIdx == pCtl->uwEntrySel)
 			ubBgColor = 7;
 		else

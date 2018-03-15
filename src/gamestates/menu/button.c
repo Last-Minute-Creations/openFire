@@ -1,11 +1,11 @@
 #include "gamestates/menu/button.h"
 #include <ace/macros.h>
 
-FUBYTE s_fubButtonCount;
-FUBYTE s_fubMaxButtonCount;
-tButton *s_pButtons;
-tBitMap *s_pBfr;
-tFont *s_pFont;
+static FUBYTE s_fubButtonCount;
+static FUBYTE s_fubMaxButtonCount;
+static tButton *s_pButtons;
+static tBitMap *s_pBfr;
+static tFont *s_pFont;
 
 void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont) {
 	logBlockBegin(
@@ -51,7 +51,7 @@ void buttonAdd(
 	++s_fubButtonCount;
 }
 
-void buttonDraw(tButton *pButton) {
+static void buttonDraw(tButton *pButton) {
 	const UBYTE ubColorLight = 12;
 	const UBYTE ubColorDark = 3;
 	const UBYTE ubColorFill = 7;

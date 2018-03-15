@@ -19,8 +19,8 @@ static tView *s_pView;
 static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
 static tFont *s_pFont;
-FUBYTE s_isHdd;
-FUBYTE s_fubProgress;
+static FUBYTE s_isHdd;
+static FUBYTE s_fubProgress;
 
 void precalcCreate(void) {
 	logBlockBegin("precalcCreate()");
@@ -135,13 +135,14 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	UWORD uwFillWidth = (s_fubProgress*uwProgressWidth)/100;
 	blitRect(
 		s_pBuffer->pBuffer,
-		uwProgressX,	uwProgressY, uwFillWidth,	uwProgressHeight,
+		(WORD)uwProgressX,	(WORD)uwProgressY,
+		(WORD)uwFillWidth,	(WORD)uwProgressHeight,
 		PRECALC_COLOR_PROGRESS_FILL
 	);
 	blitRect(
 		s_pBuffer->pBuffer,
-		uwProgressX + uwFillWidth, uwProgressY,
-		uwProgressWidth - uwFillWidth, uwProgressHeight, 0
+		(WORD)(uwProgressX + uwFillWidth), (WORD)uwProgressY,
+		(WORD)(uwProgressWidth - uwFillWidth), (WORD)uwProgressHeight, 0
 	);
 
 	// Text

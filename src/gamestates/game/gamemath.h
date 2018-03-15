@@ -35,15 +35,15 @@ UBYTE getAngleBetweenPoints(
 /**
  *  Returns direction between two angles scaled with given unit.
  *  Direction is calculated so that delta angle is less than 180deg.
- *  @param ubStartAngle Start angle.
- *  @param ubDestAngle  Destination angle.
- *  @param wUnit        Scale multiplayer of result.
+ *  @param ubPrevAngle Start angle.
+ *  @param ubNewAngle  Destination angle.
+ *  @param wUnit Scale multiplayer of result.
  *  @return supplied unit with sign relating to shorter path from start angle
             to dest angle.
  */
 WORD getDeltaAngleDirection(
-	IN UBYTE ubStrtAngle,
-	IN UBYTE ubDestAngle,
+	IN UBYTE ubPrevAngle,
+	IN UBYTE ubNewAngle,
 	IN WORD wUnit
 );
 

@@ -21,20 +21,22 @@ static UWORD s_uwMaxTurrets;
 UWORD **g_pTurretTiles; // 20x25: +2KiB
 
 static tAvg *s_pAvg;
+static FUBYTE s_fubMapWidth, s_fubMapHeight;
 
-void turretListCreate(void) {
-	int i, t;
+void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight) {
 	logBlockBegin("turretListCreate()");
+	s_fubMapWidth = fubMapWidth;
+	s_fubMapHeight = fubMapHeight;
 
 	g_uwTurretCount = 0;
-	s_uwMaxTurrets = (g_sMap.fubWidth/2 + 1) * g_sMap.fubHeight;
+	s_uwMaxTurrets = (fubMapWidth/2 + 1) * fubMapHeight;
 	g_pTurrets = memAllocFastClear(s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	g_pTurretTiles = memAllocFast(sizeof(UWORD*) * g_sMap.fubWidth);
-	for(i = 0; i != g_sMap.fubWidth; ++i) {
-		g_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * g_sMap.fubHeight);
-		memset(g_pTurretTiles[i], 0xFF, sizeof(UWORD) * g_sMap.fubHeight);
+	g_pTurretTiles = memAllocFast(sizeof(UWORD*) * fubMapWidth);
+	for(FUBYTE i = 0; i < fubMapWidth; ++i) {
+		g_pTurretTiles[i] = memAllocFast(sizeof(UWORD) * fubMapHeight);
+		memset(g_pTurretTiles[i], 0xFF, sizeof(UWORD) * fubMapHeight);
 	}
 
 	// Attach sprites
@@ -80,9 +82,9 @@ void turretListDestroy(void) {
 	memFree(g_pTurrets, s_uwMaxTurrets * sizeof(tTurret));
 
 	// Tile-based turret list
-	for(int i = 0; i != g_sMap.fubWidth; ++i)
-		memFree(g_pTurretTiles[i], sizeof(UWORD) * g_sMap.fubHeight);
-	memFree(g_pTurretTiles, sizeof(UWORD*) * g_sMap.fubWidth);
+	for(int i = 0; i != s_fubMapWidth; ++i)
+		memFree(g_pTurretTiles[i], sizeof(UWORD) * s_fubMapHeight);
+	memFree(g_pTurretTiles, sizeof(UWORD*) * s_fubMapWidth);
 
 	logAvgDestroy(s_pAvg);
 
@@ -139,7 +141,7 @@ void turretDestroy(UWORD uwIdx) {
 	pTurret->uwX = 0;
 }
 
-void turretUpdateTarget(tTurret *pTurret) {
+static void turretUpdateTarget(tTurret *pTurret) {
 	pTurret->isTargeting = 0;
 	// Scan nearby enemies
 	UBYTE ubEnemyTeam = pTurret->ubTeam == TEAM_BLUE ? TEAM_RED : TEAM_BLUE;
@@ -206,7 +208,7 @@ void turretSim(void) {
  *  @param uwRowWidth Number of words to copy per 'row', max 64.
  *  @param uwRowCnt   Number of 'rows' to copy. Max 1024
  */
- void copyWithBlitter(UBYTE *pSrc, UBYTE *pDst, UWORD uwRowWidth, UWORD uwRowCnt) {
+ static void copyWithBlitter(UBYTE *pSrc, UBYTE *pDst, UWORD uwRowWidth, UWORD uwRowCnt) {
 	// Modulo: 0, 'cuz 2nd line will go from 1st, 3rd from 2nd etc.
 	WaitBlit();
 	custom.bltcon0 = USEA|USED|MINTERM_A;

@@ -13,7 +13,7 @@ typedef struct _tExplosion {
 	tBob *pBob;
 } tExplosion;
 
-tExplosion s_pExplosions[EXPLOSIONS_MAX];
+static tExplosion s_pExplosions[EXPLOSIONS_MAX];
 static tBitMap *s_pBitmap;
 static tBitMap *s_pMask;
 

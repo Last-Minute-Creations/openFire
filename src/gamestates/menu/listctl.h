@@ -1,5 +1,5 @@
 #ifndef OF_GAMESTATES_MENU_LISTCTL_H
-#define OF_GAMESTATES_MENU_LISTCTLL_H
+#define OF_GAMESTATES_MENU_LISTCTL_H
 
 #include <ace/types.h>
 #include <ace/utils/font.h>
@@ -56,4 +56,4 @@ FUBYTE listCtlProcessClick(
 	IN UWORD uwMouseY
 );
 
-#endif // OF_GAMESTATES_MENU_LISTCTRL_H
+#endif // OF_GAMESTATES_MENU_LISTCTL_H

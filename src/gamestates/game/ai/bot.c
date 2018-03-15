@@ -109,11 +109,11 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 	botSay(pBot, "Ich bin ein computer");
 }
 
-void botRemoveByPtr(tBot *pBot) {
+static void botRemoveByPtr(tBot *pBot) {
 	astarDestroy(pBot->pNavData);
 }
 
-void botRemoveByName(const char *szName) {
+static void botRemoveByName(const char *szName) {
 	for(UBYTE i = 0; i < s_fubBotCount; ++i) {
 		if(!strcmp(s_pBots[i].pPlayer->szName, szName)) {
 			botRemoveByPtr(&s_pBots[i]);
@@ -124,8 +124,8 @@ void botRemoveByName(const char *szName) {
 
 /**
  * Finds next destination for AI's vehicle and sets up pathfinding data.
- * @param pBot: Pointer to bot.
- * @param pDestToEvade: Node which shouldn't be used as next destination.
+ * @param pBot  Pointer to bot.
+ * @param pDestToEvade Node which shouldn't be used as next destination.
  * @return Pointer to first node on new route.
  */
 static tAiNode *botFindNewTarget(tBot *pBot, tAiNode *pDestToEvade) {
@@ -175,8 +175,8 @@ static tTurret *botTargetNearbyTurret(tBot *pBot, UBYTE ubEnemyTeam) {
 
 	tBCoordYX *pTargetingOrder = s_pTargetingOrders[ubOctant];
 	for(UBYTE i = 0; i != BOT_TARGETING_FLAT_SIZE; ++i) {
-		UWORD uwTurretX = uwBotTileX + pTargetingOrder[i].bX;
-		UWORD uwTurretY = uwBotTileY + pTargetingOrder[i].bY;
+		UWORD uwTurretX = (UWORD)(uwBotTileX + pTargetingOrder[i].bX);
+		UWORD uwTurretY = (UWORD)(uwBotTileY + pTargetingOrder[i].bY);
 		if(g_pTurretTiles[uwTurretX][uwTurretY] == TURRET_INVALID)
 			continue;
 		tTurret *pTurret = &g_pTurrets[g_pTurretTiles[uwTurretX][uwTurretY]];
@@ -222,7 +222,7 @@ static UBYTE botTarget(tBot *pBot) {
 	return 0;
 }
 
-void botProcessDriving(tBot *pBot) {
+static void botProcessDriving(tBot *pBot) {
 	switch(pBot->ubState) {
 		case AI_BOT_STATE_IDLE:
 			if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
@@ -232,14 +232,14 @@ void botProcessDriving(tBot *pBot) {
 				if(!astarProcess(pBot->pNavData))
 					break;
 				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
-				pBot->uwNextX = (pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-				pBot->uwNextY = (pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextX = (UWORD)((pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
+				pBot->uwNextY = (UWORD)((pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
 				botSay(pBot, "Going to %hu,%hu\n", pNextNode->fubX, pNextNode->fubY);
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			}
 			break;
-		case AI_BOT_STATE_MOVING_TO_NODE:
+		case AI_BOT_STATE_MOVING_TO_NODE: {
 			// Update target angle
 			if(pBot->ubTick == 10) {
 				pBot->ubTick = 0;
@@ -264,7 +264,9 @@ void botProcessDriving(tBot *pBot) {
 			}
 
 			// Steer to proper angle
-			BYTE bDir = getDeltaAngleDirection(pBot->pPlayer->sVehicle.ubBodyAngle, pBot->ubNextAngle, 1);
+			BYTE bDir = (BYTE)getDeltaAngleDirection(
+				pBot->pPlayer->sVehicle.ubBodyAngle, pBot->ubNextAngle, 1
+			);
 			if(bDir) {
 				if(bDir > 0) {
 					pBot->pPlayer->sSteerRequest.ubLeft = 0;
@@ -280,12 +282,12 @@ void botProcessDriving(tBot *pBot) {
 			// Check field in front for collisions
 			pBot->pPlayer->sSteerRequest.ubLeft = 0;
 			pBot->pPlayer->sSteerRequest.ubRight = 0;
-			UWORD uwChkX = pBot->pPlayer->sVehicle.uwX + fix16_to_int(
+			UWORD uwChkX = (UWORD)(pBot->pPlayer->sVehicle.uwX + fix16_to_int(
 				MAP_FULL_TILE * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
-			);
-			UWORD uwChkY = pBot->pPlayer->sVehicle.uwY + fix16_to_int(
+			));
+			UWORD uwChkY = (UWORD)(pBot->pPlayer->sVehicle.uwY + fix16_to_int(
 				MAP_FULL_TILE * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
-			);
+			));
 			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_HALF_TILE)) {
 				pBot->ubState = AI_BOT_STATE_BLOCKED;
 				pBot->ubTick = 0;
@@ -295,7 +297,7 @@ void botProcessDriving(tBot *pBot) {
 
 			// Move until close to node
 			pBot->pPlayer->sSteerRequest.ubForward = 1;
-			break;
+		} break;
 		case AI_BOT_STATE_NODE_REACHED:
 			if(!pBot->pNavData->sRoute.ubCurrNode) {
 				// Last node from route - hold pos
@@ -307,8 +309,8 @@ void botProcessDriving(tBot *pBot) {
 				// Get next node from route
 				--pBot->pNavData->sRoute.ubCurrNode;
 				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
-				pBot->uwNextX = (pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE;
-				pBot->uwNextY = (pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE;
+				pBot->uwNextX = (UWORD)((pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
+				pBot->uwNextY = (UWORD)((pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 				botSay(
@@ -336,12 +338,12 @@ void botProcessDriving(tBot *pBot) {
 				++pBot->ubTick;
 			break;
 		case AI_BOT_STATE_BLOCKED: {
-			UWORD uwChkX = pBot->pPlayer->sVehicle.uwX + fix16_to_int(
+			UWORD uwChkX = (UWORD)(pBot->pPlayer->sVehicle.uwX + fix16_to_int(
 				(3*MAP_FULL_TILE)/2 * ccos(pBot->pPlayer->sVehicle.ubBodyAngle)
-			);
-			UWORD uwChkY = pBot->pPlayer->sVehicle.uwY + fix16_to_int(
+			));
+			UWORD uwChkY = (UWORD)(pBot->pPlayer->sVehicle.uwY + fix16_to_int(
 				(3*MAP_FULL_TILE)/2 * csin(pBot->pPlayer->sVehicle.ubBodyAngle)
-			);
+			));
 			if(playerAnyNearPoint(uwChkX, uwChkY, MAP_FULL_TILE)) {
 				if(pBot->ubTick == 50) {
 					// Change target & route
@@ -360,7 +362,7 @@ void botProcessDriving(tBot *pBot) {
 	}
 }
 
-void botProcessAiming(tBot *pBot) {
+static void botProcessAiming(tBot *pBot) {
 	if(botTarget(pBot)) {
 		pBot->pPlayer->sSteerRequest.ubAction1 = 1;
 	}
@@ -369,7 +371,7 @@ void botProcessAiming(tBot *pBot) {
 	}
 }
 
-void botProcessLimbo(tBot *pBot) {
+static void botProcessLimbo(tBot *pBot) {
 	if(pBot->pNavData->ubState == ASTAR_STATE_OFF) {
 		// Find some place to go - e.g. capture point
 		tAiNode *pFirstNode = botFindNewTarget(pBot, 0);

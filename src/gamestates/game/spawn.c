@@ -107,7 +107,6 @@ void spawnSim(void) {
 
 void spawnAnimate(UBYTE ubSpawnIdx) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
-	UBYTE ubFrameIdx;
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
 	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)

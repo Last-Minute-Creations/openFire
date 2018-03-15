@@ -45,7 +45,7 @@ typedef struct _tTileCoord {
 	UBYTE ubY;
 } tTileCoord;
 
-void worldMapCreate();
+void worldMapCreate(void);
 
 void worldMapDestroy(void);
 

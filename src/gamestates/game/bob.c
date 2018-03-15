@@ -102,7 +102,6 @@ void bobChangeFrame(tBob *pBob, FUBYTE fubFrameIdx) {
 UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest) {
 	if(pBob->ubState == BOB_STATE_NODRAW || pBob->ubState == BOB_STATE_START_DRAWING || !pBob->isDrawn)
 		return 0;
-	UWORD uwFrameDy, uwFrameHeight;
 	blitCopyAligned(
 		pBob->pBg, 0, 0,
 		pDest->pBuffer, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0,

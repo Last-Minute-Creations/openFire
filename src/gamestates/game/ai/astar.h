@@ -40,7 +40,7 @@ tAstarData *astarCreate(void);
 
 /**
  * Frees A* data structure.
- * @param pNav: A* data structure to be freed.
+ * @param pNav A* data structure to be freed.
  */
 void astarDestroy(
 	IN tAstarData *pNav
@@ -48,8 +48,9 @@ void astarDestroy(
 
 /**
  * Prepares A* initial conditions.
- * @param pNav: A* data struct to be used.
- * @param pNodeSrc: route's first node
+ * @param pNav A* data struct to be used.
+ * @param pNodeSrc Route's first node.
+ * @param pNodeDst Route's destination node.
  */
 void astarStart(
 	IN tAstarData *pNav,

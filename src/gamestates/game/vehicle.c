@@ -64,7 +64,7 @@ void vehicleUnset(tVehicle *pVehicle) {
 	pVehicle->pAuxBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
-UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
+static UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
 	// Don't check AI since it stops before driving into vehicles
 	if(playerGetByVehicle(pVehicle) != g_pLocalPlayer)
 		return 0;
@@ -133,14 +133,12 @@ UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, 
 	return 0;
 }
 
-UBYTE vehicleCollidesWithWall(UWORD uwX, UWORD uwY, tBCoordYX *pCollisionPoints) {
+static UBYTE vehicleCollidesWithWall(UWORD uwX, UWORD uwY, tBCoordYX *pCollisionPoints) {
 	UBYTE p;
-	UBYTE ubLogicTile;
-	UWORD uwPX, uwPY;
 	for(p = 0; p != 8; ++p) {
-		uwPX = uwX + pCollisionPoints[p].bX;
-		uwPY = uwY + pCollisionPoints[p].bY;
-		ubLogicTile = g_sMap.pData[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
+		UWORD uwPX = uwX + pCollisionPoints[p].bX;
+		UWORD uwPY = uwY + pCollisionPoints[p].bY;
+		UBYTE ubLogicTile = g_sMap.pData[uwPX >> MAP_TILE_SIZE][uwPY >> MAP_TILE_SIZE].ubIdx;
 		if(
 			ubLogicTile == MAP_LOGIC_WALL    ||
 			ubLogicTile == MAP_LOGIC_SENTRY0 ||
