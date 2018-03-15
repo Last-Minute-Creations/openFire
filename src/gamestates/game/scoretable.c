@@ -47,15 +47,15 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-		&pCopLc[1].uwHi, ulHudListAddr >> 16
+		&g_pCopLc[1].uwHi, ulHudListAddr >> 16
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
+		&g_pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-		&custom.copjmp2, 1
+		&g_pCustom->copjmp2, 1
 	);
 
 	// Jump to HUD - front buffer to front buffer
@@ -64,15 +64,15 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-		&pCopLc[1].uwHi, (UWORD)(ulHudListAddr >> 16)
+		&g_pCopLc[1].uwHi, (UWORD)(ulHudListAddr >> 16)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
+		&g_pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-		&custom.copjmp2, 1
+		&g_pCustom->copjmp2, 1
 	);
 
 	// Add a border

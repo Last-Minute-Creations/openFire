@@ -31,8 +31,8 @@ void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCo
 	ULONG ulSprAddr = (ULONG)((UBYTE*)pSpriteBfr);
 	if(pView->pCopList->ubMode == COPPER_MODE_RAW) {
 		tCopCmd *pCrossList = &pView->pCopList->pBackBfr->pList[uwRawCopPos];
-		copSetMove(&pCrossList[0].sMove, &pSprPtrs[fubSpriteIdx].uwHi, ulSprAddr >> 16);
-		copSetMove(&pCrossList[1].sMove, &pSprPtrs[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
+		copSetMove(&pCrossList[0].sMove, &g_pSprFetch[fubSpriteIdx].uwHi, ulSprAddr >> 16);
+		copSetMove(&pCrossList[1].sMove, &g_pSprFetch[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
 		CopyMemQuick(
 			&pView->pCopList->pBackBfr->pList[uwRawCopPos],
 			&pView->pCopList->pFrontBfr->pList[uwRawCopPos],
@@ -41,8 +41,8 @@ void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCo
 	}
 	else {
 		tCopBlock *pBlock = copBlockCreate(pView->pCopList, 2, 0, 0);
-		copMove(pView->pCopList, pBlock, &pSprPtrs[fubSpriteIdx].uwHi, ulSprAddr >> 16);
-		copMove(pView->pCopList, pBlock, &pSprPtrs[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
+		copMove(pView->pCopList, pBlock, &g_pSprFetch[fubSpriteIdx].uwHi, ulSprAddr >> 16);
+		copMove(pView->pCopList, pBlock, &g_pSprFetch[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
 	}
 }
 
