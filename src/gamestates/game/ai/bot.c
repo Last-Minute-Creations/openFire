@@ -83,8 +83,9 @@ void botManagerCreate(FUBYTE fubBotLimit) {
 
 void botManagerDestroy(void) {
 	logBlockBegin("botManagerDestroy()");
-	for(UBYTE i = s_fubBotCount; i--;)
+	for(UBYTE i = s_fubBotCount; i--;) {
 		astarDestroy(s_pBots[i].pNavData);
+	}
 	memFree(s_pBots, sizeof(tBot) * s_fubBotLimit);
 	logBlockEnd("botManagerDestroy()");
 }
