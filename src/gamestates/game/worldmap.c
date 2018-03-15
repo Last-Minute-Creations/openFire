@@ -115,9 +115,9 @@ void worldMapCreate() {
 	worldMapGenerateLogic();
 
 	// Read remaining JSON data
-	tJson *pMapJson = mapJsonCreate(g_sMap.szPath);
+	tJson *pMapJson = jsonCreate(g_sMap.szPath);
 	mapJsonReadControlPoints(pMapJson);
-	mapJsonDestroy(pMapJson);
+	jsonDestroy(pMapJson);
 
 	logBlockEnd("mapCreate()");
 }

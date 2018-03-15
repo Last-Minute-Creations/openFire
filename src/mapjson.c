@@ -5,125 +5,62 @@
 #include "gamestates/game/control.h"
 #include "gamestates/game/building.h"
 
-tJson *mapJsonCreate(char *szFilePath) {
-	logBlockBegin("mapJsonCreate(szFilePath: %s)", szFilePath);
-	tJson *pJson = memAllocFast(sizeof(tJson));
-
-	// Read whole file to string
-	FILE *pMapFile = fopen(szFilePath, "rb");
-	if(!pMapFile)
-		logWrite("ERR: File doesn't exist: '%s'\n", szFilePath);
-	fseek(pMapFile, 0, SEEK_END);
-	ULONG ulFileSize = ftell(pMapFile);
-	fseek(pMapFile, 0, SEEK_SET);
-
-	pJson->szData = memAllocFast(ulFileSize+1);
-	fread(pJson->szData, 1, ulFileSize, pMapFile);
-	pJson->szData[ulFileSize] = '\0';
-	fclose(pMapFile);
-
-	jsmn_parser sJsonParser;
-	jsmn_init(&sJsonParser);
-
-	// Count tokens & alloc
-	pJson->fwTokenCount = jsmn_parse(&sJsonParser, pJson->szData, ulFileSize+1, 0, 0);
-	if(pJson->fwTokenCount < 0) {
-		logWrite(
-			"ERR: JSON during token counting: %"PRI_FWORD"\n", pJson->fwTokenCount
-		);
-		logBlockEnd("mapJsonCreate()");
-		return 0;
-	}
-	pJson->pTokens = memAllocFast(pJson->fwTokenCount * sizeof(jsmntok_t));
-
-	// Read tokens
-	jsmn_init(&sJsonParser);
-	FWORD fwResult = jsmn_parse(
-		&sJsonParser, pJson->szData, ulFileSize+1, pJson->pTokens, pJson->fwTokenCount
-	);
-	if(fwResult < 0) {
-		logWrite("ERR: JSON during tokenize: %"PRI_FWORD"\n", fwResult);
-		logBlockEnd("mapJsonCreate()");
-		return 0;
-	}
-
-	logBlockEnd("mapJsonCreate()");
-	return pJson;
-}
-
-void mapJsonDestroy(tJson *pJson) {
-	memFree(pJson->pTokens, sizeof(jsmntok_t) * pJson->fwTokenCount);
-	memFree(pJson->szData, strlen(pJson->szData) + 1);
-	memFree(pJson, sizeof(tJson));
-}
-
-void mapJsonGetMeta(tJson *pJson, tMap *pMap) {
+UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 	logBlockBegin(
 		"mapJsonGetMeta(pJson: %p, pMap: %p",
 		pJson, pMap
 	);
-	for(FUWORD i = 1; i < pJson->fwTokenCount; ++i) { // Skip first gigantic obj
-		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
-		if(pJson->pTokens[i].type != JSMN_STRING)
-			continue;
-		// Read property name
-		if(!memcmp(pJson->szData + pJson->pTokens[i].start, "width", fuwWidth))
-			pMap->fubWidth = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-		else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "height", fuwWidth))
-			pMap->fubHeight = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-		else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "controlPoints", fuwWidth))
-			pMap->fubControlPointCount = pJson->pTokens[++i].size;
+
+	UWORD uwTokWidth = jsonGetDom(pJson, "width");
+	UWORD uwTokHeight = jsonGetDom(pJson, "height");
+	UWORD uwTokPts = jsonGetDom(pJson, "controlPoints");
+
+	if(!uwTokWidth || !uwTokHeight || !uwTokPts) {
+		logWrite("ERR: Malformed JSON!");
+		logBlockEnd("mapJsonGetMeta()");
+		return 0;
 	}
+
+	pMap->fubWidth = jsonTokToUlong(pJson, uwTokWidth, 10);
+	pMap->fubHeight = jsonTokToUlong(pJson, uwTokHeight, 10);
+	pMap->fubControlPointCount = pJson->pTokens[uwTokPts].size;
+
 	logBlockEnd("mapJsonGetMeta()");
+	return 1;
 }
 
-void mapJsonReadTiles(tJson *pJson,	tMap *pMap) {
-	// Find 'tiles' in JSON
-	FUBYTE fubFound = 0;
-	FUWORD i;
-	for(i = 1; i < pJson->fwTokenCount && !fubFound; ++i) { // Skip first obj
-		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
-		if(pJson->pTokens[i].type != JSMN_STRING)
-			continue;
-		if(memcmp(pJson->szData + pJson->pTokens[i].start, "tiles", fuwWidth))
-			continue;
-		fubFound = 1;
-	}
-	if(!fubFound) {
+void mapJsonReadTiles(const tJson *pJson, tMap *pMap) {
+	UWORD uwTokTiles = jsonGetDom(pJson, "tiles");
+	if(!uwTokTiles) {
 		logWrite("ERR: JSON 'tiles' array not found!\n");
 	}
 
 	// Tiles found - check row count
-	if(pJson->pTokens[i].size != pMap->fubHeight) {
+	if(pJson->pTokens[uwTokTiles].size != pMap->fubHeight) {
 		logWrite(
-			"ERR: Only %d rows provided, %"PRI_FUBYTE"expected\n",
-			pJson->pTokens[i].size, pMap->fubHeight
+			"ERR: tile rows provided: %d, expected %"PRI_FUBYTE"\n",
+			pJson->pTokens[uwTokTiles].size, pMap->fubHeight
 		);
 		return;
 	}
 
 	// Do some reading
 	pMap->fubSpawnCount = 0;
+	UWORD uwTokRow = jsonGetElementInArray(pJson, uwTokTiles, 0);
 	for(FUBYTE y = 0; y < pMap->fubHeight; ++y) {
-		++i;
-		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
-
-		// Sanity check
-		if(pJson->pTokens[i].type != JSMN_STRING) {
-			logWrite("ERR: Unexpected row type @y %"PRI_FUBYTE": %d\n", y, pJson->pTokens[i].type);
-			return;
-		}
-		if(fuwWidth != pMap->fubWidth) {
+		jsmntok_t *pTokRow = &pJson->pTokens[uwTokRow+y];
+		FUWORD fuwWidth = pTokRow->end - pTokRow->start;
+		if(pTokRow->type != JSMN_STRING || fuwWidth != pMap->fubWidth) {
 			logWrite(
-				"ERR: Row @y %"PRI_FUBYTE" is too short: %"PRI_FUWORD", expected %"PRI_FUBYTE"\n",
-				y, fuwWidth, pMap->fubWidth
+				"ERR: Malformed row @y %"PRI_FUBYTE": %d(%"PRI_FUBYTE")\n",
+				y, pTokRow->type, fuwWidth
 			);
 			return;
 		}
 
-		// Read row
+		// Read row to logic tiles
 		for(FUBYTE x = 0; x < fuwWidth; ++x) {
-			pMap->pData[x][y].ubIdx = (UBYTE)pJson->szData[pJson->pTokens[i].start + x];
+			pMap->pData[x][y].ubIdx = (UBYTE)pJson->szData[pTokRow->start + x];
 			pMap->pData[x][y].ubData = BUILDING_IDX_INVALID;
 			if(
 				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
@@ -137,107 +74,94 @@ void mapJsonReadTiles(tJson *pJson,	tMap *pMap) {
 	}
 }
 
-void mapJsonReadControlPoints(tJson *pJson) {
+void mapJsonReadControlPoints(const tJson *pJson) {
 	logBlockBegin("mapJsonReadControlPoints(pJson: %p)", pJson);
-	// Find 'controlPoints' in JSON
-	FUBYTE fubFound = 0;
-	FUWORD i;
-	for(i = 1; i < pJson->fwTokenCount && !fubFound; ++i) { // Skip first obj
-		if(pJson->pTokens[i].type != JSMN_STRING)
-			continue;
-		FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
-		if(memcmp(pJson->szData + pJson->pTokens[i].start, "controlPoints", fuwWidth))
-			continue;
-		fubFound = 1;
-	}
-	if(!fubFound) {
-		logWrite("ERR: JSON 'controlPoints' property not found!\n");
-		goto end;
+	UWORD uwTokPts = jsonGetDom(pJson, "controlPoints");
+	if(!uwTokPts || pJson->pTokens[uwTokPts].type != JSMN_ARRAY) {
+		logWrite("ERR: JSON controlPoints array not found!\n");
+		logBlockEnd("mapJsonReadControlPoints()");
+		return;
 	}
 
-	// Sanity check
-	if(pJson->pTokens[i].type != JSMN_ARRAY) {
-		logWrite("ERR: Value of 'controlPoints' is not an array (%d)!\n", pJson->pTokens[i].type);
-		goto end;
-	}
-	FUBYTE fubControlPointCount = pJson->pTokens[i].size;
-	for(FUBYTE pt = 0; pt != fubControlPointCount; ++pt) {
-		++i;
-		if(pJson->pTokens[i].type != JSMN_OBJECT) {
-			logWrite("ERR: Expected object\n");
-			goto end;
+	FUBYTE fubControlPointCount = pJson->pTokens[uwTokPts].size;
+	for(FUBYTE fubPt = 0; fubPt != fubControlPointCount; ++fubPt) {
+		UWORD uwTokPoint = jsonGetElementInArray(pJson, uwTokPts, fubPt);
+		if(!uwTokPoint || pJson->pTokens[uwTokPoint].type != JSMN_OBJECT) {
+			logWrite("ERR: Malformed control point: %"PRI_FUBYTE"\n", fubPt);
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
 		}
-		if(pJson->pTokens[i].size != 3) {
-			logWrite("ERR: Child count: %d, expected %d\n", pJson->pTokens[i].size, 3);
-			goto end;
+
+		UWORD uwTokPtName = jsonGetElementInStruct(pJson, uwTokPoint, "name");
+		UWORD uwTokPtCapture = jsonGetElementInStruct(pJson, uwTokPoint, "capture");
+		UWORD uwTokPtPoly = jsonGetElementInStruct(pJson, uwTokPoint, "polygon");
+		if(!uwTokPtName || !uwTokPtCapture || !uwTokPtPoly) {
+			logWrite("ERR: Missing properties in control point: %"PRI_FUBYTE"\n", fubPt);
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
 		}
-		char szControlName[CONTROL_NAME_MAX] = "";
-		FUBYTE fubCaptureX = 0, fubCaptureY = 0;
-		FUBYTE fubPolyPointCnt = 0;
-		tUbCoordYX pPolyPoints[10];
-		for(FUBYTE ch = 0; ch != 3; ++ch) {
-			++i;
-			FUWORD fuwWidth = pJson->pTokens[i].end - pJson->pTokens[i].start;
-			if(!memcmp(pJson->szData + pJson->pTokens[i].start, "name", fuwWidth)) {
-				++i;
-				FUBYTE fubNameLength = MIN(pJson->pTokens[i].end - pJson->pTokens[i].start, CONTROL_NAME_MAX-1);
-				memcpy(
-					szControlName, pJson->szData + pJson->pTokens[i].start,
-					fubNameLength
+
+		// Name
+		char szControlName[CONTROL_NAME_MAX];
+		jsonTokStrCpy(pJson, uwTokPtName, szControlName, CONTROL_NAME_MAX);
+
+		// Control point
+		if(
+			pJson->pTokens[uwTokPtCapture].type != JSMN_ARRAY ||
+			pJson->pTokens[uwTokPtCapture].size != 2
+		) {
+			logWrite(
+				"ERR: capture point not a point: '%.*s'\n",
+				pJson->pTokens[uwTokPtCapture].end - pJson->pTokens[uwTokPtCapture].start,
+				pJson->szData + pJson->pTokens[uwTokPtCapture].start
+			);
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
+		}
+		FUBYTE fubCaptureX = jsonTokToUlong(pJson, uwTokPtCapture+1, 10);
+		FUBYTE fubCaptureY = jsonTokToUlong(pJson, uwTokPtCapture+2, 10);
+
+		// Polygon
+		FUBYTE fubPolyPointCnt = pJson->pTokens[uwTokPtPoly].size;
+		tUbCoordYX *pPolyPoints = memAllocFast(fubPolyPointCnt * sizeof(tUbCoordYX));
+		for(FUBYTE pp = 0; pp != fubPolyPointCnt; ++pp) {
+			UWORD uwTokPolyPoint = jsonGetElementInArray(pJson, uwTokPtPoly, pp);
+			if(
+				!uwTokPolyPoint ||
+				pJson->pTokens[uwTokPolyPoint].type != JSMN_ARRAY ||
+				pJson->pTokens[uwTokPolyPoint].size != 2
+			) {
+				logWrite(
+					"ERR: polygon point not a point %"PRI_FUBYTE" (%d): '%.*s'",
+					pp, pJson->pTokens[uwTokPolyPoint].type,
+					pJson->pTokens[uwTokPolyPoint].end - pJson->pTokens[uwTokPolyPoint].start,
+					pJson->szData + pJson->pTokens[uwTokPolyPoint].start
 				);
-				szControlName[fubNameLength] = '\0';
+				memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
+				logBlockEnd("mapJsonReadControlPoints()");
+				return;
 			}
-			else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "capture", fuwWidth)) {
-				// Capture point
-				++i;
-				if(pJson->pTokens[i].type != JSMN_ARRAY || pJson->pTokens[i].size != 2) {
-					logWrite(
-						"ERR: polygon point not a point: %.*s",
-						pJson->pTokens[i].end - pJson->pTokens[i].start, pJson->szData + pJson->pTokens[i].start
-					);
-					goto end;
-				}
-				fubCaptureX = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-				fubCaptureY = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-			}
-			else if(!memcmp(pJson->szData + pJson->pTokens[i].start, "polygon", fuwWidth)) {
-				// Polygon points
-				fubPolyPointCnt = pJson->pTokens[++i].size;
-				if(fubPolyPointCnt >= 10-1) {
-					logWrite(
-						"ERR: too much poly points: %"PRI_FUBYTE"\n", fubPolyPointCnt
-					);
-					goto end;
-				}
-				for(FUBYTE pp = 0; pp != fubPolyPointCnt; ++pp) {
-					++i;
-					if(pJson->pTokens[i].type != JSMN_ARRAY || pJson->pTokens[i].size != 2) {
-						logWrite(
-							"ERR: polygon point not a point: %.*s",
-							pJson->pTokens[i].end - pJson->pTokens[i].start, pJson->szData + pJson->pTokens[i].start
-						);
-						goto end;
-					}
-					pPolyPoints[pp].sUbCoord.ubX = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-					pPolyPoints[pp].sUbCoord.ubY = strtoul(pJson->szData + pJson->pTokens[++i].start, 0, 10);
-				}
-			}
-			else {
-				logWrite("ERR: Unknown attribute: %.*s\n", pJson->szData + pJson->pTokens[i].start);
-				goto end;
-			}
+			pPolyPoints[pp].sUbCoord.ubX = jsonTokToUlong(pJson, uwTokPolyPoint+1, 10);
+			pPolyPoints[pp].sUbCoord.ubY = jsonTokToUlong(pJson, uwTokPolyPoint+2, 10);
 		}
+
 		if(!fubPolyPointCnt) {
-			logWrite("ERR: No polygon points supplied @point %"PRI_FUBYTE"!\n", pt);
-			goto end;
+			logWrite("ERR: No polygon points supplied @point %"PRI_FUBYTE"!\n", fubPt);
+			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
 		}
 		if(!fubCaptureX && !fubCaptureY) {
-			logWrite("ERR: No capture point supplied @point %"PRI_FUBYTE"!\n", pt);
-			goto end;
+			logWrite("ERR: No capture point supplied @point %"PRI_FUBYTE"!\n", fubPt);
+			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
 		}
 		if(!strlen(szControlName)) {
-			logWrite("ERR: No control point name! @point %"PRI_FUBYTE"\n", pt);
-			goto end;
+			logWrite("ERR: No control point name! @point %"PRI_FUBYTE"\n", fubPt);
+			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
 		}
 		// Close polygon
 		++fubPolyPointCnt;
@@ -245,8 +169,6 @@ void mapJsonReadControlPoints(tJson *pJson) {
 		controlAddPoint(
 			szControlName, fubCaptureX, fubCaptureY, fubPolyPointCnt, pPolyPoints
 		);
+		memFree(pPolyPoints, (fubPolyPointCnt-1) * sizeof(tUbCoordYX));
 	}
-
-end:
-	logBlockEnd("mapJsonReadControlPoints()");
 }
