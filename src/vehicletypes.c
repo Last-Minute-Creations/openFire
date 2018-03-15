@@ -26,7 +26,7 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	FILE *pBitmapFile = fopen(szBitmapFileName, "rb");
 	FILE *pChecksumFile = fopen(szChecksumFileName, "rb");
 	if(pChecksumFile && pBitmapFile) {
-		ULONG ulPrevAdlerBm, ulPrevAdlerMask;
+		ULONG ulPrevAdlerBm;
 		fread(&ulPrevAdlerBm, sizeof(ULONG), 1, pChecksumFile);
 		fclose(pChecksumFile);
 		fclose(pBitmapFile);
@@ -70,7 +70,6 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	bitmapDestroy(pFirstFrame);
 
 	// Convert first frame to chunky
-	UWORD uwMaskChunk;
 	for(UWORD y = 0; y != uwFrameWidth; ++y) {
 		// Read bitmap row to chunky
 		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*uwFrameWidth]);
@@ -115,9 +114,8 @@ fail:
 	return 0;
 }
 
-void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UBYTE isAux) {
+static void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UBYTE isAux) {
 	char szFilePath[100];
-	tBitMap *pSrcFrame;
 
 	sprintf(szFilePath, "vehicles/%s/main_blue.bm", szVehicleName);
 	pType->pMainFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames(szFilePath);
@@ -144,7 +142,7 @@ void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UBYTE isA
 	}
 }
 
-void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
+static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockBegin(
 		"vehicleTypeGenerateRotatedCollisions(pFrameCollisions: %p)", pFrameCollisions
 	);
@@ -191,7 +189,7 @@ void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }
 
-tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
+static tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
 	tBobFrameOffset *pOffsets = memAllocFast(
 		sizeof(tBobFrameOffset) * VEHICLE_BODY_ANGLE_COUNT
 	);
@@ -226,7 +224,6 @@ tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
  */
 void vehicleTypesCreate(void) {
 	tVehicleType *pType;
-	UBYTE i;
 
 	logBlockBegin("vehicleTypesCreate");
 
@@ -304,7 +301,7 @@ void vehicleTypesCreate(void) {
 	logBlockEnd("vehicleTypesCreate");
 }
 
-void vehicleTypeUnloadFrameData(tVehicleType *pType) {
+static void vehicleTypeUnloadFrameData(tVehicleType *pType) {
 	memFree(
 		pType->pMainFrameOffsets,
 		VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
@@ -327,8 +324,6 @@ void vehicleTypeUnloadFrameData(tVehicleType *pType) {
 }
 
 void vehicleTypesDestroy(void) {
-	tVehicleType *pType;
-
 	logBlockBegin("vehicleTypesDestroy()");
 
 	// Free bob sources

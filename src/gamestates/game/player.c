@@ -61,7 +61,7 @@ void playerListDestroy(void) {
 	logBlockEnd("playerListDestroy()");
 }
 
-void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
+static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	if(fubSpawnIdx == SPAWN_INVALID)
 		fubSpawnIdx = pPlayer->ubSpawnIdx = spawnGetNearest(
 			pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
@@ -237,7 +237,7 @@ void playerLocalProcessInput(void) {
 	}
 }
 
-UBYTE playerCheckDeathFromSpawn(tPlayer *pPlayer) {
+static UBYTE playerCheckDeathFromSpawn(tPlayer *pPlayer) {
 	tBCoordYX *pCollisionPts = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1].pPts;
 
 	// Unrolling for best results
@@ -274,7 +274,6 @@ kill:
 void playerSimVehicle(tPlayer *pPlayer) {
 	tVehicle *pVehicle;
 	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
-	UWORD uwSiloDx, uwSiloDy;
 	UBYTE ubTileType;
 
 	pVehicle = &pPlayer->sVehicle;
@@ -306,8 +305,8 @@ void playerSimVehicle(tPlayer *pPlayer) {
 			(pPlayer->ubTeam == TEAM_BLUE && ubTileType == MAP_LOGIC_SPAWN1) ||
 			(pPlayer->ubTeam == TEAM_RED && ubTileType == MAP_LOGIC_SPAWN2)
 		) {
-			uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
-			uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
+			UWORD uwSiloDx = uwVx & (MAP_FULL_TILE - 1);
+			UWORD uwSiloDy = uwVy & (MAP_FULL_TILE - 1);
 			if(
 				pPlayer == g_pLocalPlayer &&
 				uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18

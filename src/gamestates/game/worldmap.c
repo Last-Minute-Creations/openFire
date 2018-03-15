@@ -10,18 +10,18 @@
 #include "gamestates/game/turret.h"
 #include "gamestates/game/control.h"
 
-tTileCoord g_pTilesToRedraw[9] = {{0, 0}};
-UBYTE g_ubPendingTileCount;
+static tTileCoord s_pTilesToRedraw[9] = {{0, 0}};
+static UBYTE s_ubPendingTileCount;
 
 tBitMap *g_pMapTileset;
-tBitMap *s_pBuffer;
+static tBitMap *s_pBuffer;
 
 void worldMapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
 	g_pMapTileset = pTileset;
 	s_pBuffer = pDst;
 }
 
-UBYTE worldMapIsWater(UBYTE ubMapTile) {
+static UBYTE worldMapIsWater(UBYTE ubMapTile) {
 	return ubMapTile == MAP_LOGIC_WATER;
 }
 
@@ -35,7 +35,7 @@ UBYTE worldMapIsWall(UBYTE ubMapTile) {
 	);
 }
 
-UBYTE worldMapIsRoadFriend(UBYTE ubMapTile) {
+static UBYTE worldMapIsRoadFriend(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_ROAD     ||
 		// ubMapTile == MAP_LOGIC_SPAWN0   ||
@@ -54,7 +54,7 @@ UBYTE worldMapIsRoadFriend(UBYTE ubMapTile) {
 	);
 }
 
-UBYTE worldMapCheckWater(UBYTE ubX, UBYTE ubY) {
+static UBYTE worldMapCheckWater(UBYTE ubX, UBYTE ubY) {
 	UBYTE ubOut;
 	if(ubX && g_sMap.pData[ubX-1][ubY].ubIdx == MAP_LOGIC_WATER) {
 		if(ubY && g_sMap.pData[ubX][ubY-1].ubIdx == MAP_LOGIC_WATER)
@@ -81,7 +81,7 @@ UBYTE worldMapCheckWater(UBYTE ubX, UBYTE ubY) {
 	return ubOut;
 }
 
-UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
+static UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	UBYTE ubTileType;
 	UBYTE ubOut;
 	const UBYTE ubE = 8;
@@ -102,16 +102,14 @@ UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
 	return ubOut;
 }
 
-void worldMapCreate() {
-	UBYTE ubTileIdx;
-	tSimpleBufferManager *pManager;
-
-	logBlockBegin("mapCreate()");
-	g_ubPendingTileCount = 0;
+void worldMapCreate(void) {
+	logBlockBegin("worldMapCreate()");
+	s_ubPendingTileCount = 0;
 
 	buildingManagerReset();
 	controlManagerCreate(g_sMap.fubControlPointCount);
 	spawnManagerCreate(g_sMap.fubSpawnCount);
+	turretListCreate(g_sMap.fubWidth, g_sMap.fubHeight);
 	worldMapGenerateLogic();
 
 	// Read remaining JSON data
@@ -119,13 +117,12 @@ void worldMapCreate() {
 	mapJsonReadControlPoints(pMapJson);
 	jsonDestroy(pMapJson);
 
-	logBlockEnd("mapCreate()");
+	logBlockEnd("worldMapCreate()");
 }
 
 void worldMapGenerateLogic(void) {
 	FUBYTE x, y, ubTileIdx;
 	logBlockBegin("mapGenerateLogic()");
-	turretListCreate();
 	// 2nd data pass - generate additional logic
 	for(x = 0; x != g_sMap.fubWidth; ++x) {
 		for(y = 0; y != g_sMap.fubHeight; ++y) {
@@ -180,7 +177,7 @@ void worldMapGenerateLogic(void) {
 	logBlockEnd("mapGenerateLogic()");
 }
 
-void worldMapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
+static void worldMapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 	blitCopyAligned(
 		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
 		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
@@ -189,11 +186,8 @@ void worldMapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 }
 
 void worldMapRedraw(void) {
-	UBYTE ubTileIdx, ubOutTile;
-
 	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x) {
 		for(FUBYTE y = 0; y != g_sMap.fubHeight; ++y) {
-			ubTileIdx = g_sMap.pData[x][y].ubIdx;
 			worldMapDrawTile(x, y, worldMapTileFromLogic(x, y));
 		}
 	}
@@ -246,20 +240,20 @@ void worldMapDestroy(void) {
 void worldMapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
 	// TODO omit if not visible
 	// TODO when scrolling trick: omit if not yet drawn on redraw margin
-	++g_ubPendingTileCount;
-	g_pTilesToRedraw[g_ubPendingTileCount].ubX = ubTileX;
-	g_pTilesToRedraw[g_ubPendingTileCount].ubY = ubTileY;
+	++s_ubPendingTileCount;
+	s_pTilesToRedraw[s_ubPendingTileCount].ubX = ubTileX;
+	s_pTilesToRedraw[s_ubPendingTileCount].ubY = ubTileY;
 }
 
 /**
  * @todo Redraw proper tile type.
  */
 void worldMapUpdateTiles(void) {
-	while(g_ubPendingTileCount) {
-		FUBYTE fubTileX = g_pTilesToRedraw[g_ubPendingTileCount].ubX;
-		FUBYTE fubTileY = g_pTilesToRedraw[g_ubPendingTileCount].ubY;
+	while(s_ubPendingTileCount) {
+		FUBYTE fubTileX = s_pTilesToRedraw[s_ubPendingTileCount].ubX;
+		FUBYTE fubTileY = s_pTilesToRedraw[s_ubPendingTileCount].ubY;
 		worldMapDrawTile(fubTileX, fubTileY, worldMapTileFromLogic(fubTileX, fubTileY));
-		--g_ubPendingTileCount;
+		--s_ubPendingTileCount;
 	}
 }
 

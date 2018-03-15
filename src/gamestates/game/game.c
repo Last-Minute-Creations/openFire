@@ -69,7 +69,7 @@ static tAvg *s_pProcessAvgHud;
 #endif
 
 ULONG g_ulGameFrame;
-tFont *g_pSmallFont;
+static tFont *s_pSmallFont;
 
 UBYTE g_isLocalBot;
 
@@ -83,7 +83,7 @@ void displayPrepareDriving(void) {
 	hudChangeState(HUD_STATE_DRIVING);
 }
 
-void worldUndraw(void) {
+static void worldUndraw(void) {
 	UBYTE ubPlayer;
 
 	logAvgBegin(s_pUndrawAvgExplosions);
@@ -152,9 +152,9 @@ void gsGameCreate(void) {
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
-	g_pSmallFont = fontCreate("data/silkscreen5.fnt");
-	hudCreate(g_pSmallFont);
-	scoreTableCreate(g_pHudBfr->sCommon.pVPort, g_pSmallFont);
+	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
+	hudCreate(s_pSmallFont);
+	scoreTableCreate(g_pHudBfr->sCommon.pVPort, s_pSmallFont);
 	s_isScoreShown = 0;
 
 	// Enabling sprite DMA
@@ -209,16 +209,17 @@ void gsGameCreate(void) {
 		botAdd("player", TEAM_BLUE);
 		g_pLocalPlayer = &g_pPlayers[0];
 	}
-	else
+	else {
 		g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
+	}
 	botAdd("enemy", TEAM_RED);
 	displayPrepareLimbo();
 
-	// for(FUBYTE i = 0; i != 7; ++i) {
-	// 	char szName[10];
-	// 	sprintf(szName, "player %hhu", i);
-	// 	playerAdd(szName, TEAM_BLUE);
-	// }
+	for(FUBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player %hhu", i);
+		playerAdd(szName, TEAM_BLUE);
+	}
 
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
@@ -230,7 +231,7 @@ void gsGameCreate(void) {
 	logBlockEnd("gsGameCreate()");
 }
 
-void gameSummaryLoop(void) {
+static void gameSummaryLoop(void) {
 	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
@@ -294,7 +295,6 @@ void gsGameLoop(void) {
 	}
 
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
-		UWORD uwLocalX, uwLocalY;
 		cameraCenterAt(
 			g_pWorldCamera,
 			g_pLocalPlayer->sVehicle.uwX & 0xFFFE, g_pLocalPlayer->sVehicle.uwY
@@ -305,8 +305,8 @@ void gsGameLoop(void) {
 		UWORD uwSpawnY = g_pLocalPlayer->sVehicle.uwY;
 		UWORD uwLimboX = MAX(0, uwSpawnX - WORLD_VPORT_WIDTH/2);
 		UWORD uwLimboY = MAX(0, uwSpawnY- WORLD_VPORT_HEIGHT/2);
-		WORD wDx = CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
-		WORD wDy = CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
+		WORD wDx = (WORD)CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
+		WORD wDy = (WORD)CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 
@@ -381,13 +381,13 @@ void gsGameDestroy(void) {
 	cursorDestroy();
 	scoreTableDestroy();
 	hudDestroy();
-	fontDestroy(g_pSmallFont);
+	fontDestroy(s_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
 
-	#ifdef SPEED_LOG
+#ifdef SPEED_LOG
 	logAvgDestroy(s_pUndrawAvgExplosions);
 	logAvgDestroy(s_pUndrawAvgProjectiles);
 	logAvgDestroy(s_pUndrawAvgVehicles);
@@ -405,7 +405,7 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pAvgRedrawControl);
 	logAvgDestroy(s_pAvgUpdateSprites);
 	logAvgDestroy(s_pProcessAvgHud);
-	#endif
+#endif
 
 	worldMapDestroy();
 	playerListDestroy();

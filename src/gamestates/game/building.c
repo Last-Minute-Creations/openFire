@@ -13,9 +13,9 @@
 #define BUILDING_HP_TURRET     100
 #define BUILDING_HP_TURRET_MIN 50
 
-tBuildingManager s_sBuildingManager;
+static tBuildingManager s_sBuildingManager;
 
-const UBYTE s_pBuildingHps[5] = {
+static const UBYTE s_pBuildingHps[5] = {
 	BUILDING_HP_WALL,
 	BUILDING_HP_AMMO,
 	BUILDING_HP_FUEL,
@@ -48,11 +48,11 @@ UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 			// Setup building
 			s_sBuildingManager.pBuildings[ubIdx].ubHp = s_pBuildingHps[ubType];
 			if(ubType == BUILDING_TYPE_TURRET)
-				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = turretAdd(
+				s_sBuildingManager.pBuildings[ubIdx].uwTurretIdx = turretAdd(
 					ubX, ubY,	ubTeam
 				);
 			else
-				s_sBuildingManager.pBuildings[ubIdx].ubTurretIdx = TURRET_INVALID;
+				s_sBuildingManager.pBuildings[ubIdx].uwTurretIdx = TURRET_INVALID;
 			s_sBuildingManager.ubLastIdx = ubIdx;
 			logBlockEnd("buildingAdd()");
 			return ubIdx;
@@ -73,17 +73,17 @@ UBYTE buildingDamage(UBYTE ubIdx, UBYTE ubDamage) {
 	tBuilding *pBuilding = &s_sBuildingManager.pBuildings[ubIdx];
 	if(pBuilding->ubHp <= ubDamage) {
 		pBuilding->ubHp = 0;
-		if(pBuilding->ubTurretIdx != TURRET_INVALID) {
-			turretDestroy(pBuilding->ubTurretIdx);
-			pBuilding->ubTurretIdx = TURRET_INVALID; // TODO: not needed?
+		if(pBuilding->uwTurretIdx != TURRET_INVALID) {
+			turretDestroy(pBuilding->uwTurretIdx);
+			pBuilding->uwTurretIdx = TURRET_INVALID; // TODO: not needed?
 		}
 		// TODO spawn flag
 		return BUILDING_DESTROYED;
 	}
 	pBuilding->ubHp -= ubDamage;
-	if(pBuilding->ubTurretIdx != TURRET_INVALID && pBuilding->ubHp <= BUILDING_HP_TURRET_MIN) {
-		turretDestroy(pBuilding->ubTurretIdx);
-		pBuilding->ubTurretIdx = TURRET_INVALID;
+	if(pBuilding->uwTurretIdx != TURRET_INVALID && pBuilding->ubHp <= BUILDING_HP_TURRET_MIN) {
+		turretDestroy(pBuilding->uwTurretIdx);
+		pBuilding->uwTurretIdx = TURRET_INVALID;
 	}
 	return BUILDING_DAMAGED;
 }

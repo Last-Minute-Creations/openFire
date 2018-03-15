@@ -51,7 +51,7 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
+		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
@@ -64,11 +64,11 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-		&pCopLc[1].uwHi, ulHudListAddr >> 16
+		&pCopLc[1].uwHi, (UWORD)(ulHudListAddr >> 16)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, ulHudListAddr & 0xFFFFF
+		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
@@ -117,7 +117,7 @@ void scoreTableDestroy(void) {
 void scoreTableUpdate(void) {
 	const FUBYTE fubColorBot = 4;
 	for(FUBYTE i = 0; i < g_ubPlayerCount; ++i) {
-		if(&g_pPlayers[i].isBot) {
+		if(g_pPlayers[i].isBot) {
 			fontDrawStr(
 				s_pBfr->pBuffer, s_pFont,	6, 16 + 7*i, "[BOT]",
 				fubColorBot,

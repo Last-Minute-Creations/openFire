@@ -11,14 +11,14 @@
 #define PROJECTILE_BULLET_HEIGHT 2
 #define PROJECTILE_DAMAGE 10
 
-tProjectile *s_pProjectiles;
-FUBYTE s_fubProjectileMaxCount;
-FUBYTE s_fubPrevProjectileAdded;
-tBitMap *s_pBulletBitmap;
-tBitMap *s_pBulletMask;
+static tProjectile *s_pProjectiles;
+static FUBYTE s_fubProjectileMaxCount;
+static FUBYTE s_fubPrevProjectileAdded;
+static tBitMap *s_pBulletBitmap;
+static tBitMap *s_pBulletMask;
 
-fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
-fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
+static fix16_t s_pProjectileDx[VEHICLE_TURRET_ANGLE_COUNT];
+static fix16_t s_pProjectileDy[VEHICLE_TURRET_ANGLE_COUNT];
 
 void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 	logBlockBegin(
@@ -147,8 +147,6 @@ void projectileDraw(void) {
 }
 
 void projectileSim(void) {
-	tVehicle *pVehicle;
-
 	tProjectile *pProjectile;
 	FUBYTE i;
 	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile) {

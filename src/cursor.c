@@ -13,18 +13,20 @@ void cursorUpdate(void) {
 	UWORD uwVStart =0x2B-4 + uwMouseY;
 	UWORD uwVStop = uwVStart + uwCrossHeight;
 
-	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
-	pSpriteBfr[0] = (uwVStart << 8) | (64-(4>>1) + (uwMouseX >> 1));
-	pSpriteBfr[1] = (uwVStop << 8)
-		| (((uwVStart & (1 << 8)) >> 8) << 2)
-		| (((uwVStop  & (1 << 8)) >> 8) << 1)
-		| (uwMouseX & 1);
+	UWORD *pSpriteBfr = (UWORD*)((void*)s_pCrosshair->Planes[0]);
+	pSpriteBfr[0] = (UWORD)((uwVStart << 8) | (64-(4>>1) + (uwMouseX >> 1)));
+	pSpriteBfr[1] = (UWORD)(
+		(uwVStop << 8) |
+		(((uwVStart & (1 << 8)) >> 8) << 2) |
+		(((uwVStop  & (1 << 8)) >> 8) << 1) |
+		(uwMouseX & 1)
+	);
 }
 
 void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCopPos) {
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320, 255);
 	s_pCrosshair = bitmapCreateFromFile(szPath);
-	UWORD *pSpriteBfr = (UWORD*)s_pCrosshair->Planes[0];
+	UWORD *pSpriteBfr = (UWORD*)((void*)s_pCrosshair->Planes[0]);
 	cursorUpdate();
 	ULONG ulSprAddr = (ULONG)((UBYTE*)pSpriteBfr);
 	if(pView->pCopList->ubMode == COPPER_MODE_RAW) {

@@ -13,8 +13,11 @@
 
 tControlPoint *g_pControlPoints;
 FUBYTE g_fubControlPointCount;
-FUBYTE s_fubControlPointMaxCount;
+static FUBYTE s_fubControlPointMaxCount;
 static UWORD s_uwFrameCounter;
+static UBYTE s_ubAllocSpawnCount;
+static UBYTE s_ubAllocTurretCount;
+
 
 void controlManagerCreate(FUBYTE fubPointCount) {
 	logBlockBegin(
@@ -31,14 +34,18 @@ void controlManagerDestroy(void) {
 	logBlockBegin("controlManagerDestroy()");
 	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
-		memFree(pPoint->pSpawns, pPoint->fubSpawnCount * sizeof(FUBYTE));
-		memFree(pPoint->pTurrets, pPoint->fubTurretCount * sizeof(UWORD));
+		if(pPoint->fubSpawnCount) {
+			memFree(pPoint->pSpawns, pPoint->fubSpawnCount * sizeof(FUBYTE));
+		}
+		if(pPoint->fubTurretCount) {
+			memFree(pPoint->pTurrets, pPoint->fubTurretCount * sizeof(UWORD));
+		}
 	}
 	memFree(g_pControlPoints, sizeof(tControlPoint) * s_fubControlPointMaxCount);
 	logBlockEnd("controlManagerDestroy()");
 }
 
-UBYTE ** controlPolygonMaskCreate(
+static UBYTE ** controlPolygonMaskCreate(
 	tControlPoint *pPoint, FUBYTE fubPolyPtCnt, tUbCoordYX *pPolyPts,
 	FUBYTE *pX1, FUBYTE *pY1, FUBYTE *pX2, FUBYTE *pY2
 ) {
@@ -84,32 +91,30 @@ UBYTE ** controlPolygonMaskCreate(
 	return pMask;
 }
 
-void controlPolygonMaskDestroy(UBYTE **pMask) {
-	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+static void controlPolygonMaskDestroy(UBYTE **pMask) {
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x) {
 		memFree(pMask[x], sizeof(UBYTE) * g_sMap.fubHeight);
+	}
 	memFree(pMask, g_sMap.fubWidth * sizeof(UBYTE*));
 }
 
-UBYTE s_ubAllocSpawnCount;
-UBYTE s_ubAllocTurretCount;
-
-void increaseSpawnCount(tControlPoint *pPoint, FUBYTE fubSpawnIdx) {
+static void increaseSpawnCount(tControlPoint *pPoint, FUBYTE fubSpawnIdx) {
 	++s_ubAllocSpawnCount;
 }
 
-void increaseTurretCount(tControlPoint *pPoint, FUBYTE fubTurretIdx) {
+static void increaseTurretCount(tControlPoint *pPoint, FUBYTE fubTurretIdx) {
 	++s_ubAllocTurretCount;
 }
 
-void addSpawn(tControlPoint *pPoint, FUBYTE fubSpawnIdx) {
+static void addSpawn(tControlPoint *pPoint, FUBYTE fubSpawnIdx) {
 	pPoint->pSpawns[pPoint->fubSpawnCount++] = fubSpawnIdx;
 }
 
-void addTurret(tControlPoint *pPoint, FUBYTE fubTurretIdx) {
+static void addTurret(tControlPoint *pPoint, FUBYTE fubTurretIdx) {
 	pPoint->pTurrets[pPoint->fubTurretCount++] = fubTurretIdx;
 }
 
-void controlMaskIterateSpawns(
+static void controlMaskIterateSpawns(
 	UBYTE **pMask, tControlPoint *pPoint,
 	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2,
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubSpawnIdx)
@@ -119,11 +124,11 @@ void controlMaskIterateSpawns(
 		FUBYTE fubY = g_pSpawns[i].ubTileY;
 		if(fubX < fubX1 || fubX > fubX2)
 			continue;
-		FUBYTE isInPoly = 0, isEdgeProcessed;
+		FUBYTE isInPoly = 0;
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
-			isEdgeProcessed = 0;
+			FUBYTE isEdgeProcessed = 0;
 			if(!isInPoly && pMask[fubX][y]) {
-				isInPoly = !isInPoly;
+				isInPoly = 1;
 				isEdgeProcessed = 1;
 			}
 
@@ -132,13 +137,14 @@ void controlMaskIterateSpawns(
 				break;
 			}
 
-			if(isInPoly && pMask[fubX][y] && !isEdgeProcessed)
-				isInPoly = !isInPoly;
+			if(isInPoly && pMask[fubX][y] && !isEdgeProcessed) {
+				isInPoly = 0;
+			}
 		}
 	}
 }
 
-void controlMaskIterateTurrets(
+static void controlMaskIterateTurrets(
 	UBYTE **pMask, tControlPoint *pPoint,
 	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2,
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubTurretIdx)
@@ -148,11 +154,11 @@ void controlMaskIterateTurrets(
 		FUBYTE fubY = g_pTurrets[i].uwY >> MAP_TILE_SIZE;
 		if(fubX < fubX1 || fubX > fubX2)
 			continue;
-		FUBYTE isInPoly = 0, isProcessed;
+		FUBYTE isInPoly = 0;
 		for(FUBYTE y = fubY1; y <= fubY2; ++y) {
-			isProcessed = 0;
+			FUBYTE isProcessed = 0;
 			if(!isInPoly && pMask[fubX][y]) {
-				isInPoly = !isInPoly;
+				isInPoly = 1;
 				isProcessed = 1;
 			}
 
@@ -161,8 +167,9 @@ void controlMaskIterateTurrets(
 				break;
 			}
 
-			if(isInPoly && pMask[fubX][y] && !isProcessed)
-				isInPoly = !isInPoly;
+			if(isInPoly && pMask[fubX][y] && !isProcessed) {
+				isInPoly = 0;
+			}
 		}
 	}
 }
@@ -176,8 +183,12 @@ void controlAddPoint(
 		"fubCaptureTileY: %"PRI_FUBYTE", fubPolyPtCnt: %"PRI_FUBYTE", pPolyPts: %p)",
 		szName, fubCaptureTileX, fubCaptureTileY, fubPolyPtCnt, pPolyPts
 	);
+	if(g_fubControlPointCount >= s_fubControlPointMaxCount) {
+		logWrite("ERR: No more room for control point %s\n", szName);
+		return;
+	}
 	tControlPoint *pPoint = &g_pControlPoints[g_fubControlPointCount];
-	strcpy(pPoint->szName, szName);
+	memcpy(pPoint->szName, szName, MIN(CONTROL_NAME_MAX, strlen(szName)));
 	pPoint->fubTileX = fubCaptureTileX;
 	pPoint->fubTileY = fubCaptureTileY;
 
@@ -234,7 +245,7 @@ void controlAddPoint(
 	logBlockEnd("controlAddPoint()");
 }
 
-void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
+static void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 	if(pPoint->fubTeam == fubTeam)
 		return;
 	char szLog[50];

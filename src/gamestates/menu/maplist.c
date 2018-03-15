@@ -30,15 +30,15 @@ typedef struct _tMapList {
 	tMapListEntry *pMaps;
 } tMapList;
 
-tMapList s_sMapList;
-tListCtl *s_pListCtl;
+static tMapList s_sMapList;
+static tListCtl *s_pListCtl;
 
-void mapListPrepareList(void) {
+static void mapListPrepareList(void) {
 	// Get map count
 	s_sMapList.uwMapCount = 0;
 	BPTR pLock;
 	struct FileInfoBlock sFileBlock;
-	pLock = Lock("data/maps", ACCESS_READ);
+	pLock = Lock((unsigned char*)"data/maps", ACCESS_READ);
 	LONG lResult;
 	lResult = Examine(pLock, &sFileBlock);
 	if(lResult != DOSFALSE) {
@@ -59,11 +59,11 @@ void mapListPrepareList(void) {
 	if(!s_sMapList.uwMapCount)
 		return;
 	s_sMapList.pMaps = memAllocFast(s_sMapList.uwMapCount * sizeof(tMapListEntry));
-	pLock = Lock("data/maps", ACCESS_READ);
-	UWORD i = 0;
+	pLock = Lock((unsigned char *)"data/maps", ACCESS_READ);
 	lResult = Examine(pLock, &sFileBlock);
 	if(lResult != DOSFALSE) {
 		lResult = ExNext(pLock, &sFileBlock); // Skip dir name
+		UWORD i = 0;
 		while(lResult != DOSFALSE) {
 			if(!memcmp(
 				&sFileBlock.fib_FileName[strlen(sFileBlock.fib_FileName)-strlen(".json")],
@@ -81,22 +81,22 @@ void mapListPrepareList(void) {
 	UnLock(pLock);
 }
 
-void mapListSelect(UWORD uwIdx) {
+static void mapListSelect(UWORD uwIdx) {
 	mapInit(s_sMapList.pMaps[uwIdx].szFileName);
 	minimapDraw(g_pMenuBuffer->pBuffer, &g_sMap);
 }
 
-void mapListOnBtnStart(void) {
+static void mapListOnBtnStart(void) {
 	g_isLocalBot = 0;
 	gamePopState(); // From menu substate
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }
 
-void mapListOnBtnBack(void) {
+static void mapListOnBtnBack(void) {
 	gameChangeState(menuMainCreate, menuLoop, menuMainDestroy);
 }
 
-void mapListOnMapChange(void) {
+static void mapListOnMapChange(void) {
 	mapListSelect(s_pListCtl->uwEntrySel);
 }
 
@@ -105,7 +105,8 @@ void mapListCreate(void) {
 	// Clear bg
 	blitRect(
 		g_pMenuBuffer->pBuffer, 0, 0,
-		bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3, g_pMenuBuffer->pBuffer->Rows,
+		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3),
+		(WORD)(g_pMenuBuffer->pBuffer->Rows),
 		0
 	);
 	blitWait();

@@ -7,7 +7,7 @@
 static UBYTE s_pDataBfr[DATA_MAX_PACKET_SIZE];
 static UBYTE s_isPacketRead;
 
-void dataTryReadPacket(void) {
+static void dataTryReadPacket(void) {
 	if(0) {
 		// TODO packet successfully received
 		s_isPacketRead = 1;

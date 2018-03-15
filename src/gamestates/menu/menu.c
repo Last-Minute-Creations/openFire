@@ -18,15 +18,15 @@ static tVPort *s_pVPort;
 tSimpleBufferManager *g_pMenuBuffer;
 tFont *g_pMenuFont;
 
-void menuMainOnStartGame(void) {
+static void menuMainOnStartGame(void) {
 	gameChangeState(mapListCreate, mapListLoop, mapListDestroy);
 }
 
-void menuMainOnQuit(void) {
+static void menuMainOnQuit(void) {
 	gameClose();
 }
 
-void menuMainOnDemo(void) {
+static void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
 	mapInit("fubar.json");
 	gamePopState(); // From current menu substate
@@ -42,7 +42,8 @@ void menuMainCreate(void) {
 	// Display logo
 	blitRect(
 		g_pMenuBuffer->pBuffer, 0, 0,
-		bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3, g_pMenuBuffer->pBuffer->Rows,
+		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3),
+		(WORD)(g_pMenuBuffer->pBuffer->Rows),
 		0
 	);
 	blitWait();

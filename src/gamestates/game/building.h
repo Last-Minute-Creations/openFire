@@ -17,8 +17,8 @@
 #define BUILDING_MAX_COUNT 256
 
 typedef struct {
+	UWORD uwTurretIdx;
 	UBYTE ubHp;
-	UBYTE ubTurretIdx;
 } tBuilding;
 
 typedef struct {

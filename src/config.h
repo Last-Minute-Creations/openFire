@@ -7,4 +7,4 @@ extern const UWORD WINDOW_SCREEN_WIDTH;
 extern const UWORD WINDOW_SCREEN_HEIGHT;
 extern const UWORD WINDOW_SCREEN_BPP;
 
-#endif
+#endif // GUARD_OF_CONFIG_H

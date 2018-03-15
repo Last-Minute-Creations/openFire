@@ -32,7 +32,7 @@ extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
 extern UWORD **g_pTurretTiles;
 
-void turretListCreate(void);
+void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight);
 void turretListDestroy(void);
 
 UWORD turretAdd(

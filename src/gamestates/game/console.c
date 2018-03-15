@@ -8,10 +8,10 @@
 #define CONSOLE_MAX_ENTRIES 8
 #define CHAT_MAX (192/6)
 
-tFont *s_pConsoleFont;
-char s_pChatBfr[CHAT_MAX] = "say: ";
+static tFont *s_pConsoleFont;
+static char s_pChatBfr[CHAT_MAX] = "say: ";
 FUBYTE g_isChatting;
-FUBYTE s_fubChatLineLength;
+static FUBYTE s_fubChatLineLength;
 
 
 void consoleCreate(tFont *pFont) {
@@ -68,7 +68,7 @@ FUBYTE consoleChatProcessChar(char c) {
 	}
 	else {
 		// Printable chars
-		c= g_pToAscii[c];
+		c= g_pToAscii[(UBYTE)c];
 		if(
 			(c >= 'A' && c <= 'Z') ||
 			(c >= 'a' && c <= 'z') ||
