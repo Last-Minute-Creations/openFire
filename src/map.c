@@ -3,7 +3,7 @@
 #include <ace/managers/memory.h>
 #include "mapjson.h"
 
-tMap g_sMap = {.fubWidth = 0, .fubHeight = 0, .pData = 0};
+tMap g_sMap = {.fubWidth = 0, .fubHeight = 0, .pData = {{{0}}}};
 
 void mapInit(char *szFileName) {
 	logBlockBegin("mapInit(szPath: %s)", szFileName);

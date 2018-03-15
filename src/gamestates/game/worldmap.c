@@ -82,7 +82,6 @@ static UBYTE worldMapCheckWater(UBYTE ubX, UBYTE ubY) {
 }
 
 static UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYTE)) {
-	UBYTE ubTileType;
 	UBYTE ubOut;
 	const UBYTE ubE = 8;
 	const UBYTE ubW = 4;
@@ -90,7 +89,6 @@ static UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYT
 	const UBYTE ubN = 1;
 
 	ubOut = 0;
-	ubTileType = g_sMap.pData[ubX][ubY].ubIdx;
 	if(ubX && checkFn(g_sMap.pData[ubX+1][ubY].ubIdx))
 		ubOut |= ubE;
 	if(ubX-1 < g_sMap.fubWidth && checkFn(g_sMap.pData[ubX-1][ubY].ubIdx))
