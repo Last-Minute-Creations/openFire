@@ -34,11 +34,11 @@ void controlManagerDestroy(void) {
 	logBlockBegin("controlManagerDestroy()");
 	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
-		if(s_ubAllocSpawnCount) {
-			memFree(pPoint->pSpawns, s_ubAllocSpawnCount * sizeof(FUBYTE));
+		if(pPoint->fubSpawnCount) {
+			memFree(pPoint->pSpawns, pPoint->fubSpawnCount * sizeof(FUBYTE));
 		}
-		if(s_ubAllocTurretCount) {
-			memFree(pPoint->pTurrets, s_ubAllocTurretCount * sizeof(UWORD));
+		if(pPoint->fubTurretCount) {
+			memFree(pPoint->pTurrets, pPoint->fubTurretCount * sizeof(UWORD));
 		}
 	}
 	memFree(g_pControlPoints, sizeof(tControlPoint) * s_fubControlPointMaxCount);

@@ -154,8 +154,8 @@ void gsGameCreate(void) {
 
 	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
 	hudCreate(s_pSmallFont);
-	// scoreTableCreate(g_pHudBfr->sCommon.pVPort, s_pSmallFont);
-	// s_isScoreShown = 0;
+	scoreTableCreate(g_pHudBfr->sCommon.pVPort, s_pSmallFont);
+	s_isScoreShown = 0;
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
@@ -171,7 +171,7 @@ void gsGameCreate(void) {
 	cursorCreate(g_pWorldView, 2, "data/crosshair.bm", WORLD_COP_CROSS_POS);
 
 	// Explosions
-	// explosionsCreate();
+	explosionsCreate();
 
 	#ifdef SPEED_LOG
 	s_pDrawAvgExplosions = logAvgCreate("draw explosions", 50);
@@ -202,24 +202,24 @@ void gsGameCreate(void) {
 
 	// AI
 	playerListCreate(8);
-	// aiManagerCreate();
+	aiManagerCreate();
 
 	// Add players
-	// if(g_isLocalBot) {
-		// botAdd("player", TEAM_BLUE);
-		// g_pLocalPlayer = &g_pPlayers[0];
-	// }
-	// else {
+	if(g_isLocalBot) {
+		botAdd("player", TEAM_BLUE);
+		g_pLocalPlayer = &g_pPlayers[0];
+	}
+	else {
 		g_pLocalPlayer = playerAdd("player", TEAM_BLUE);
-	// }
-	// botAdd("enemy", TEAM_RED);
+	}
+	botAdd("enemy", TEAM_RED);
 	displayPrepareLimbo();
 
-	// for(FUBYTE i = 0; i != 7; ++i) {
-	// 	char szName[10];
-	// 	sprintf(szName, "player %hhu", i);
-	// 	playerAdd(szName, TEAM_BLUE);
-	// }
+	for(FUBYTE i = 0; i != 7; ++i) {
+		char szName[10];
+		sprintf(szName, "player %hhu", i);
+		playerAdd(szName, TEAM_BLUE);
+	}
 
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
@@ -242,10 +242,10 @@ static void gameSummaryLoop(void) {
 void gsGameLoop(void) {
 	++g_ulGameFrame;
 	// Quit?
-	// if(keyUse(KEY_ESCAPE)) {
+	if(keyUse(KEY_ESCAPE)) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
-	// }
+	}
 	// Steering-irrelevant player input
 	if(keyUse(KEY_C))
 		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
@@ -376,18 +376,18 @@ void gsGameDestroy(void) {
 	logBlockBegin("gsGameDestroy()");
 	custom.dmacon = BITSET | DMAF_DISK;
 
-	// aiManagerDestroy();
+	aiManagerDestroy();
 
 	cursorDestroy();
-	// scoreTableDestroy();
+	scoreTableDestroy();
 	hudDestroy();
 	fontDestroy(s_pSmallFont);
-	// explosionsDestroy();
+	explosionsDestroy();
 	viewDestroy(g_pWorldView);
 	bobUniqueDestroy(s_pSiloHighlight);
 	bitmapDestroy(s_pTiles);
 
-	#ifdef SPEED_LOG
+#ifdef SPEED_LOG
 	logAvgDestroy(s_pUndrawAvgExplosions);
 	logAvgDestroy(s_pUndrawAvgProjectiles);
 	logAvgDestroy(s_pUndrawAvgVehicles);
@@ -405,7 +405,7 @@ void gsGameDestroy(void) {
 	logAvgDestroy(s_pAvgRedrawControl);
 	logAvgDestroy(s_pAvgUpdateSprites);
 	logAvgDestroy(s_pProcessAvgHud);
-	#endif
+#endif
 
 	worldMapDestroy();
 	playerListDestroy();

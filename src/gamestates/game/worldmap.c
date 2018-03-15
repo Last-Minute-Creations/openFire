@@ -108,8 +108,6 @@ void worldMapCreate(void) {
 
 	buildingManagerReset();
 	controlManagerCreate(g_sMap.fubControlPointCount);
-	controlManagerDestroy(); // <-------
-	controlManagerCreate(g_sMap.fubControlPointCount); // <-----
 	spawnManagerCreate(g_sMap.fubSpawnCount);
 	turretListCreate(g_sMap.fubWidth, g_sMap.fubHeight);
 	worldMapGenerateLogic();
@@ -117,7 +115,6 @@ void worldMapCreate(void) {
 	// Read remaining JSON data
 	tJson *pMapJson = jsonCreate(g_sMap.szPath);
 	mapJsonReadControlPoints(pMapJson);
-	// controlManagerDestroy() corrupts here // TODO MOVE ARROWED TO FIND BREAKAGE
 	jsonDestroy(pMapJson);
 
 	logBlockEnd("worldMapCreate()");
