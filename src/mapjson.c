@@ -1,4 +1,5 @@
 #include "mapjson.h"
+#include <string.h>
 #include <ace/macros.h>
 #include <ace/managers/log.h>
 #include "map.h"
@@ -11,11 +12,16 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 		pJson, pMap
 	);
 
+	char szModeStr[20];
+
 	UWORD uwTokWidth = jsonGetDom(pJson, "width");
 	UWORD uwTokHeight = jsonGetDom(pJson, "height");
 	UWORD uwTokPts = jsonGetDom(pJson, "controlPoints");
+	UWORD uwTokName = jsonGetDom(pJson, "title");
+	UWORD uwTokAuthor = jsonGetDom(pJson, "author");
+	UWORD uwTokMode = jsonGetDom(pJson, "mode");
 
-	if(!uwTokWidth || !uwTokHeight || !uwTokPts) {
+	if(!uwTokWidth || !uwTokHeight || !uwTokPts || !uwTokName || !uwTokAuthor) {
 		logWrite("ERR: Malformed JSON!");
 		logBlockEnd("mapJsonGetMeta()");
 		return 0;
@@ -24,6 +30,20 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 	pMap->fubWidth = jsonTokToUlong(pJson, uwTokWidth, 10);
 	pMap->fubHeight = jsonTokToUlong(pJson, uwTokHeight, 10);
 	pMap->fubControlPointCount = pJson->pTokens[uwTokPts].size;
+	jsonTokStrCpy(pJson, uwTokAuthor, pMap->szAuthor, MAP_AUTHOR_MAX);
+	jsonTokStrCpy(pJson, uwTokName, pMap->szName, MAP_NAME_MAX);
+	jsonTokStrCpy(pJson, uwTokMode, szModeStr, 20);
+
+	if(!strcmp(szModeStr, "conquest")) {
+		pMap->ubMode = MAP_MODE_CONQUEST;
+	}
+	else if(!strcmp(szModeStr, "ctf")) {
+		pMap->ubMode = MAP_MODE_CTF;
+	}
+	else {
+		logWrite("Unsupported map type: %s", szModeStr);
+		return 0;
+	}
 
 	logBlockEnd("mapJsonGetMeta()");
 	return 1;

@@ -17,14 +17,10 @@
 #include "gamestates/game/game.h"
 
 #define MAPLIST_FILENAME_MAX 108
-#define MAP_NAME_MAX 30
 
-#define MAPLIST_MINIMAP_BORDER 1
+#define MAPLIST_COLOR_MINIMAP_BORDER 1
 
-typedef struct _tMapListEntry {
-	char szFileName[MAPLIST_FILENAME_MAX];
-	char szMapName[MAP_NAME_MAX];
-} tMapListEntry;
+typedef char tMapListEntry[MAPLIST_FILENAME_MAX];
 
 typedef struct _tMapList {
 	UWORD uwMapCount;
@@ -73,7 +69,7 @@ static void mapListPrepareList(void) {
 				".json", strlen(".json")
 			)) {
 				memcpy(
-					s_sMapList.pMaps[i].szFileName, sFileBlock.fib_FileName,
+					s_sMapList.pMaps[i], sFileBlock.fib_FileName,
 					MAPLIST_FILENAME_MAX
 				);
 				++i;
@@ -86,9 +82,41 @@ static void mapListPrepareList(void) {
 }
 
 static void mapListSelect(UWORD uwIdx) {
-	mapInit(s_sMapList.pMaps[uwIdx].szFileName);
 	systemUse();
+	mapInit(s_sMapList.pMaps[uwIdx]);
 	minimapDraw(g_pMenuBuffer->pBuffer, &g_sMap);
+	char szBfr[20 + MAX(MAP_AUTHOR_MAX, MAP_NAME_MAX)];
+	blitRect(
+		g_pMenuBuffer->pBuffer, MAPLIST_MINIMAP_X,
+		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16,
+		320-MAPLIST_MINIMAP_X, 3*(g_pMenuFont->uwHeight + 1), MENU_COLOR_BG
+	);
+	sprintf(szBfr, "Map name: %s", g_sMap.szName);
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 0*(g_pMenuFont->uwHeight+1),
+		szBfr, MENU_COLOR_TEXT, 0
+	);
+	sprintf(szBfr, "Author: %s", g_sMap.szAuthor);
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 1*(g_pMenuFont->uwHeight+1),
+		szBfr, MENU_COLOR_TEXT, 0
+	);
+	const char szModeConquest[] = "Mode: Conquest";
+	const char szModeCtf[] = "Mode: CTF";
+	const char *pMode = 0;
+	if(g_sMap.ubMode == MAP_MODE_CONQUEST) {
+		pMode = szModeConquest;
+	}
+	else if(g_sMap.ubMode == MAP_MODE_CTF) {
+		pMode = szModeCtf;
+	}
+	fontDrawStr(
+		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 2*(g_pMenuFont->uwHeight+1),
+		pMode, MENU_COLOR_TEXT, 0
+	);
 	systemUnuse();
 }
 
@@ -114,7 +142,7 @@ void mapListCreate(void) {
 		g_pMenuBuffer->pBuffer, 0, 0,
 		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3),
 		(WORD)(g_pMenuBuffer->pBuffer->Rows),
-		0
+		MENU_COLOR_BG
 	);
 	blitWait();
 
@@ -128,9 +156,9 @@ void mapListCreate(void) {
 		mapListOnMapChange
 	);
 	for(UWORD i = 0; i != s_sMapList.uwMapCount; ++i) {
-		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)-5] = 0;
-		listCtlAddEntry(s_pListCtl, s_sMapList.pMaps[i].szFileName);
-		s_sMapList.pMaps[i].szFileName[strlen(s_sMapList.pMaps[i].szFileName)] = '.';
+		s_sMapList.pMaps[i][strlen(s_sMapList.pMaps[i])-5] = '\0';
+		listCtlAddEntry(s_pListCtl, s_sMapList.pMaps[i]);
+		s_sMapList.pMaps[i][strlen(s_sMapList.pMaps[i])] = '.';
 	}
 	listCtlDraw(s_pListCtl);
 
@@ -142,7 +170,7 @@ void mapListCreate(void) {
 		g_pMenuBuffer->pBuffer,
 		MAPLIST_MINIMAP_X - 1, MAPLIST_MINIMAP_Y - 1,
 		MAPLIST_MINIMAP_WIDTH + 2, MAPLIST_MINIMAP_WIDTH + 2,
-		MAPLIST_MINIMAP_BORDER
+		MAPLIST_COLOR_MINIMAP_BORDER
 	);
 	mapListSelect(s_pListCtl->uwEntrySel);
 	logBlockEnd("mapListCreate()");
