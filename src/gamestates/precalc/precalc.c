@@ -12,8 +12,8 @@
 #define PRECALC_BPP 4
 // Colors
 #define PRECALC_COLOR_TEXT             13
-#define PRECALC_COLOR_PROGRESS_OUTLINE 7
-#define PRECALC_COLOR_PROGRESS_FILL    3
+#define PRECALC_COLOR_PROGRESS_OUTLINE 15
+#define PRECALC_COLOR_PROGRESS_FILL    8
 
 static tView *s_pView;
 static tVPort *s_pVPort;
@@ -21,6 +21,7 @@ static tSimpleBufferManager *s_pBuffer;
 static tFont *s_pFont;
 static FUBYTE s_isHdd;
 static FUBYTE s_fubProgress;
+static tBitMap *s_pLoadingVehicle;
 
 void precalcCreate(void) {
 	logBlockBegin("precalcCreate()");
@@ -41,8 +42,9 @@ void precalcCreate(void) {
 	);
 
 	copBlockDisableSprites(s_pView->pCopList, 0xFF);
-	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
+	paletteLoad("data/loading.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
 	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
+	s_pLoadingVehicle = bitmapCreateFromFile("data/loading/tank.bm");
 
 	s_isHdd = 1;
 
@@ -81,14 +83,14 @@ void precalcLoop(void) {
 	}
 	logBlockBegin("precalcLoop()");
 
-	precalcIncreaseProgress(5, "Initializing vehicle types");
+	precalcIncreaseProgress(10, "Initializing vehicle types");
 	vehicleTypesCreate();
 
 	// Turret stuff
-	precalcIncreaseProgress(5, "Generating turret frames");
+	precalcIncreaseProgress(20, "Generating turret frames");
 	g_pTurretFrames = vehicleTypeGenerateRotatedFrames("vehicles/turret.bm");
 
-	precalcIncreaseProgress(5, "Working on projectiles");
+	precalcIncreaseProgress(10, "Working on projectiles");
 	projectileListCreate(5);
 
 	// View is no longer needed
@@ -122,6 +124,16 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 
 	s_fubProgress = MIN(100, s_fubProgress+fubAmountToAdd);
 	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", s_fubProgress, szText);
+
+	UWORD uwVehicleWidth = s_pLoadingVehicle->BytesPerRow<<3;
+	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/6;
+	blitCopy(
+		s_pLoadingVehicle, 0, ((s_fubProgress*6)/100) * s_pLoadingVehicle->Rows/6,
+		s_pBuffer->pBuffer,
+		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
+		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
+		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE, 0xFF
+	);
 
 	// BG + outline
 	blitRect(
