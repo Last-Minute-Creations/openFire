@@ -39,6 +39,7 @@ static void menuMainOnDemo(void) {
 #define MENU_BUTTON_OFFS_X 32
 
 void menuMainCreate(void) {
+	systemUse();
 	logBlockBegin("menuMainCreate()");
 	// Display logo
 	blitRect(
@@ -84,12 +85,15 @@ void menuMainCreate(void) {
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);
 	logBlockEnd("menuMainCreate()");
+	systemUnuse();
 }
 
 void menuMainDestroy(void) {
+	systemUse();
 	logBlockBegin("menuMainDestroy()");
 	buttonListDestroy();
 	logBlockEnd("menuMainDestroy()");
+	systemUnuse();
 }
 
 void menuCreate(void) {
@@ -120,9 +124,11 @@ void menuCreate(void) {
 	systemSetDma(DMAB_SPRITE, 1);
 	viewLoad(s_pView);
 	logBlockEnd("menuCreate()");
+	systemUnuse();
 }
 
 void menuDestroy(void) {
+	systemUse();
 	logBlockBegin("menuDestroy()");
 	systemSetDma(DMAB_SPRITE, 0);
 	viewLoad(0);
@@ -137,10 +143,12 @@ void menuLoop() {
 		gameClose();
 		return;
 	}
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 		buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
+	}
 
 	menuProcess();
+	vPortWaitForEnd(s_pVPort);
 }
 
 void menuProcess(void) {

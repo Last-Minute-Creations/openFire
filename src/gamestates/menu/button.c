@@ -6,6 +6,7 @@ static FUBYTE s_fubMaxButtonCount;
 static tButton *s_pButtons;
 static tBitMap *s_pBfr;
 static tFont *s_pFont;
+static tTextBitMap *s_pLabelTextBfr;
 
 void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont) {
 	logBlockBegin(
@@ -16,6 +17,7 @@ void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont) {
 	s_fubMaxButtonCount = fubButtonCount;
 	s_pBfr = pBfr;
 	s_pFont = pFont;
+	s_pLabelTextBfr = fontCreateTextBitMap(128, pFont->uwHeight);
 	s_pButtons = memAllocFastClear(s_fubMaxButtonCount * sizeof(tButton));
 	logBlockEnd("buttonListCreate()");
 }
@@ -23,6 +25,7 @@ void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont) {
 void buttonListDestroy(void) {
 	logBlockBegin("buttonListDestroy()");
 	memFree(s_pButtons, s_fubMaxButtonCount * sizeof(tButton));
+	fontDestroyTextBitMap(s_pLabelTextBfr);
 	s_fubButtonCount = 0;
 	s_fubMaxButtonCount = 0;
 	logBlockEnd("buttonListDestroy()");
@@ -80,10 +83,11 @@ static void buttonDraw(tButton *pButton) {
 	);
 
 	// Text
-	fontDrawStr(
-		s_pBfr, s_pFont,
+	fontFillTextBitMap(s_pFont, s_pLabelTextBfr, pButton->szText);
+	fontDrawTextBitMap(
+		s_pBfr, s_pLabelTextBfr,
 		pRect->uwX + pRect->uwWidth/2, pRect->uwY + pRect->uwHeight/2,
-		pButton->szText, ubColorText, FONT_CENTER | FONT_SHADOW | FONT_COOKIE
+		ubColorText, FONT_CENTER | FONT_SHADOW | FONT_COOKIE
 	);
 }
 

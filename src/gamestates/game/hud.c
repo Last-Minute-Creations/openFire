@@ -13,6 +13,7 @@ tSimpleBufferManager *g_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
 static FUBYTE s_fubHudState, s_fubHudPrevState;
 static tFont *s_pHudFont;
+static tTextBitMap *s_pSpawnTextBfr;
 
 static UWORD s_uwPrevTickets[2];
 static FUBYTE s_fubFrame;
@@ -31,6 +32,7 @@ void hudCreate(tFont *pFont) {
 		TAG_DONE
 	);
 	s_pHudFont = pFont;
+	s_pSpawnTextBfr = fontCreateTextBitMap(32, pFont->uwHeight);
 
 	tCopCmd *pCopList = g_pWorldView->pCopList->pBackBfr->pList;
 	copSetWait(
@@ -132,8 +134,9 @@ static void hudDrawTeamScore(FUBYTE fubTeam) {
 	char szSpawnBfr[6];
 	blitRect(g_pHudBfr->pBuffer, (WORD)uwTicketX, (WORD)uwTicketY[fubTeam], 26, 5, 0);
 	sprintf(szSpawnBfr, "%5hu", g_pTeams[fubTeam].uwTicketsLeft);
-	fontDrawStr(
-		g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketY[fubTeam], szSpawnBfr,
+	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szSpawnBfr);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBuffer, s_pSpawnTextBfr, uwTicketX, uwTicketY[fubTeam],
 		pTeamColors[fubTeam], FONT_COOKIE | FONT_LAZY
 	);
 	s_uwPrevTickets[fubTeam] = g_pTeams[fubTeam].uwTicketsLeft;
@@ -181,6 +184,7 @@ void hudUpdate(void) {
 
 void hudDestroy(void) {
 	consoleDestroy();
+	fontDestroyTextBitMap(s_pSpawnTextBfr);
 
 	bitmapDestroy(s_pHudDriving);
 	bitmapDestroy(s_pHudSelecting);

@@ -7,6 +7,7 @@
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/mouse.h>
+#include <ace/managers/system.h>
 #include "cursor.h"
 #include "map.h"
 #include "gamestates/menu/menu.h"
@@ -34,6 +35,7 @@ static tMapList s_sMapList;
 static tListCtl *s_pListCtl;
 
 static void mapListPrepareList(void) {
+	systemUse();
 	// Get map count
 	s_sMapList.uwMapCount = 0;
 	BPTR pLock;
@@ -56,8 +58,9 @@ static void mapListPrepareList(void) {
 	UnLock(pLock);
 
 	// Alloc map list
-	if(!s_sMapList.uwMapCount)
+	if(!s_sMapList.uwMapCount) {
 		return;
+	}
 	s_sMapList.pMaps = memAllocFast(s_sMapList.uwMapCount * sizeof(tMapListEntry));
 	pLock = Lock((unsigned char *)"data/maps", ACCESS_READ);
 	lResult = Examine(pLock, &sFileBlock);
@@ -79,11 +82,14 @@ static void mapListPrepareList(void) {
 		}
 	}
 	UnLock(pLock);
+	systemUnuse();
 }
 
 static void mapListSelect(UWORD uwIdx) {
 	mapInit(s_sMapList.pMaps[uwIdx].szFileName);
+	systemUse();
 	minimapDraw(g_pMenuBuffer->pBuffer, &g_sMap);
+	systemUnuse();
 }
 
 static void mapListOnBtnStart(void) {
@@ -101,6 +107,7 @@ static void mapListOnMapChange(void) {
 }
 
 void mapListCreate(void) {
+	systemUse();
 	logBlockBegin("mapListCreate()");
 	// Clear bg
 	blitRect(
@@ -139,6 +146,7 @@ void mapListCreate(void) {
 	);
 	mapListSelect(s_pListCtl->uwEntrySel);
 	logBlockEnd("mapListCreate()");
+	systemUnuse();
 }
 
 void mapListLoop(void) {
@@ -155,9 +163,11 @@ void mapListLoop(void) {
 }
 
 void mapListDestroy(void) {
+	systemUse();
 	logBlockBegin("mapListDestroy()");
 	memFree(s_sMapList.pMaps, s_sMapList.uwMapCount * sizeof(tMapListEntry));
 	listCtlDestroy(s_pListCtl);
 	buttonListDestroy();
 	logBlockEnd("mapListDestroy()");
+	systemUnuse();
 }

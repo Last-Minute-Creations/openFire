@@ -8,6 +8,7 @@
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
 #include <ace/managers/rand.h>
+#include <ace/managers/system.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include "cursor.h"
@@ -226,6 +227,7 @@ void gsGameCreate(void) {
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
+	systemUnuse();
 }
 
 static void gameSummaryLoop(void) {
@@ -369,7 +371,7 @@ void gsGameLoop(void) {
 }
 
 void gsGameDestroy(void) {
-	// Return DMA to correct state
+	systemUse();
 	logBlockBegin("gsGameDestroy()");
 
 	aiManagerDestroy();

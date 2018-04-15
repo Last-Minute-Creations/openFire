@@ -13,13 +13,17 @@ static char s_pChatBfr[CHAT_MAX] = "say: ";
 FUBYTE g_isChatting;
 static FUBYTE s_fubChatLineLength;
 
+static tTextBitMap *s_pChatLineBfr;
+
 
 void consoleCreate(tFont *pFont) {
 	s_pConsoleFont = pFont;
 	g_isChatting = 0;
+	s_pChatLineBfr = fontCreateTextBitMap(192, pFont->uwHeight);
 }
 
 void consoleDestroy(void) {
+	fontDestroyTextBitMap(s_pChatLineBfr);
 }
 
 void consoleWrite(char *szMsg, UBYTE ubColor) {
@@ -34,9 +38,10 @@ void consoleWrite(char *szMsg, UBYTE ubColor) {
 	blitRect(g_pHudBfr->pBuffer, 112,45, 192, 5, 0);
 
 	// Draw new message
-	fontDrawStr(
-		g_pHudBfr->pBuffer, s_pConsoleFont, 112, 45,
-		szMsg, ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
+	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, szMsg);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 45,
+		ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
 }
 
@@ -44,8 +49,9 @@ void consoleChatBegin(void) {
 	s_fubChatLineLength = 5;
 	s_pChatBfr[s_fubChatLineLength] = 0;
 	g_isChatting = 1;
-	fontDrawStr(
-		g_pHudBfr->pBuffer, s_pConsoleFont, 112, 51, s_pChatBfr,
+	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
 		CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
 }
@@ -77,8 +83,9 @@ FUBYTE consoleChatProcessChar(char c) {
 		) {
 			s_pChatBfr[s_fubChatLineLength++] = c;
 			s_pChatBfr[s_fubChatLineLength] = 0; // for printing
-			fontDrawStr(
-				g_pHudBfr->pBuffer, s_pConsoleFont, 112, 51, s_pChatBfr,
+			fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
+			fontDrawTextBitMap(
+				g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
 				CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 			);
 		}
