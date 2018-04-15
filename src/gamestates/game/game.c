@@ -224,9 +224,6 @@ void gsGameCreate(void) {
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
 
-	// Get some speed out of unnecessary DMA
-	g_pCustom->dmacon = BITCLR | DMAF_DISK;
-
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
 }
@@ -374,7 +371,6 @@ void gsGameLoop(void) {
 void gsGameDestroy(void) {
 	// Return DMA to correct state
 	logBlockBegin("gsGameDestroy()");
-	g_pCustom->dmacon = BITSET | DMAF_DISK;
 
 	aiManagerDestroy();
 

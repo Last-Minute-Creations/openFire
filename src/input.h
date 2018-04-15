@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <ace/managers/window.h>
 #include <ace/managers/key.h>
 
 /* Types */

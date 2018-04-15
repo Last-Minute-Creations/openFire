@@ -1,10 +1,11 @@
 #include "gamestates/menu/menu.h"
 #include <clib/dos_protos.h>
-#include <ace/utils/extview.h>
-#include <ace/utils/palette.h>
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
+#include <ace/utils/extview.h>
+#include <ace/utils/palette.h>
+#include <ace/managers/system.h>
 #include "config.h"
 #include "cursor.h"
 #include "map.h"
@@ -116,12 +117,14 @@ void menuCreate(void) {
 
 	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
 
+	systemSetDma(DMAB_SPRITE, 1);
 	viewLoad(s_pView);
 	logBlockEnd("menuCreate()");
 }
 
 void menuDestroy(void) {
 	logBlockBegin("menuDestroy()");
+	systemSetDma(DMAB_SPRITE, 0);
 	viewLoad(0);
 	cursorDestroy();
 	fontDestroy(g_pMenuFont);
