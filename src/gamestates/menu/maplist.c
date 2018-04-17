@@ -1,13 +1,12 @@
 #include "gamestates/menu/maplist.h"
 #include <string.h>
-#include <dos/dos.h>
-#include <clib/dos_protos.h>
 #include <ace/types.h>
 #include <ace/managers/memory.h>
 #include <ace/managers/key.h>
 #include <ace/managers/game.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/system.h>
+#include <ace/utils/dir.h>
 #include "cursor.h"
 #include "map.h"
 #include "gamestates/menu/menu.h"
@@ -34,50 +33,34 @@ static void mapListPrepareList(void) {
 	systemUse();
 	// Get map count
 	s_sMapList.uwMapCount = 0;
-	BPTR pLock;
-	struct FileInfoBlock sFileBlock;
-	pLock = Lock((unsigned char*)"data/maps", ACCESS_READ);
-	LONG lResult;
-	lResult = Examine(pLock, &sFileBlock);
-	if(lResult != DOSFALSE) {
-		lResult = ExNext(pLock, &sFileBlock); // Skip dir name
-		while(lResult != DOSFALSE) {
-			if(!memcmp(
-				&sFileBlock.fib_FileName[strlen(sFileBlock.fib_FileName)-strlen(".json")],
-				".json", strlen(".json")
-			)) {
-				++s_sMapList.uwMapCount;
-				lResult = ExNext(pLock, &sFileBlock);
-			}
+	tDir *pDir = dirOpen("data/maps");
+	char szFileName[MAPLIST_FILENAME_MAX];
+	if(!pDir) {
+		systemUnuse();
+		return;
+	}
+	while(dirRead(pDir, szFileName, MAPLIST_FILENAME_MAX)) {
+		if(!strcmp(&szFileName[strlen(szFileName)-strlen(".json")], ".json")) {
+			++s_sMapList.uwMapCount;
 		}
 	}
-	UnLock(pLock);
+	dirClose(pDir);
 
 	// Alloc map list
 	if(!s_sMapList.uwMapCount) {
+		systemUnuse();
 		return;
 	}
 	s_sMapList.pMaps = memAllocFast(s_sMapList.uwMapCount * sizeof(tMapListEntry));
-	pLock = Lock((unsigned char *)"data/maps", ACCESS_READ);
-	lResult = Examine(pLock, &sFileBlock);
-	if(lResult != DOSFALSE) {
-		lResult = ExNext(pLock, &sFileBlock); // Skip dir name
-		UWORD i = 0;
-		while(lResult != DOSFALSE) {
-			if(!memcmp(
-				&sFileBlock.fib_FileName[strlen(sFileBlock.fib_FileName)-strlen(".json")],
-				".json", strlen(".json")
-			)) {
-				memcpy(
-					s_sMapList.pMaps[i], sFileBlock.fib_FileName,
-					MAPLIST_FILENAME_MAX
-				);
-				++i;
-				lResult = ExNext(pLock, &sFileBlock);
-			}
+	UBYTE i = 0;
+	pDir = dirOpen("data/maps");
+	while(dirRead(pDir, szFileName, MAPLIST_FILENAME_MAX)) {
+		if(!strcmp(&szFileName[strlen(szFileName)-strlen(".json")], ".json")) {
+			memcpy(s_sMapList.pMaps[i], szFileName, MAPLIST_FILENAME_MAX);
+			++i;
 		}
 	}
-	UnLock(pLock);
+	dirClose(pDir);
 	systemUnuse();
 }
 
