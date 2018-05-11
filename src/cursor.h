@@ -18,10 +18,10 @@
  * @todo Support for 4bpp sprites.
  */
 void cursorCreate(
-	IN tView *pView,
-	IN FUBYTE fubSpriteIdx,
-	IN char *szPath,
-	IN UWORD uwRawCopPos
+	tView *pView,
+	FUBYTE fubSpriteIdx,
+	char *szPath,
+	UWORD uwRawCopPos
 );
 
 /**

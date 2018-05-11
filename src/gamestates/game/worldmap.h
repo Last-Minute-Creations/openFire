@@ -52,30 +52,15 @@ void worldMapDestroy(void);
 void worldMapRedraw(void);
 void worldMapGenerateLogic(void);
 
-void worldMapChangeTile(
-	IN UBYTE ubX,
-	IN UBYTE ubY,
-	IN UBYTE ubLogicTileIdx
-);
+void worldMapChangeTile(UBYTE ubX, UBYTE ubY, UBYTE ubLogicTileIdx);
 
-void worldMapSetSrcDst(
-	IN tBitMap *pTileset,
-	IN tBitMap *pDst
-);
+void worldMapSetBuffers(tBitMap *pTileset, tBitMap *pFront, tBitMap *pBack);
 
-void worldMapRequestUpdateTile(
-	IN UBYTE ubX,
-	IN UBYTE ubY
-);
+void worldMapRequestUpdateTile(UBYTE ubX, UBYTE ubY);
 
-UBYTE worldMapTileFromLogic(
-	IN FUBYTE ubTileX,
-	IN FUBYTE ubTileY
-);
+UBYTE worldMapTileFromLogic(FUBYTE ubTileX, FUBYTE ubTileY);
 
-UBYTE worldMapIsWall(
-	IN UBYTE ubMapTile
-);
+UBYTE worldMapIsWall(UBYTE ubMapTile);
 
 void worldMapUpdateTiles(void);
 

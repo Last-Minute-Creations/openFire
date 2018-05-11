@@ -22,12 +22,8 @@ void menuMainDestroy(void);
 void menuProcess(void);
 
 void menuDrawButton(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UWORD uwWidth,
-	IN UWORD uwHeight,
-	IN char *szText,
-	IN UBYTE isSelected
+	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight,
+	char *szText, UBYTE isSelected
 );
 
 extern tSimpleBufferManager *g_pMenuBuffer;

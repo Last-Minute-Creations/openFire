@@ -35,82 +35,48 @@ typedef struct _tPlayer {
 	UWORD uwScore;
 } tPlayer;
 
-void playerListCreate(
-	IN UBYTE ubPlayerLimit
-);
+void playerListCreate(UBYTE ubPlayerLimit);
 
 void playerListDestroy(void);
 
-tPlayer *playerAdd(
-	IN const char *szName,
-	IN UBYTE ubTeam
-);
+tPlayer *playerAdd(const char *szName, UBYTE ubTeam);
 
-void playerRemoveByIdx(
-	IN UBYTE ubPlayerIdx
-);
+void playerRemoveByIdx(UBYTE ubPlayerIdx);
 
-void playerRemoveByPtr(
-	IN tPlayer *pPlayer
-);
+void playerRemoveByPtr(tPlayer *pPlayer);
 
 void playerSelectVehicle(
 	tPlayer *pPlayer,
 	UBYTE ubVehicleType
 );
 
-void playerHideInBunker(
-	IN tPlayer *pPlayer,
-	IN FUBYTE fubSpawnIdx
-);
+void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx);
 
-FUBYTE playerDamageVehicle(
-	IN tPlayer *pPlayer,
-	IN UBYTE ubDamage
-);
+FUBYTE playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage);
 
-void playerLoseVehicle(
-	IN tPlayer *pPlayer
-);
+void playerLoseVehicle(tPlayer *pPlayer);
 
-void playerSteerVehicle(
-	IN tPlayer *pPlayer
-);
+void playerSteerVehicle(tPlayer *pPlayer);
 
 void playerLocalProcessInput(void);
 
 void playerSim(void);
 
-void playerSimVehicle(
-	IN tPlayer *pPlayer
-);
+void playerSimVehicle(tPlayer *pPlayer);
 
-void playerSay(
-	IN tPlayer *pPlayer,
-	IN char *szMsg,
-	IN UBYTE isSayTeam
-);
+void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam);
 
-static inline tPlayer *playerGetByVehicle(
-	IN tVehicle *pVehicle
-) {
+static inline tPlayer *playerGetByVehicle(tVehicle *pVehicle) {
 	UBYTE *pVehicleByteAddr = (UBYTE*)pVehicle;
 	tPlayer sPlayer;
 	UBYTE ubDist = ((UBYTE*)&sPlayer.sVehicle) - ((UBYTE*)&sPlayer);
 	return (tPlayer*)(pVehicleByteAddr - ubDist);
 }
 
-UBYTE playerAnyNearPoint(
-	IN UWORD uwChkX,
-	IN UWORD uwChkY,
-	IN UWORD uwDist
-);
+UBYTE playerAnyNearPoint(UWORD uwChkX, UWORD uwChkY, UWORD uwDist);
 
 tPlayer *playerGetClosestInRange(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UWORD uwRange,
-	IN UBYTE ubTeam
+	UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTeam
 );
 
 extern tPlayer *g_pPlayers;

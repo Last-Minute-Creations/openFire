@@ -23,9 +23,7 @@ typedef struct _tControlPoint {
 	char szName[CONTROL_NAME_MAX];
 } tControlPoint;
 
-void controlManagerCreate(
-	IN FUBYTE fubPointCount
-);
+void controlManagerCreate(FUBYTE fubPointCount);
 
 void controlManagerDestroy(void);
 
@@ -33,21 +31,15 @@ void controlManagerDestroy(void);
  *  This function expects all logic tiles to be initialized - spawns & turrets too.
  */
 void controlAddPoint(
-	IN char *szName,
-	IN FUBYTE fubCaptureTileX,
-	IN FUBYTE fubCaptureTileY,
-	IN FUBYTE fubPolyPtCnt,
-	IN tUbCoordYX *pPolyPts
+	char *szName, FUBYTE fubCaptureTileX, FUBYTE fubCaptureTileY,
+	FUBYTE fubPolyPtCnt, tUbCoordYX *pPolyPts
 );
 
 void controlSim(void);
 
 void controlRedrawPoints(void);
 
-tControlPoint *controlPointGetAt(
-	IN FUBYTE fubTileX,
-	IN FUBYTE fubTileY
-);
+tControlPoint *controlPointGetAt(FUBYTE fubTileX, FUBYTE fubTileY);
 
 extern tControlPoint *g_pControlPoints;
 extern FUBYTE g_fubControlPointCount;

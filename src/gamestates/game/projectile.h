@@ -39,28 +39,20 @@ typedef struct _tProjectile {
 	UBYTE ubOwnerType;       ///< See PROJECTILE_OWNER_TYPE_* defines.
 } tProjectile;
 
-void projectileListCreate(
-	IN FUBYTE ubProjectileCount
-);
+void projectileListCreate(FUBYTE ubProjectileCount);
 void projectileListDestroy(void);
 
 tProjectile *projectileCreate(
-	IN UBYTE ubOwnerType,
-	IN tProjectileOwner uOwner,
-	IN UBYTE ubType
+	UBYTE ubOwnerType, tProjectileOwner uOwner, UBYTE ubType
 );
 
-void projectileDestroy(
-	IN tProjectile *pProjectile
-);
+void projectileDestroy( tProjectile *pProjectile);
 
 void projectileUndraw(void);
 void projectileDraw(void);
 void projectileSim(void);
 
-UBYTE projectileHasCollidedWithAnyPlayer(
-	IN tProjectile *pProjectile
-);
+UBYTE projectileHasCollidedWithAnyPlayer(tProjectile *pProjectile);
 
 
 #endif // GUARD_OF_GAMESTATES_GAME_PROJECTILE_H

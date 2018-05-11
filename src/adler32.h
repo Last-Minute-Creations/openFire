@@ -4,12 +4,12 @@
 #include <ace/types.h>
 
 ULONG adler32array(
-	IN UBYTE *pData,
-	IN ULONG ulDataSize
+	UBYTE *pData,
+	ULONG ulDataSize
 );
 
 ULONG adler32file(
-	IN char *szPath
+	char *szPath
 );
 
 #endif // GUARD_OF_ADLER32

@@ -9,9 +9,6 @@ void precalcLoop(void);
 
 void precalcDestroy(void);
 
-void precalcIncreaseProgress(
-	IN FUBYTE fubAmountToAdd,
-	IN char *szText
-);
+void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText);
 
 #endif // GUARD_OF_PRECALC_PRECALC_H

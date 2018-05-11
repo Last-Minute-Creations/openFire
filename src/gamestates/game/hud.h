@@ -8,13 +8,9 @@
 #define HUD_STATE_SELECTING 0
 #define HUD_STATE_DRIVING 1
 
-void hudChangeState(
-	IN FUBYTE fubState
-);
+void hudChangeState(FUBYTE fubState);
 
-void hudCreate(
-	IN tFont *pFont
-);
+void hudCreate(tFont *pFont);
 void hudDestroy(void);
 void hudUpdate(void);
 

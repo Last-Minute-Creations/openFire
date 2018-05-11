@@ -40,41 +40,21 @@ typedef struct _tVehicle {
 	UBYTE ubIsOnSilo;
 } tVehicle;
 
-void vehicleInit(
-	IN tVehicle *pVehicle,
-	IN UBYTE ubVehicleType,
-	IN UBYTE ubSpawnIdx
-);
+void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);
 
 void vehicleUnset(
 	tVehicle *pVehicle
 );
 
-void vehicleDrawFrame(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UBYTE ubDAngle
-);
+void vehicleDrawFrame(UWORD uwX, UWORD uwY, UBYTE ubDAngle);
 
-void vehicleSteerTank(
-	IN tVehicle *pVehicle,
-	IN tSteerRequest *pSteerRequest
-);
-void vehicleSteerJeep(
-	IN tVehicle *pVehicle,
-	IN tSteerRequest *pSteerRequest
-);
+void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
+void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
 
-void vehicleDraw(
-	IN tVehicle *pVehicle
-);
+void vehicleDraw(tVehicle *pVehicle);
 
-void vehicleUndraw(
-	IN tVehicle *pVehicle
-);
+void vehicleUndraw(tVehicle *pVehicle);
 
-void vehicleSetupBob(
-	IN tVehicle *pVehicle
-);
+void vehicleSetupBob(tVehicle *pVehicle);
 
 #endif

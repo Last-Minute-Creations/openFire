@@ -14,23 +14,13 @@ typedef struct _tHeap {
 	tHeapEntry *pEntries;
 } tHeap;
 
-tHeap *heapCreate(
-	IN UWORD uwMaxEntries
-);
+tHeap *heapCreate(UWORD uwMaxEntries);
 
-void heapDestroy(
-	IN tHeap *pHeap
-);
+void heapDestroy(tHeap *pHeap);
 
-void heapPush(
-	IN tHeap *pHeap,
-	IN void *pData,
-	IN UWORD uwPriority
-);
+void heapPush(tHeap *pHeap, void *pData, UWORD uwPriority);
 
-void *heapPop(
-	IN tHeap *pHeap
-);
+void *heapPop(tHeap *pHeap);
 
 static inline void heapClear(tHeap *pHeap) {
 	pHeap->uwCount = 0;

@@ -21,9 +21,7 @@ typedef struct _tBot {
 	UBYTE ubNextTargetAngle;
 } tBot;
 
-void botManagerCreate(
-	IN FUBYTE fubBotLimit
-);
+void botManagerCreate(FUBYTE fubBotLimit);
 
 void botManagerDestroy(void);
 

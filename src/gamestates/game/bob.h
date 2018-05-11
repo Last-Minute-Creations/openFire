@@ -37,61 +37,34 @@ typedef struct _tBob {
 } tBob;
 
 tBob *bobCreate(
-	IN tBitMap *pBitmap,
-	IN tBitMap *pMask,
-	IN tBobFrameOffset *pFrameOffsets,
-	IN FUBYTE fubMaxFrameHeight,
-	IN FUBYTE fubFrameIdx
+	tBitMap *pBitmap, tBitMap *pMask, tBobFrameOffset *pFrameOffsets,
+	FUBYTE fubMaxFrameHeight, FUBYTE fubFrameIdx
 );
 
-void bobDestroy(
-	IN tBob *pBob
-);
+void bobDestroy(tBob *pBob);
 
 void bobSetData(
-	IN tBob *pBob,
-	IN tBitMap *pFrames,
-	IN tBitMap *pMask,
-	IN tBobFrameOffset *pOffsets
+	tBob *pBob, tBitMap *pFrames, tBitMap *pMask, tBobFrameOffset *pOffsets
 );
 
 tBob *bobUniqueCreate(
-	char *szBitmapPath,
-	char *szMaskPath,
-	IN tBobFrameOffset *pFrameOffsets,
-	IN FUBYTE fubMaxFrameHeight,
-	IN FUBYTE fubFrameIdx
+	char *szBitmapPath, char *szMaskPath, tBobFrameOffset *pFrameOffsets,
+	FUBYTE fubMaxFrameHeight, FUBYTE fubFrameIdx
 );
 
-void bobUniqueDestroy(
-	IN tBob *pBob
-);
+void bobUniqueDestroy(tBob *pBob);
 
-void bobChangeFrame(
-	IN tBob *pBob,
-	IN FUBYTE fubFrameIdx
-);
+void bobChangeFrame(tBob *pBob, FUBYTE fubFrameIdx);
 
-UWORD bobUndraw(
-	IN tBob *pBob,
-	IN tSimpleBufferManager *pDest
-);
+UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest);
 
 UWORD bobDraw(
-	IN tBob *pBob,
-	IN tSimpleBufferManager *pDest,
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UBYTE ubBgDy,
-	IN UBYTE ubBgHeight
+	tBob *pBob, tSimpleBufferManager *pDest, UWORD uwX, UWORD uwY,
+	UBYTE ubBgDy, UBYTE ubBgHeight
 );
 
-void bobEnable(
-	IN tBob *pBob
-);
+void bobEnable(tBob *pBob);
 
-void bobDisable(
-	IN tBob *pBob
-);
+void bobDisable(tBob *pBob);
 
 #endif // GUARD_OF_GAMESTATES_GAME_BOB_H

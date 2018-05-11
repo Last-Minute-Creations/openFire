@@ -35,20 +35,11 @@ extern UWORD **g_pTurretTiles;
 void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight);
 void turretListDestroy(void);
 
-UWORD turretAdd(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UBYTE ubTeam
-);
+UWORD turretAdd(UWORD uwX, UWORD uwY, UBYTE ubTeam);
 
-void turretDestroy(
-	IN UWORD uwIdx
-);
+void turretDestroy(UWORD uwIdx);
 
-void turretCapture(
-	IN UWORD uwIdx,
-	IN FUBYTE fubTeam
-);
+void turretCapture(UWORD uwIdx, FUBYTE fubTeam);
 
 void turretSim(void);
 

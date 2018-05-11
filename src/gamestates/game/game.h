@@ -43,7 +43,6 @@ extern UWORD g_uwSiloHighlightY;
 extern UWORD g_uwSiloHighlightX;
 extern tCameraManager *g_pWorldCamera;
 
-extern UBYTE g_ubActiveState;
 extern ULONG g_ulGameFrame;
 extern UBYTE g_isLocalBot;
 

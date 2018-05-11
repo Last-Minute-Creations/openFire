@@ -5,10 +5,7 @@
 #include <ace/utils/extview.h>
 #include <ace/utils/font.h>
 
-void scoreTableCreate(
-	IN tVPort *pHudVPort,
-	IN tFont *pFont
-);
+void scoreTableCreate(tVPort *pHudVPort, tFont *pFont);
 
 void scoreTableDestroy(void);
 

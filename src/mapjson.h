@@ -5,18 +5,10 @@
 #include "map.h"
 #include "json.h"
 
-UBYTE mapJsonGetMeta(
-	IN const tJson *pJson,
-	IN tMap *pMap
-);
+UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap);
 
-void mapJsonReadTiles(
-	IN const tJson *pJson,
-	IN tMap *pMap
-);
+void mapJsonReadTiles(const tJson *pJson, tMap *pMap);
 
-void mapJsonReadControlPoints(
-	IN const tJson *pJson
-);
+void mapJsonReadControlPoints(const tJson *pJson);
 
 #endif // GUARD_OF_MAPJSON_H

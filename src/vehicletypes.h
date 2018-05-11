@@ -61,13 +61,9 @@ void vehicleTypesDestroy(void);
  *
  *  @todo Make it accept bitmaps wider than 32px?
  */
-tBitMap *vehicleTypeGenerateRotatedFrames(
-	IN char *szPath
-);
+tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath);
 
-void vehicleTypeFramesDestroy(
-	IN tVehicleType *pType
-);
+void vehicleTypeFramesDestroy(tVehicleType *pType);
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 

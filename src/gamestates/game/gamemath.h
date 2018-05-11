@@ -26,10 +26,7 @@ extern fix16_t g_pSin[128];
  *  @return Angle value between ANGLE_0 and ANGLE_LAST
  */
 UBYTE getAngleBetweenPoints(
-	IN UWORD uwSrcX,
-	IN UWORD uwSrcY,
-	IN UWORD uwDstX,
-	IN UWORD uwDstY
+	UWORD uwSrcX, UWORD uwSrcY, UWORD uwDstX, UWORD uwDstY
 );
 
 /**
@@ -42,9 +39,7 @@ UBYTE getAngleBetweenPoints(
             to dest angle.
  */
 WORD getDeltaAngleDirection(
-	IN UBYTE ubPrevAngle,
-	IN UBYTE ubNewAngle,
-	IN WORD wUnit
+	UBYTE ubPrevAngle, UBYTE ubNewAngle, WORD wUnit
 );
 
 #endif // GUARD_OF_GAMESTATES_GAME_GAMEMATH_H

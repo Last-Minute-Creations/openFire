@@ -7,22 +7,15 @@
 
 #define EXPLOSIONS_MAX 8
 
-void explosionsAdd(
-	const IN UWORD uwX,
-	const IN UWORD uwY
-);
+void explosionsAdd(UWORD uwX, UWORD uwY);
 
 void explosionsCreate(void);
 
 void explosionsDestroy(void);
 
-void explosionsDraw(
-	IN tSimpleBufferManager *pBfr
-);
+void explosionsDraw(tSimpleBufferManager *pBfr);
 
-void explosionsUndraw(
-	IN tSimpleBufferManager *pBfr
-);
+void explosionsUndraw(tSimpleBufferManager *pBfr);
 
 
 void explosionsProcess(void);

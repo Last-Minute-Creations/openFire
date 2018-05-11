@@ -22,38 +22,18 @@ typedef struct _tListCtl {
 } tListCtl;
 
 tListCtl *listCtlCreate(
-	IN tBitMap *pBfr,
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UWORD uwWidth,
-	IN UWORD uwHeight,
-	IN tFont *pFont,
-	IN UWORD uwEntryMaxCnt,
-	IN void (*onChange)(void)
+	tBitMap *pBfr, UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight,
+	tFont *pFont, UWORD uwEntryMaxCnt, void (*onChange)(void)
 );
 
-void listCtlDestroy(
-	IN tListCtl *pCtl
-);
+void listCtlDestroy(tListCtl *pCtl);
 
-UWORD listCtlAddEntry(
-	IN tListCtl *pCtl,
-	IN char *szTxt
-);
+UWORD listCtlAddEntry(tListCtl *pCtl, char *szTxt);
 
-void listCtlRemoveEntry(
-	IN tListCtl *pCtl,
-	IN UWORD uwIdx
-);
+void listCtlRemoveEntry(tListCtl *pCtl, UWORD uwIdx);
 
-void listCtlDraw(
-	IN tListCtl *pCtl
-);
+void listCtlDraw(tListCtl *pCtl);
 
-FUBYTE listCtlProcessClick(
-	IN tListCtl *pCtl,
-	IN UWORD uwMouseX,
-	IN UWORD uwMouseY
-);
+FUBYTE listCtlProcessClick(tListCtl *pCtl, UWORD uwMouseX, UWORD uwMouseY);
 
 #endif // OF_GAMESTATES_MENU_LISTCTL_H
