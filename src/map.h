@@ -23,6 +23,11 @@
 #define MAP_LOGIC_CAPTURE2 'C'
 
 #define MAP_MAX_SIZE 128
+#define MAP_NAME_MAX 30
+#define MAP_AUTHOR_MAX 30
+
+#define MAP_MODE_CONQUEST 1
+#define MAP_MODE_CTF 2
 
 typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx
@@ -31,10 +36,13 @@ typedef struct _tTile {
 
 typedef struct _tMap {
 	char szPath[200];
+	char szName[MAP_NAME_MAX];
+	char szAuthor[MAP_AUTHOR_MAX];
 	FUBYTE fubWidth;
 	FUBYTE fubHeight;
 	FUBYTE fubControlPointCount;
 	FUBYTE fubSpawnCount;
+	UBYTE ubMode;
 	tMapTile pData[MAP_MAX_SIZE][MAP_MAX_SIZE];
 } tMap;
 

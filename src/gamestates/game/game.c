@@ -8,6 +8,7 @@
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
 #include <ace/managers/rand.h>
+#include <ace/managers/system.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include "cursor.h"
@@ -224,11 +225,9 @@ void gsGameCreate(void) {
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
 
-	// Get some speed out of unnecessary DMA
-	g_pCustom->dmacon = BITCLR | DMAF_DISK;
-
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
+	systemUnuse();
 }
 
 static void gameSummaryLoop(void) {
@@ -372,9 +371,8 @@ void gsGameLoop(void) {
 }
 
 void gsGameDestroy(void) {
-	// Return DMA to correct state
+	systemUse();
 	logBlockBegin("gsGameDestroy()");
-	g_pCustom->dmacon = BITSET | DMAF_DISK;
 
 	aiManagerDestroy();
 

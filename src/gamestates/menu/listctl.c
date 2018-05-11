@@ -5,6 +5,8 @@
 
 #define LISTCTL_BTN_WIDTH 10
 
+tTextBitMap *s_pEntryTextBfr;
+
 tListCtl *listCtlCreate(
 	tBitMap *pBfr,
 	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight,
@@ -32,6 +34,8 @@ tListCtl *listCtlCreate(
 
 	pCtl->pEntries =  memAllocFastClear(uwEntryMaxCnt * sizeof(char*));
 
+	s_pEntryTextBfr = fontCreateTextBitMap(uwWidth, pFont->uwHeight);
+
 	buttonAdd(
 		uwX + uwWidth - LISTCTL_BTN_WIDTH-2, uwY+2,
 		LISTCTL_BTN_WIDTH, LISTCTL_BTN_WIDTH, "U", 0
@@ -46,9 +50,11 @@ tListCtl *listCtlCreate(
 }
 
 void listCtlDestroy(tListCtl *pCtl) {
-	for(UWORD i = pCtl->uwEntryCnt; i--;)
+	for(UWORD i = pCtl->uwEntryCnt; i--;) {
 		listCtlRemoveEntry(pCtl, i);
+	}
 	memFree(pCtl->pEntries, pCtl->uwEntryMaxCnt * sizeof(char*));
+	fontDestroyTextBitMap(s_pEntryTextBfr);
 	memFree(pCtl, sizeof(tListCtl));
 }
 
@@ -107,9 +113,10 @@ void listCtlDraw(tListCtl *pCtl) {
 				pCtl->sRect.uwWidth - LISTCTL_BTN_WIDTH - 2 - 2 - 1, pCtl->ubEntryHeight, 7
 			);
 		}
-		fontDrawStr(
-			pCtl->pBfr, pCtl->pFont,
-			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + i*pCtl->ubEntryHeight, pCtl->pEntries[i],
+		fontFillTextBitMap(pCtl->pFont, s_pEntryTextBfr, pCtl->pEntries[i]);
+		fontDrawTextBitMap(
+			pCtl->pBfr, s_pEntryTextBfr,
+			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + i*pCtl->ubEntryHeight,
 			13, FONT_LEFT| FONT_TOP | FONT_COOKIE
 		);
 	}
@@ -132,9 +139,10 @@ static void listCtlDrawEntry(tListCtl *pCtl, UWORD uwIdx) {
 			pCtl->sRect.uwWidth - LISTCTL_BTN_WIDTH - 2 - 2 - 1, pCtl->ubEntryHeight,
 			ubBgColor
 		);
-		fontDrawStr(
-			pCtl->pBfr, pCtl->pFont,
-			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + uwIdx*pCtl->ubEntryHeight, pCtl->pEntries[uwIdx],
+		fontFillTextBitMap(pCtl->pFont, s_pEntryTextBfr, pCtl->pEntries[uwIdx]);
+		fontDrawTextBitMap(
+			pCtl->pBfr, s_pEntryTextBfr,
+			pCtl->sRect.uwX+2+1, pCtl->sRect.uwY+2+1 + uwIdx*pCtl->ubEntryHeight,
 			13, FONT_LEFT| FONT_TOP | FONT_COOKIE
 		);
 	}

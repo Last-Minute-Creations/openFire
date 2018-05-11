@@ -23,13 +23,13 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	sprintf(szChecksumFileName, "precalc/%s.adl", szPath);
 	sprintf(szBitmapFileName, "precalc/%s", szPath);
 
-	FILE *pBitmapFile = fopen(szBitmapFileName, "rb");
-	FILE *pChecksumFile = fopen(szChecksumFileName, "rb");
+	tFile *pBitmapFile = fileOpen(szBitmapFileName, "rb");
+	tFile *pChecksumFile = fileOpen(szChecksumFileName, "rb");
 	if(pChecksumFile && pBitmapFile) {
 		ULONG ulPrevAdlerBm;
-		fread(&ulPrevAdlerBm, sizeof(ULONG), 1, pChecksumFile);
-		fclose(pChecksumFile);
-		fclose(pBitmapFile);
+		fileRead(pChecksumFile, &ulPrevAdlerBm, sizeof(ULONG));
+		fileClose(pChecksumFile);
+		fileClose(pBitmapFile);
 		// Check if adler is same
 		if(ulAdlerBm == ulPrevAdlerBm) {
 			logWrite("Loading from cache...\n");
@@ -37,10 +37,17 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 			logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 			return pBitmap;
 		}
+		else {
+			logWrite("WARN: Adler mismatch for %s!\n", szChecksumFileName);
+		}
 	}
 	else {
-		if(pBitmapFile) fclose(pBitmapFile);
-		if(pChecksumFile) fclose(pChecksumFile);
+		if(pBitmapFile) {
+			fileClose(pBitmapFile);
+		}
+		if(pChecksumFile) {
+			fileClose(pChecksumFile);
+		}
 	}
 
 	// Load first frame to determine sizes
@@ -100,9 +107,9 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	sprintf(szBitmapFileName, "precalc/%s", szPath);
 	bitmapSave(pBitmap, szBitmapFileName);
-	pChecksumFile = fopen(szChecksumFileName, "wb");
-	fwrite(&ulAdlerBm, sizeof(ULONG), 1, pChecksumFile);
-	fclose(pChecksumFile);
+	pChecksumFile = fileOpen(szChecksumFileName, "wb");
+	fileWrite(pChecksumFile, &ulAdlerBm, sizeof(ULONG));
+	fileClose(pChecksumFile);
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 	return pBitmap;
 fail:
@@ -238,11 +245,11 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 100;
 
-	precalcIncreaseProgress(5, "Generating tank frames");
+	precalcIncreaseProgress(15, "Generating tank frames");
 	vehicleTypeFramesCreate(pType, "tank", 1);
 
 	// Tank collision coords
-	precalcIncreaseProgress(5, "Calculating tank collision coords");
+	precalcIncreaseProgress(15, "Calculating tank collision coords");
 	pType->pCollisionPts[0].pPts[0].bX = 6;  pType->pCollisionPts[0].pPts[0].bY = 8;
 	pType->pCollisionPts[0].pPts[1].bX = 17; pType->pCollisionPts[0].pPts[1].bY = 8;
 	pType->pCollisionPts[0].pPts[2].bX = 29; pType->pCollisionPts[0].pPts[2].bY = 8;
@@ -274,11 +281,11 @@ void vehicleTypesCreate(void) {
 	pType->ubMaxFuel = 100;
 	pType->ubMaxLife = 1;
 
-	precalcIncreaseProgress(5, "Generating jeep frames");
+	precalcIncreaseProgress(15, "Generating jeep frames");
 	vehicleTypeFramesCreate(pType, "jeep", 0);
 
 	// Jeep collision coords
-	precalcIncreaseProgress(5, "Calculating jeep collision coords");
+	precalcIncreaseProgress(15, "Calculating jeep collision coords");
 	pType->pCollisionPts[0].pPts[0].bX = 8;  pType->pCollisionPts[0].pPts[0].bY = 11;
 	pType->pCollisionPts[0].pPts[1].bX = 16; pType->pCollisionPts[0].pPts[1].bY = 11;
 	pType->pCollisionPts[0].pPts[2].bX = 25; pType->pCollisionPts[0].pPts[2].bY = 11;

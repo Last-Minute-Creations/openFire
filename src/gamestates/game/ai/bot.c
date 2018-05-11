@@ -235,7 +235,7 @@ static void botProcessDriving(tBot *pBot) {
 				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
 				pBot->uwNextX = (UWORD)((pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
 				pBot->uwNextY = (UWORD)((pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
-				botSay(pBot, "Going to %hu,%hu\n", pNextNode->fubX, pNextNode->fubY);
+				botSay(pBot, "Going to %hu,%hu", pNextNode->fubX, pNextNode->fubY);
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			}
@@ -315,7 +315,7 @@ static void botProcessDriving(tBot *pBot) {
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 				botSay(
-					pBot, "Moving to next pos: %hu, %hu\n",
+					pBot, "Moving to next pos: %hu, %hu",
 					pNextNode->fubX, pNextNode->fubY
 				);
 			}

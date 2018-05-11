@@ -4,6 +4,7 @@
 #include <ace/managers/key.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/rand.h>
+#include <ace/managers/system.h>
 #include <ace/utils/custom.h>
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
@@ -227,7 +228,7 @@ void turretSim(void) {
 // But also, because of scroll, there'll be 7 turret rows and 6 cols.
 void turretUpdateSprites(void) {
 	logAvgBegin(s_pAvg);
-	g_pCustom->dmacon = BITSET | DMAF_BLITHOG;
+	systemSetDma(DMAB_BLITHOG, 1);
 	tTurret *pTurret;
 	UWORD uwSpriteLine;
 	const UWORD uwCopperInsCount = 6;
@@ -366,7 +367,7 @@ void turretUpdateSprites(void) {
 		copSetMove(&pCmdList[uwCopOffs+1].sMove, &g_pCopLc[1].uwLo, ulEndPos & 0xFFFF);
 		copSetMove(&pCmdList[uwCopOffs+2].sMove, &g_pCustom->copjmp2, 1);
 	}
-	g_pCustom->dmacon = BITCLR | DMAF_BLITHOG;
+	systemSetDma(DMAB_BLITHOG, 0);
 	logAvgEnd(s_pAvg);
 	// DMA-exact HOG on turretsFull map
 	// Avg turretUpdateSprites():  30.311 ms, min:  30.677 ms, max:  41.228 ms

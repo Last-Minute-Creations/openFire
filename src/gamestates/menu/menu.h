@@ -6,6 +6,8 @@
 #include <ace/utils/font.h>
 
 #define MENU_BPP 4
+#define MENU_COLOR_TEXT 13
+#define MENU_COLOR_BG 0
 
 void menuCreate(void);
 
