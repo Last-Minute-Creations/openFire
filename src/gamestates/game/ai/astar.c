@@ -8,8 +8,11 @@ tAstarData *astarCreate(void) {
 }
 
 void astarDestroy(tAstarData *pNav) {
+	// GCC -O2 heisenbug - hangs if ommited logBlockBegin/End here
+	logBlockBegin("astarDestroy(pNav: %p)", pNav);
 	heapDestroy(pNav->pFrontier);
 	memFree(pNav, sizeof(tAstarData));
+	logBlockEnd("astarDestroy()");
 }
 
 void astarStart(tAstarData *pNav, tAiNode *pNodeSrc, tAiNode *pNodeDst) {

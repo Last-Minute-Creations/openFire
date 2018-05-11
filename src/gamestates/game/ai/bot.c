@@ -83,8 +83,9 @@ void botManagerCreate(FUBYTE fubBotLimit) {
 
 void botManagerDestroy(void) {
 	logBlockBegin("botManagerDestroy()");
-	for(UBYTE i = s_fubBotCount; i--;)
+	for(UBYTE i = s_fubBotCount; i--;) {
 		astarDestroy(s_pBots[i].pNavData);
+	}
 	memFree(s_pBots, sizeof(tBot) * s_fubBotLimit);
 	logBlockEnd("botManagerDestroy()");
 }
@@ -234,7 +235,7 @@ static void botProcessDriving(tBot *pBot) {
 				tAiNode *pNextNode = pBot->pNavData->sRoute.pNodes[pBot->pNavData->sRoute.ubCurrNode];
 				pBot->uwNextX = (UWORD)((pNextNode->fubX << MAP_TILE_SIZE) + MAP_HALF_TILE);
 				pBot->uwNextY = (UWORD)((pNextNode->fubY << MAP_TILE_SIZE) + MAP_HALF_TILE);
-				botSay(pBot, "Going to %hu,%hu\n", pNextNode->fubX, pNextNode->fubY);
+				botSay(pBot, "Going to %hu,%hu", pNextNode->fubX, pNextNode->fubY);
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 			}
@@ -314,7 +315,7 @@ static void botProcessDriving(tBot *pBot) {
 				pBot->ubTick = 10;
 				pBot->ubState = AI_BOT_STATE_MOVING_TO_NODE;
 				botSay(
-					pBot, "Moving to next pos: %hu, %hu\n",
+					pBot, "Moving to next pos: %hu, %hu",
 					pNextNode->fubX, pNextNode->fubY
 				);
 			}

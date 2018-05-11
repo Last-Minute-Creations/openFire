@@ -1,25 +1,25 @@
 #include "json.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <ace/managers/log.h>
 #include <ace/managers/memory.h>
+#include <ace/utils/file.h>
 
 tJson *jsonCreate(const char *szFilePath) {
 	logBlockBegin("jsonCreate(szFilePath: %s)", szFilePath);
 	tJson *pJson = memAllocFast(sizeof(tJson));
 
 	// Read whole file to string
-	FILE *pFile = fopen(szFilePath, "rb");
+	tFile *pFile = fileOpen(szFilePath, "rb");
 	if(!pFile)
 		logWrite("ERR: File doesn't exist: '%s'\n", szFilePath);
-	fseek(pFile, 0, SEEK_END);
-	ULONG ulFileSize = ftell(pFile);
-	fseek(pFile, 0, SEEK_SET);
+	fileSeek(pFile, 0, FILE_SEEK_END);
+	ULONG ulFileSize = fileGetPos(pFile);
+	fileSeek(pFile, 0, FILE_SEEK_SET);
 
 	pJson->szData = memAllocFast(ulFileSize+1);
-	fread(pJson->szData, 1, ulFileSize, pFile);
+	fileRead(pFile, pJson->szData, ulFileSize);
 	pJson->szData[ulFileSize] = '\0';
-	fclose(pFile);
+	fileClose(pFile);
 
 	jsmn_parser sJsonParser;
 	jsmn_init(&sJsonParser);

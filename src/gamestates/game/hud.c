@@ -2,6 +2,7 @@
 #include <ace/managers/blit.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/bitmap.h>
+#include <ace/utils/custom.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/console.h"
@@ -12,6 +13,7 @@ tSimpleBufferManager *g_pHudBfr;
 static tBitMap *s_pHudDriving, *s_pHudSelecting;
 static FUBYTE s_fubHudState, s_fubHudPrevState;
 static tFont *s_pHudFont;
+static tTextBitMap *s_pSpawnTextBfr;
 
 static UWORD s_uwPrevTickets[2];
 static FUBYTE s_fubFrame;
@@ -30,6 +32,7 @@ void hudCreate(tFont *pFont) {
 		TAG_DONE
 	);
 	s_pHudFont = pFont;
+	s_pSpawnTextBfr = fontCreateTextBitMap(32, pFont->uwHeight);
 
 	tCopCmd *pCopList = g_pWorldView->pCopList->pBackBfr->pList;
 	copSetWait(
@@ -39,11 +42,11 @@ void hudCreate(tFont *pFont) {
 	);
 	copSetMove(
 		&pCopList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove,
-		&custom.dmacon, BITCLR | DMAF_RASTER | DMAF_SPRITE
+		&g_pCustom->dmacon, BITCLR | DMAF_RASTER | DMAF_SPRITE
 	);
 	copSetMove(
 		&pCopList[WORLD_COP_VPHUD_DMAON_POS].sMove,
-		&custom.dmacon, BITSET|DMAF_RASTER
+		&g_pCustom->dmacon, BITSET|DMAF_RASTER
 	);
 	// Same for front bfr
 	CopyMemQuick(
@@ -83,16 +86,16 @@ void hudChangeState(FUBYTE fubState) {
 	tCopCmd *pFrontList = g_pWorldView->pCopList->pFrontBfr->pList;
 	tCopCmd *pBackList = g_pWorldView->pCopList->pBackBfr->pList;
 	if(fubState == HUD_STATE_DRIVING) {
-		pCrossCtl = &custom.spr[2].ctl;
+		pCrossCtl = &g_pCustom->spr[2].ctl;
 		uwDmaCon = BITCLR | DMAF_RASTER | DMAF_SPRITE;
 	}
 	else {
-		pCrossCtl = &custom.spr[0].ctl;
+		pCrossCtl = &g_pCustom->spr[0].ctl;
 		uwDmaCon = BITCLR | DMAF_RASTER;
 	}
 	// Disable/enable sprite DMA during hud
-	copSetMove(&pBackList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &custom.dmacon, uwDmaCon);
-	copSetMove(&pFrontList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &custom.dmacon, uwDmaCon);
+	copSetMove(&pBackList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &g_pCustom->dmacon, uwDmaCon);
+	copSetMove(&pFrontList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &g_pCustom->dmacon, uwDmaCon);
 	// Disable/enable crosshair sprite during hud
 	copSetMove(&pBackList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
 	copSetMove(&pFrontList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
@@ -131,8 +134,9 @@ static void hudDrawTeamScore(FUBYTE fubTeam) {
 	char szSpawnBfr[6];
 	blitRect(g_pHudBfr->pBuffer, (WORD)uwTicketX, (WORD)uwTicketY[fubTeam], 26, 5, 0);
 	sprintf(szSpawnBfr, "%5hu", g_pTeams[fubTeam].uwTicketsLeft);
-	fontDrawStr(
-		g_pHudBfr->pBuffer, s_pHudFont, uwTicketX, uwTicketY[fubTeam], szSpawnBfr,
+	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szSpawnBfr);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBuffer, s_pSpawnTextBfr, uwTicketX, uwTicketY[fubTeam],
 		pTeamColors[fubTeam], FONT_COOKIE | FONT_LAZY
 	);
 	s_uwPrevTickets[fubTeam] = g_pTeams[fubTeam].uwTicketsLeft;
@@ -180,6 +184,7 @@ void hudUpdate(void) {
 
 void hudDestroy(void) {
 	consoleDestroy();
+	fontDestroyTextBitMap(s_pSpawnTextBfr);
 
 	bitmapDestroy(s_pHudDriving);
 	bitmapDestroy(s_pHudSelecting);

@@ -300,18 +300,22 @@ void controlSim(void) {
 			if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
 				// Brown taking over green
 				fbCaptureDir = -1;
-				if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL)
+				if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
-				else
+				}
+				else {
 					pPoint->fubDestTeam = TEAM_RED;
+				}
 			}
 			else {
 				// Green taking over brown
 				fbCaptureDir = 1;
-				if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL)
+				if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
-				else
+				}
+				else {
 					pPoint->fubDestTeam = TEAM_BLUE;
+				}
 			}
 		}
 		// Process takeover
@@ -320,18 +324,23 @@ void controlSim(void) {
 			CONTROL_POINT_LIFE_RED,	CONTROL_POINT_LIFE_BLUE
 		);
 
-		if(pPoint->fuwLife == CONTROL_POINT_LIFE_RED)
+		if(pPoint->fuwLife == CONTROL_POINT_LIFE_RED) {
 			controlCapturePoint(pPoint, TEAM_RED);
-		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_BLUE)
+		}
+		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_BLUE) {
 			controlCapturePoint(pPoint, TEAM_BLUE);
-		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL)
+		}
+		else if(pPoint->fuwLife == CONTROL_POINT_LIFE_NEUTRAL) {
 			controlCapturePoint(pPoint, TEAM_NONE);
+		}
 
 		// Calc domination ratio for bleed
-		if(pPoint->fubTeam == TEAM_BLUE)
+		if(pPoint->fubTeam == TEAM_BLUE) {
 			++fubControlledByBlue;
-		else if(pPoint->fubTeam == TEAM_RED)
+		}
+		else if(pPoint->fubTeam == TEAM_RED) {
 			++fubControlledByRed;
+		}
 
 		// Reset for next counting during player process
 		pPoint->fubBrownCount = 0;
@@ -342,13 +351,16 @@ void controlSim(void) {
 	if(s_uwFrameCounter >= 50*5) {
 		s_uwFrameCounter -= 50*5;
 		FUBYTE fubDelta = (ABS(fubControlledByRed - fubControlledByBlue)+1) >> 1;
-		if(fubControlledByRed > fubControlledByBlue)
+		if(fubControlledByRed > fubControlledByBlue) {
 			g_pTeams[TEAM_BLUE].uwTicketsLeft = MAX(0, g_pTeams[TEAM_BLUE].uwTicketsLeft - fubDelta);
-		else if(fubControlledByRed < fubControlledByBlue)
+		}
+		else if(fubControlledByRed < fubControlledByBlue) {
 			g_pTeams[TEAM_RED].uwTicketsLeft = MAX(0, g_pTeams[TEAM_RED].uwTicketsLeft - fubDelta);
+		}
 	}
-	else
+	else {
 		++s_uwFrameCounter;
+	}
 }
 
 void controlRedrawPoints(void) {
@@ -359,14 +371,16 @@ void controlRedrawPoints(void) {
 			g_pWorldMainBfr,
 			pPoint->fubTileX << MAP_TILE_SIZE, pPoint->fubTileY << MAP_TILE_SIZE,
 			MAP_FULL_TILE, MAP_FULL_TILE
-		))
+		)) {
 			continue;
+		}
 		// TODO could be drawn only on fubTileLife change
 		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
 		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
 		FUWORD fuwTileProgress = ABS(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
-		if(pPoint->fubDestTeam == TEAM_NONE)
+		if(pPoint->fubDestTeam == TEAM_NONE) {
 			fuwTileProgress = CONTROL_POINT_LIFE - fuwTileProgress;
+		}
 		fuwTileProgress = (MAP_FULL_TILE * fuwTileProgress) / CONTROL_POINT_LIFE;
 		FUWORD fuwAntiProgress = MAP_FULL_TILE - fuwTileProgress;
 
@@ -378,20 +392,23 @@ void controlRedrawPoints(void) {
 				MAP_FULL_TILE, fuwAntiProgress
 			);
 		}
-		if(fuwTileProgress)
+		if(fuwTileProgress) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
 				((MAP_TILE_CAPTURE_BLUE + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
 				g_pWorldMainBfr->pBuffer, uwX, uwY + fuwAntiProgress,
 				MAP_FULL_TILE, fuwTileProgress
 			);
+		}
 	}
 }
 
 tControlPoint *controlPointGetAt(FUBYTE fubTileX, FUBYTE fubTileY) {
 	FUBYTE i; tControlPoint *pPoint;
-	for(i = g_fubControlPointCount, pPoint = &g_pControlPoints[0]; i--; ++pPoint)
-		if(pPoint->fubTileX == fubTileX &&	pPoint->fubTileY == fubTileY)
+	for(i = g_fubControlPointCount, pPoint = &g_pControlPoints[0]; i--; ++pPoint) {
+		if(pPoint->fubTileX == fubTileX &&	pPoint->fubTileY == fubTileY) {
 			return pPoint;
+		}
+	}
 	return 0;
 }

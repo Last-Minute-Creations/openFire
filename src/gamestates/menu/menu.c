@@ -1,10 +1,11 @@
 #include "gamestates/menu/menu.h"
 #include <clib/dos_protos.h>
-#include <ace/utils/extview.h>
-#include <ace/utils/palette.h>
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
+#include <ace/utils/extview.h>
+#include <ace/utils/palette.h>
+#include <ace/managers/system.h>
 #include "config.h"
 #include "cursor.h"
 #include "map.h"
@@ -38,6 +39,7 @@ static void menuMainOnDemo(void) {
 #define MENU_BUTTON_OFFS_X 32
 
 void menuMainCreate(void) {
+	systemUse();
 	logBlockBegin("menuMainCreate()");
 	// Display logo
 	blitRect(
@@ -83,12 +85,15 @@ void menuMainCreate(void) {
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);
 	logBlockEnd("menuMainCreate()");
+	systemUnuse();
 }
 
 void menuMainDestroy(void) {
+	systemUse();
 	logBlockBegin("menuMainDestroy()");
 	buttonListDestroy();
 	logBlockEnd("menuMainDestroy()");
+	systemUnuse();
 }
 
 void menuCreate(void) {
@@ -116,12 +121,16 @@ void menuCreate(void) {
 
 	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
 
+	systemSetDma(DMAB_SPRITE, 1);
 	viewLoad(s_pView);
 	logBlockEnd("menuCreate()");
+	systemUnuse();
 }
 
 void menuDestroy(void) {
+	systemUse();
 	logBlockBegin("menuDestroy()");
+	systemSetDma(DMAB_SPRITE, 0);
 	viewLoad(0);
 	cursorDestroy();
 	fontDestroy(g_pMenuFont);
@@ -134,10 +143,12 @@ void menuLoop() {
 		gameClose();
 		return;
 	}
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 		buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
+	}
 
 	menuProcess();
+	vPortWaitForEnd(s_pVPort);
 }
 
 void menuProcess(void) {

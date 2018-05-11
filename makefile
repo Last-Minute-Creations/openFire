@@ -10,24 +10,41 @@ ifdef ComSpec
 	CP = copy
 	SLASH = \\
 	CURR_DIR=$(shell chdir)
+	ECHO = @echo
+	NEWLINE = @echo.
+	QUIETCOPY = > NUL
 else
 	# Linux/Amiga
 	RM = rm
 	CP = cp
 	SLASH = /
 	CURR_DIR = $(shell pwd)
+	ECHO = @echo
+	NEWLINE = @echo " "
+	QUIETCOPY =
 endif
 SL= $(strip $(SLASH))
 SRC_DIR = $(CURR_DIR)$(SL)src
 
 # Directories
 TMP_DIR = build
-ACE_DIR = ..$(SL)ace$
+ACE_DIR = ..$(SL)ace
 ACE_INC_DIR = $(ACE_DIR)$(SL)include
 
-# Compiler stuff
-CC = vc
-CC_FLAGS = +kick13 -c99 -I$(SRC_DIR) -I$(ACE_INC_DIR) -DAMIGA
+OF_CC ?= vc
+
+INCLUDES = -I$(SRC_DIR) -I$(ACE_DIR)/include
+ifeq ($(OF_CC), vc)
+	CC_FLAGS = +kick13 -c99 $(INCLUDES) -DAMIGA
+	ACE_AS = vc
+	AS_FLAGS = +kick13 -c
+	OBJDUMP =
+else ifeq ($(OF_CC), m68k-amigaos-gcc)
+	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O0
+	ACE_AS = vasmm68k_mot
+	AS_FLAGS = -quiet -x -m68010 -Faout
+	OBJDUMP = m68k-amigaos-objdump -S -d $@ > $@.dasm
+endif
 
 # File list
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -51,43 +68,44 @@ ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 
 #
 ace: $(ACE_OBJS)
-	$(MAKE) -C $(ACE_DIR) all
-	@echo.
+	$(MAKE) -C $(ACE_DIR) all ACE_CC=$(OF_CC)
+	$(NEWLINE)
 	@echo Copying ACE objs...
-	@echo.
-	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) > NUL
+	$(NEWLINE)
+	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) $(QUIETCOPY)
 
 of: $(OF_OBJS)
-	@echo.
+	$(NEWLINE)
 	@echo Linking...
-	@$(CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
+	@$(OF_CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
 
 # Main files
 $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c
 	@echo Building $<
-	@$(CC) $(CC_FLAGS) -c -o $@ $<
+	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
 # Game
 $(TMP_DIR)$(SL)gsgame_%.o: $(SRC_DIR)/gamestates/game/%.c
 	@echo Building $<
-	@$(CC) $(CC_FLAGS) -c -o $@ $<
+	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
 # Game AI
 $(TMP_DIR)$(SL)gsgame_ai_%.o: $(SRC_DIR)/gamestates/game/ai/%.c
 	@echo Building $<
-	@$(CC) $(CC_FLAGS) -c -o $@ $<
+	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
 # Menu
 $(TMP_DIR)$(SL)gsmenu_%.o: $(SRC_DIR)/gamestates/menu/%.c
 	@echo Building $<
-	@$(CC) $(CC_FLAGS) -c -o $@ $<
+	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
 # Precalc
 $(TMP_DIR)$(SL)gsprecalc_%.o: $(SRC_DIR)/gamestates/precalc/%.c
 	@echo Building $<
-	@$(CC) $(CC_FLAGS) -c -o $@ $<
+	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
 all: clear ace of
 
 clear:
+	$(ECHO) "a" > $(TMP_DIR)$(SL)foo.o
 	$(RM) $(TMP_DIR)$(SL)*.o

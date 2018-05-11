@@ -279,8 +279,9 @@ void aiManagerCreate(void) {
 
 	// Calculate tile costs
 	s_pTileCosts = memAllocFast(g_sMap.fubWidth * sizeof(UBYTE*));
-	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x) {
 		s_pTileCosts[x] = memAllocFastClear(g_sMap.fubHeight * sizeof(UBYTE));
+	}
 	aiCalcTileCosts();
 
 	// Create node network
@@ -292,8 +293,9 @@ void aiManagerDestroy(void) {
 	logBlockBegin("aiManagerDestroy()");
 	aiGraphDestroy();
 	botManagerDestroy();
-	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x)
+	for(FUBYTE x = 0; x != g_sMap.fubWidth; ++x) {
 		memFree(s_pTileCosts[x], g_sMap.fubHeight * sizeof(UBYTE));
+	}
 	memFree(s_pTileCosts, g_sMap.fubWidth * sizeof(UBYTE*));
 	logBlockEnd("aiManagerDestroy()");
 }

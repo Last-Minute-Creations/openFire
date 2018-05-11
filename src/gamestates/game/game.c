@@ -8,6 +8,7 @@
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
 #include <ace/managers/rand.h>
+#include <ace/managers/system.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
 #include "cursor.h"
@@ -159,7 +160,7 @@ void gsGameCreate(void) {
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
-	copSetMove(&pSpriteEnList[0].sMove, &custom.dmacon, BITSET | DMAF_SPRITE);
+	copSetMove(&pSpriteEnList[0].sMove, &g_pCustom->dmacon, BITSET | DMAF_SPRITE);
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS],
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS],
@@ -224,11 +225,9 @@ void gsGameCreate(void) {
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
 
-	// Get some speed out of unnecessary DMA
-	custom.dmacon = BITCLR | DMAF_DISK;
-
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
+	systemUnuse();
 }
 
 static void gameSummaryLoop(void) {
@@ -372,9 +371,8 @@ void gsGameLoop(void) {
 }
 
 void gsGameDestroy(void) {
-	// Return DMA to correct state
+	systemUse();
 	logBlockBegin("gsGameDestroy()");
-	custom.dmacon = BITSET | DMAF_DISK;
 
 	aiManagerDestroy();
 

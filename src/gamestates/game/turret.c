@@ -4,6 +4,7 @@
 #include <ace/managers/key.h>
 #include <ace/managers/blit.h>
 #include <ace/managers/rand.h>
+#include <ace/managers/system.h>
 #include <ace/utils/custom.h>
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/bob.h"
@@ -43,8 +44,8 @@ void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight) {
 	// TODO vehicle/turret jitter could be fixed by setting lsbit in ctl
 	// accordingly.
 	tCopCmd *pCopInit = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS];
-	copSetMove(&pCopInit[0].sMove, &custom.spr[1].ctl, 1);
-	copSetMove(&pCopInit[1].sMove, &custom.spr[0].ctl, 1);
+	copSetMove(&pCopInit[0].sMove, &g_pCustom->spr[1].ctl, 1);
+	copSetMove(&pCopInit[1].sMove, &g_pCustom->spr[0].ctl, 1);
 	// Same in front bfr
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_INIT_POS],
@@ -54,8 +55,8 @@ void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight) {
 
 	// Cleanup block for sprites trimmed from bottom
 	tCopCmd *pCopCleanup = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS];
-	copSetMove(&pCopCleanup[0].sMove, &custom.spr[1].ctl, 1);
-	copSetMove(&pCopCleanup[1].sMove, &custom.spr[0].ctl, 0);
+	copSetMove(&pCopCleanup[0].sMove, &g_pCustom->spr[1].ctl, 1);
+	copSetMove(&pCopCleanup[1].sMove, &g_pCustom->spr[0].ctl, 0);
 	CopyMemQuick(
 		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_CLEANUP_POS],
 		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_CLEANUP_POS],
@@ -211,15 +212,15 @@ void turretSim(void) {
  static void copyWithBlitter(UBYTE *pSrc, UBYTE *pDst, UWORD uwRowWidth, UWORD uwRowCnt) {
 	// Modulo: 0, 'cuz 2nd line will go from 1st, 3rd from 2nd etc.
 	WaitBlit();
-	custom.bltcon0 = USEA|USED|MINTERM_A;
-	custom.bltcon1 = 0;
-	custom.bltafwm = 0xFFFF;
-	custom.bltalwm = 0xFFFF;
-	custom.bltamod = 0;
-	custom.bltdmod = 0;
-	custom.bltapt = pSrc;
-	custom.bltdpt = pDst;
-	custom.bltsize = (uwRowCnt << 6) | uwRowWidth;
+	g_pCustom->bltcon0 = USEA|USED|MINTERM_A;
+	g_pCustom->bltcon1 = 0;
+	g_pCustom->bltafwm = 0xFFFF;
+	g_pCustom->bltalwm = 0xFFFF;
+	g_pCustom->bltamod = 0;
+	g_pCustom->bltdmod = 0;
+	g_pCustom->bltapt = pSrc;
+	g_pCustom->bltdpt = pDst;
+	g_pCustom->bltsize = (uwRowCnt << 6) | uwRowWidth;
 }
 
 // Screen is 320x256, tiles are 32x32, hud 64px, so 10x6 tiles on screen
@@ -227,7 +228,7 @@ void turretSim(void) {
 // But also, because of scroll, there'll be 7 turret rows and 6 cols.
 void turretUpdateSprites(void) {
 	logAvgBegin(s_pAvg);
-	custom.dmacon = BITSET | DMAF_BLITHOG;
+	systemSetDma(DMAB_BLITHOG, 1);
 	tTurret *pTurret;
 	UWORD uwSpriteLine;
 	const UWORD uwCopperInsCount = 6;
@@ -319,10 +320,10 @@ void turretUpdateSprites(void) {
 
 			// Add MOVEs - no need setting sprite VPos 'cuz WAIT ensures same line
 			UWORD uwSpritePos = 63 + (wSpriteBeginOnScreenX >> 1);
-			copSetMove(&pCmdList[uwCopOffs+1].sMove, &custom.color[16+3], pTeamColors[pTurret->ubTeam]);
-			copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.spr[0].pos, uwSpritePos);
-			copSetMove(&pCmdList[uwCopOffs+3].sMove, &custom.spr[0].datab, pSpriteBpls[1]);
-			copSetMove(&pCmdList[uwCopOffs+4].sMove, &custom.spr[0].dataa, pSpriteBpls[0]);
+			copSetMove(&pCmdList[uwCopOffs+1].sMove, &g_pCustom->color[16+3], pTeamColors[pTurret->ubTeam]);
+			copSetMove(&pCmdList[uwCopOffs+2].sMove, &g_pCustom->spr[0].pos, uwSpritePos);
+			copSetMove(&pCmdList[uwCopOffs+3].sMove, &g_pCustom->spr[0].datab, pSpriteBpls[1]);
+			copSetMove(&pCmdList[uwCopOffs+4].sMove, &g_pCustom->spr[0].dataa, pSpriteBpls[0]);
 			++uwTurretsInRow;
 			// Force 1 empty tile
 			++uwTileX;
@@ -362,11 +363,11 @@ void turretUpdateSprites(void) {
 	// Jump to cleanup if not completely filled
 	if(uwCopOffs < WORLD_COP_VPHUD_POS) {
 		ULONG ulEndPos = (ULONG)((void*)&pCmdList[WORLD_COP_VPHUD_DMAOFF_POS]);
-		copSetMove(&pCmdList[uwCopOffs+0].sMove, &pCopLc[1].uwHi, ulEndPos>>16);
-		copSetMove(&pCmdList[uwCopOffs+1].sMove, &pCopLc[1].uwLo, ulEndPos & 0xFFFF);
-		copSetMove(&pCmdList[uwCopOffs+2].sMove, &custom.copjmp2, 1);
+		copSetMove(&pCmdList[uwCopOffs+0].sMove, &g_pCopLc[1].uwHi, ulEndPos>>16);
+		copSetMove(&pCmdList[uwCopOffs+1].sMove, &g_pCopLc[1].uwLo, ulEndPos & 0xFFFF);
+		copSetMove(&pCmdList[uwCopOffs+2].sMove, &g_pCustom->copjmp2, 1);
 	}
-	custom.dmacon = BITCLR | DMAF_BLITHOG;
+	systemSetDma(DMAB_BLITHOG, 0);
 	logAvgEnd(s_pAvg);
 	// DMA-exact HOG on turretsFull map
 	// Avg turretUpdateSprites():  30.311 ms, min:  30.677 ms, max:  41.228 ms

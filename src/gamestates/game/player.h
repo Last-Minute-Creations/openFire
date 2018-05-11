@@ -91,7 +91,7 @@ void playerSay(
 	IN UBYTE isSayTeam
 );
 
-inline tPlayer *playerGetByVehicle(
+static inline tPlayer *playerGetByVehicle(
 	IN tVehicle *pVehicle
 ) {
 	UBYTE *pVehicleByteAddr = (UBYTE*)pVehicle;

@@ -13,6 +13,9 @@ static tFont *s_pFont;
 static const FUBYTE s_fubColorBlue = 12;
 static const FUBYTE s_fubColorRed  = 10;
 
+tTextBitMap *s_pBotTextBfr;
+tTextBitMap *s_pNameTextBfr;
+
 void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	logBlockBegin("scoreTableCreate(pHudVPort: %p, pFont: %p)", pHudVPort, pFont);
 	s_pView = viewCreate(0,
@@ -33,7 +36,6 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, 8*2,
 		TAG_DONE
 	);
-	s_pFont = pFont;
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 16);
 
@@ -47,15 +49,15 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-		&pCopLc[1].uwHi, ulHudListAddr >> 16
+		&g_pCopLc[1].uwHi, ulHudListAddr >> 16
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
+		&g_pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pBackBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-		&custom.copjmp2, 1
+		&g_pCustom->copjmp2, 1
 	);
 
 	// Jump to HUD - front buffer to front buffer
@@ -64,15 +66,15 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 0].sMove,
-		&pCopLc[1].uwHi, (UWORD)(ulHudListAddr >> 16)
+		&g_pCopLc[1].uwHi, (UWORD)(ulHudListAddr >> 16)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 1].sMove,
-		&pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
+		&g_pCopLc[1].uwLo, (UWORD)(ulHudListAddr & 0xFFFFF)
 	);
 	copSetMove(
 		&s_pView->pCopList->pFrontBfr->pList[8*2 + (6+2*SCORE_TABLE_BPP) + 2].sMove,
-		&custom.copjmp2, 1
+		&g_pCustom->copjmp2, 1
 	);
 
 	// Add a border
@@ -86,24 +88,27 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	blitRect(s_pBfr->pBuffer, 0, 191, 320, 1, 9);
 	blitRect(s_pBfr->pBuffer, 319, 0, 1, 192, 9);
 
-	const FUBYTE fubColorHeader = 13;
+	s_pFont = pFont;
+	s_pBotTextBfr = fontCreateTextBitMapFromStr(s_pFont, "[BOT]");
+	s_pNameTextBfr = fontCreateTextBitMap(128, pFont->uwHeight);
+	const UBYTE ubColorHeader = 13;
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 32, 4, "Name", fubColorHeader,
+		s_pBfr->pBuffer, s_pFont, 32, 4, "Name", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 96, 4, "Deaths", fubColorHeader,
+		s_pBfr->pBuffer, s_pFont, 96, 4, "Deaths", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 160, 4, "Kills", fubColorHeader,
+		s_pBfr->pBuffer, s_pFont, 160, 4, "Kills", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 224, 4, "Capture points", fubColorHeader,
+		s_pBfr->pBuffer, s_pFont, 224, 4, "Capture points", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
@@ -111,6 +116,8 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 }
 
 void scoreTableDestroy(void) {
+	fontDestroyTextBitMap(s_pBotTextBfr);
+	fontDestroyTextBitMap(s_pNameTextBfr);
 	viewDestroy(s_pView);
 }
 
@@ -118,14 +125,15 @@ void scoreTableUpdate(void) {
 	const FUBYTE fubColorBot = 4;
 	for(FUBYTE i = 0; i < g_ubPlayerCount; ++i) {
 		if(g_pPlayers[i].isBot) {
-			fontDrawStr(
-				s_pBfr->pBuffer, s_pFont,	6, 16 + 7*i, "[BOT]",
+			fontDrawTextBitMap(
+				s_pBfr->pBuffer, s_pBotTextBfr,	6, 16 + 7*i,
 				fubColorBot,
 				FONT_TOP | FONT_LEFT | FONT_COOKIE
 			);
 		}
-		fontDrawStr(
-			s_pBfr->pBuffer, s_pFont,	32, 16 + 7*i,	g_pPlayers[i].szName,
+		fontFillTextBitMap(s_pFont, s_pNameTextBfr, g_pPlayers[i].szName);
+		fontDrawTextBitMap(
+			s_pBfr->pBuffer, s_pNameTextBfr,	32, 16 + 7*i,
 			(g_pPlayers[i].ubTeam == TEAM_RED ? s_fubColorRed : s_fubColorBlue),
 			FONT_TOP | FONT_LEFT | FONT_COOKIE
 		);
