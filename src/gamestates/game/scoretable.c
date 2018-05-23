@@ -78,37 +78,37 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	);
 
 	// Add a border
-	blitRect(s_pBfr->pBuffer, 0, 0, 1, 192, 13);
-	blitRect(s_pBfr->pBuffer, 0, 0, 320, 1, 13);
-	blitRect(s_pBfr->pBuffer, 1, 1, 1, 191, 9);
-	blitRect(s_pBfr->pBuffer, 1, 1, 319, 1, 9);
+	blitRect(s_pBfr->pBack, 0, 0, 1, 192, 13);
+	blitRect(s_pBfr->pBack, 0, 0, 320, 1, 13);
+	blitRect(s_pBfr->pBack, 1, 1, 1, 191, 9);
+	blitRect(s_pBfr->pBack, 1, 1, 319, 1, 9);
 
-	blitRect(s_pBfr->pBuffer, 0, 190, 320, 1, 13);
-	blitRect(s_pBfr->pBuffer, 318, 0, 1, 191, 13);
-	blitRect(s_pBfr->pBuffer, 0, 191, 320, 1, 9);
-	blitRect(s_pBfr->pBuffer, 319, 0, 1, 192, 9);
+	blitRect(s_pBfr->pBack, 0, 190, 320, 1, 13);
+	blitRect(s_pBfr->pBack, 318, 0, 1, 191, 13);
+	blitRect(s_pBfr->pBack, 0, 191, 320, 1, 9);
+	blitRect(s_pBfr->pBack, 319, 0, 1, 192, 9);
 
 	s_pFont = pFont;
 	s_pBotTextBfr = fontCreateTextBitMapFromStr(s_pFont, "[BOT]");
 	s_pNameTextBfr = fontCreateTextBitMap(128, pFont->uwHeight);
 	const UBYTE ubColorHeader = 13;
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 32, 4, "Name", ubColorHeader,
+		s_pBfr->pBack, s_pFont, 32, 4, "Name", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 96, 4, "Deaths", ubColorHeader,
+		s_pBfr->pBack, s_pFont, 96, 4, "Deaths", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 160, 4, "Kills", ubColorHeader,
+		s_pBfr->pBack, s_pFont, 160, 4, "Kills", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
 	fontDrawStr(
-		s_pBfr->pBuffer, s_pFont, 224, 4, "Capture points", ubColorHeader,
+		s_pBfr->pBack, s_pFont, 224, 4, "Capture points", ubColorHeader,
 		FONT_TOP | FONT_LEFT | FONT_COOKIE
 	);
 
@@ -126,14 +126,14 @@ void scoreTableUpdate(void) {
 	for(FUBYTE i = 0; i < g_ubPlayerCount; ++i) {
 		if(g_pPlayers[i].isBot) {
 			fontDrawTextBitMap(
-				s_pBfr->pBuffer, s_pBotTextBfr,	6, 16 + 7*i,
+				s_pBfr->pBack, s_pBotTextBfr,	6, 16 + 7*i,
 				fubColorBot,
 				FONT_TOP | FONT_LEFT | FONT_COOKIE
 			);
 		}
 		fontFillTextBitMap(s_pFont, s_pNameTextBfr, g_pPlayers[i].szName);
 		fontDrawTextBitMap(
-			s_pBfr->pBuffer, s_pNameTextBfr,	32, 16 + 7*i,
+			s_pBfr->pBack, s_pNameTextBfr,	32, 16 + 7*i,
 			(g_pPlayers[i].ubTeam == TEAM_RED ? s_fubColorRed : s_fubColorBlue),
 			FONT_TOP | FONT_LEFT | FONT_COOKIE
 		);
@@ -143,13 +143,13 @@ void scoreTableUpdate(void) {
 void scoreTableShowSummary(void) {
 	if(!g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		fontDrawStr(
-			s_pBfr->pBuffer, s_pFont, 160, 160, "Red Wins!",
+			s_pBfr->pBack, s_pFont, 160, 160, "Red Wins!",
 			s_fubColorRed, FONT_COOKIE | FONT_CENTER
 		);
 	}
 	else {
 		fontDrawStr(
-			s_pBfr->pBuffer, s_pFont, 160, 160, "Blue Wins!",
+			s_pBfr->pBack, s_pFont, 160, 160, "Blue Wins!",
 			s_fubColorBlue, FONT_COOKIE | FONT_CENTER
 		);
 	}

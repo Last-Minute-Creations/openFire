@@ -61,7 +61,7 @@ void hudCreate(tFont *pFont) {
 	);
 
 	// Initial draw on buffer
-	bitmapLoadFromFile(g_pHudBfr->pBuffer, "data/hud/blank.bm", 0, 0);
+	bitmapLoadFromFile(g_pHudBfr->pBack, "data/hud/blank.bm", 0, 0);
 	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
 	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
 
@@ -77,7 +77,7 @@ void hudChangeState(FUBYTE fubState) {
 
 	s_fubHudState = fubState;
 	blitCopy(
-		pHudPanels[fubState], 0, 0, g_pHudBfr->pBuffer, 2, 2,
+		pHudPanels[fubState], 0, 0, g_pHudBfr->pBack, 2, 2,
 		104, (WORD)s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
 	);
 
@@ -115,14 +115,14 @@ static void drawHudBar(
 	// Black part of bar
 	if(uwCurrBarWidth != uwMaxBarWidth)
 		blitRect(
-			g_pHudBfr->pBuffer,	(WORD)(uwBarX + uwCurrBarWidth), (WORD)uwBarY,
+			g_pHudBfr->pBack,	(WORD)(uwBarX + uwCurrBarWidth), (WORD)uwBarY,
 			(WORD)(uwMaxBarWidth - uwCurrBarWidth), uwBarHeight, 0
 		);
 
 	// Colored part of bar
 	if(uwCurrBarWidth)
 		blitRect(
-			g_pHudBfr->pBuffer, (WORD)uwBarX, (WORD)uwBarY,
+			g_pHudBfr->pBack, (WORD)uwBarX, (WORD)uwBarY,
 			(WORD)uwCurrBarWidth, (WORD)uwBarHeight, ubColor
 		);
 }
@@ -132,11 +132,11 @@ static void hudDrawTeamScore(FUBYTE fubTeam) {
 	const UWORD uwTicketY[2] = {2+35+3, 2+35+3+5+4};
 	const UBYTE pTeamColors[2] = {12, 10};
 	char szSpawnBfr[6];
-	blitRect(g_pHudBfr->pBuffer, (WORD)uwTicketX, (WORD)uwTicketY[fubTeam], 26, 5, 0);
+	blitRect(g_pHudBfr->pBack, (WORD)uwTicketX, (WORD)uwTicketY[fubTeam], 26, 5, 0);
 	sprintf(szSpawnBfr, "%5hu", g_pTeams[fubTeam].uwTicketsLeft);
 	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szSpawnBfr);
 	fontDrawTextBitMap(
-		g_pHudBfr->pBuffer, s_pSpawnTextBfr, uwTicketX, uwTicketY[fubTeam],
+		g_pHudBfr->pBack, s_pSpawnTextBfr, uwTicketX, uwTicketY[fubTeam],
 		pTeamColors[fubTeam], FONT_COOKIE | FONT_LAZY
 	);
 	s_uwPrevTickets[fubTeam] = g_pTeams[fubTeam].uwTicketsLeft;

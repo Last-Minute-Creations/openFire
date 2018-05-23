@@ -56,6 +56,8 @@ void worldMapChangeTile(UBYTE ubX, UBYTE ubY, UBYTE ubLogicTileIdx);
 
 void worldMapSetBuffers(tBitMap *pTileset, tBitMap *pFront, tBitMap *pBack);
 
+void worldMapSwapBuffers(void);
+
 void worldMapRequestUpdateTile(UBYTE ubX, UBYTE ubY);
 
 UBYTE worldMapTileFromLogic(FUBYTE ubTileX, FUBYTE ubTileY);

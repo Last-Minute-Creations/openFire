@@ -374,7 +374,7 @@ void controlRedrawPoints(void) {
 		)) {
 			continue;
 		}
-		// TODO could be drawn only on fubTileLife change
+		// TODO could be drawn only on fubTileLife change, but watch out for dblbuf
 		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
 		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
 		FUWORD fuwTileProgress = ABS(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
@@ -388,7 +388,7 @@ void controlRedrawPoints(void) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
 				(MAP_TILE_CAPTURE_BLUE + pPoint->fubTeam) << MAP_TILE_SIZE,
-				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				g_pWorldMainBfr->pBack, uwX, uwY,
 				MAP_FULL_TILE, fuwAntiProgress
 			);
 		}
@@ -396,7 +396,7 @@ void controlRedrawPoints(void) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
 				((MAP_TILE_CAPTURE_BLUE + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
-				g_pWorldMainBfr->pBuffer, uwX, uwY + fuwAntiProgress,
+				g_pWorldMainBfr->pBack, uwX, uwY + fuwAntiProgress,
 				MAP_FULL_TILE, fuwTileProgress
 			);
 		}

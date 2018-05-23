@@ -315,7 +315,7 @@ void vehicleDraw(tVehicle *pVehicle) {
 		if(bobDraw(pMainBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
 			blitCopyMask(
 				pAuxBob->sData.pBitmap, 0, pAuxBob->uwOffsY,
-				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				g_pWorldMainBfr->pBack, uwX, uwY,
 				VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
 				(UWORD*)pAuxBob->sData.pMask->Planes[0]
 			);

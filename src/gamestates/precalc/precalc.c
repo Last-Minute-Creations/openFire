@@ -43,26 +43,26 @@ void precalcCreate(void) {
 
 	copBlockDisableSprites(s_pView->pCopList, 0xFF);
 	paletteLoad("data/loading.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
-	bitmapLoadFromFile(s_pBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
+	bitmapLoadFromFile(s_pBuffer->pBack, "data/menu/logo.bm", 80, 16);
 	s_pLoadingVehicle = bitmapCreateFromFile("data/loading/tank.bm");
 
 	s_isHdd = 1;
 
 	s_pFont = fontCreate("data/silkscreen5.fnt");
 	fontDrawStr(
-		s_pBuffer->pBuffer, s_pFont, 320/2, 256/4,
+		s_pBuffer->pBack, s_pFont, 320/2, 256/4,
 		"Precalculating...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 	);
 	if(s_isHdd) {
 		fontDrawStr(
-			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+			s_pBuffer->pBack, s_pFont, 320/2, 256/4 + 10,
 			"This will take a long time only once",
 			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 		);
 	}
 	else {
 		fontDrawStr(
-			s_pBuffer->pBuffer, s_pFont, 320/2, 256/4 + 10,
+			s_pBuffer->pBack, s_pFont, 320/2, 256/4 + 10,
 			"For better load times put this game on HDD",
 			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 		);
@@ -129,7 +129,7 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/6;
 	blitCopy(
 		s_pLoadingVehicle, 0, ((s_fubProgress*6)/100) * s_pLoadingVehicle->Rows/6,
-		s_pBuffer->pBuffer,
+		s_pBuffer->pBack,
 		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
 		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
 		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE, 0xFF
@@ -137,7 +137,7 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 
 	// BG + outline
 	blitRect(
-		s_pBuffer->pBuffer,
+		s_pBuffer->pBack,
 		uwProgressX - 1,	uwProgressY - 1,
 		1+ uwProgressWidth + 1, 1 + uwProgressHeight + 1,
 		PRECALC_COLOR_PROGRESS_OUTLINE
@@ -146,20 +146,20 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	// Progress
 	UWORD uwFillWidth = (s_fubProgress*uwProgressWidth)/100;
 	blitRect(
-		s_pBuffer->pBuffer,
+		s_pBuffer->pBack,
 		(WORD)uwProgressX,	(WORD)uwProgressY,
 		(WORD)uwFillWidth,	(WORD)uwProgressHeight,
 		PRECALC_COLOR_PROGRESS_FILL
 	);
 	blitRect(
-		s_pBuffer->pBuffer,
+		s_pBuffer->pBack,
 		(WORD)(uwProgressX + uwFillWidth), (WORD)uwProgressY,
 		(WORD)(uwProgressWidth - uwFillWidth), (WORD)uwProgressHeight, 0
 	);
 
 	// Text
 	fontDrawStr(
-		s_pBuffer->pBuffer, s_pFont,
+		s_pBuffer->pBack, s_pFont,
 		uwProgressX + uwProgressWidth/2, uwProgressY + uwProgressHeight/2,
 		szText, PRECALC_COLOR_TEXT, FONT_CENTER | FONT_SHADOW | FONT_COOKIE
 	);

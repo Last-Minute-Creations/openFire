@@ -17,7 +17,7 @@ static tExplosion s_pExplosions[EXPLOSIONS_MAX];
 static tBitMap *s_pBitmap;
 static tBitMap *s_pMask;
 
-void explosionsAdd(const IN UWORD uwX, const IN UWORD uwY) {
+void explosionsAdd(UWORD uwX, UWORD uwY) {
 	// Find free explosion slot
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		if(s_pExplosions[i].pBob->ubState < BOB_STATE_START_DRAWING) {

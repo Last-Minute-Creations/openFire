@@ -37,7 +37,6 @@ typedef struct _tVehicle {
 	UBYTE ubFuel;
 	UBYTE ubLife;
 	UBYTE ubCooldown; ///< Cooldown timer after fire
-	UBYTE ubIsOnSilo;
 } tVehicle;
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);

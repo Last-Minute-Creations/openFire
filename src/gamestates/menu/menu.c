@@ -43,16 +43,16 @@ void menuMainCreate(void) {
 	logBlockBegin("menuMainCreate()");
 	// Display logo
 	blitRect(
-		g_pMenuBuffer->pBuffer, 0, 0,
-		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3),
-		(WORD)(g_pMenuBuffer->pBuffer->Rows),
+		g_pMenuBuffer->pBack, 0, 0,
+		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBack) << 3),
+		(WORD)(g_pMenuBuffer->pBack->Rows),
 		0
 	);
 	blitWait();
-	bitmapLoadFromFile(g_pMenuBuffer->pBuffer, "data/menu/logo.bm", 80, 16);
+	bitmapLoadFromFile(g_pMenuBuffer->pBack, "data/menu/logo.bm", 80, 16);
 
 	// Create buttons
-	buttonListCreate(10, g_pMenuBuffer->pBuffer, g_pMenuFont);
+	buttonListCreate(10, g_pMenuBuffer->pBack, g_pMenuFont);
 	buttonAdd(
 		MENU_BUTTON_OFFS_X, 64   , MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT,
 		"PLAY GAME", menuMainOnStartGame
@@ -70,17 +70,17 @@ void menuMainCreate(void) {
 	// Add notice
 	const UWORD uwColorNotice = 14;
 	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 236,
+		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 236,
 		"Founded by KaiN, Selur and Softiron",
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);
 	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 243,
+		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 243,
 		"as a RetroKomp 2017 Gamedev Compo entry.",
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);
 	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, 320/2, 250,
+		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 250,
 		"Remaining authors are listed on project page.",
 		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
 	);

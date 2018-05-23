@@ -104,7 +104,7 @@ UWORD bobUndraw(tBob *pBob, tSimpleBufferManager *pDest) {
 		return 0;
 	blitCopyAligned(
 		pBob->pBg, 0, 0,
-		pDest->pBuffer, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0,
+		pDest->pBack, pBob->sPrevCoord.sUwCoord.uwX & 0xFFF0,
 		pBob->sPrevCoord.sUwCoord.uwY + pBob->sBgDrawOffset.uwDy,
 		bitmapGetByteWidth(pBob->pBg) << 3, pBob->sBgDrawOffset.uwHeight
 	);
@@ -140,7 +140,7 @@ UWORD bobDraw(
 		uwFrameHeight = pBob->sBgDrawOffset.uwHeight = pBob->fubMaxFrameHeight;
 	}
 	blitCopyAligned(
-		pDest->pBuffer, uwX & 0xFFF0, uwY + pBob->sBgDrawOffset.uwDy,
+		pDest->pBack, uwX & 0xFFF0, uwY + pBob->sBgDrawOffset.uwDy,
 		pBob->pBg, 0, 0,
 		bitmapGetByteWidth(pBob->pBg) << 3, pBob->sBgDrawOffset.uwHeight
 	);
@@ -148,7 +148,7 @@ UWORD bobDraw(
 	// Redraw bob
 	blitCopyMask(
 		pBob->sData.pBitmap, 0, pBob->uwOffsY + uwFrameDy,
-		pDest->pBuffer, uwX, uwY + uwFrameDy,
+		pDest->pBack, uwX, uwY + uwFrameDy,
 		bitmapGetByteWidth(pBob->sData.pBitmap)<<3, uwFrameHeight,
 		(UWORD*)pBob->sData.pMask->Planes[0]
 	);

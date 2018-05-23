@@ -118,7 +118,7 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 		blitCopyAligned(
 			pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
 			0, ubFrameIdx << MAP_TILE_SIZE,
-			g_pWorldMainBfr->pBuffer,
+			g_pWorldMainBfr->pBack,
 			pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,
 			MAP_FULL_TILE, MAP_FULL_TILE
 		);

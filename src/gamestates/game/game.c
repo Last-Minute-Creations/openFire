@@ -116,8 +116,7 @@ void gsGameCreate(void) {
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
-		TAG_DONE
-	);
+	TAG_DONE);
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
@@ -133,23 +132,22 @@ void gsGameCreate(void) {
 		TAG_VPORT_VIEW, g_pWorldView,
 		TAG_VPORT_HEIGHT, WORLD_VPORT_HEIGHT,
 		TAG_VPORT_BPP, WORLD_BPP,
-		TAG_DONE
-	);
+	TAG_DONE);
 	g_pWorldMainBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_sMap.fubWidth << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_sMap.fubHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
-		TAG_DONE
-	);
+		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
+	TAG_DONE);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
 		gamePopState();
 		return;
 	}
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
-	worldMapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
+	worldMapSetBuffers(s_pTiles, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
@@ -224,6 +222,15 @@ void gsGameCreate(void) {
 
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
+	if(g_pWorldMainBfr->pBack != g_pWorldMainBfr->pFront) {
+		// Might be too big to do in a single blit
+		for(UWORD i = 0; i < g_pWorldMainBfr->pBack->Rows; i+=32) {
+			blitCopyAligned(
+				g_pWorldMainBfr->pBack, 0, i, g_pWorldMainBfr->pFront, 0, i,
+				bitmapGetByteWidth(g_pWorldMainBfr->pBack) * 8, 32
+			);
+		}
+	}
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
@@ -247,9 +254,9 @@ void gsGameLoop(void) {
 	}
 	// Steering-irrelevant player input
 	if(keyUse(KEY_C))
-		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
+		bitmapSaveBmp(g_pWorldMainBfr->pFront, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
 	if(keyUse(KEY_L))
-		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
+		copDumpBfr(g_pWorldView->pCopList->pFrontBfr);
 	if(keyUse(KEY_T))
 		consoleChatBegin();
 	if(keyUse(KEY_TAB)) {
@@ -354,15 +361,16 @@ void gsGameLoop(void) {
 		viewProcessManagers(g_pWorldView);
 		copProcessBlocks();
 	}
-	else
+	else {
 		scoreTableProcessView();
+	}
 
 	logAvgBegin(s_pProcessAvgTurret);
-	turretSim();               // Turrets: targeting, rotation & projectile spawn
+	turretSim(); // Turrets: targeting, rotation & projectile spawn
 	logAvgEnd(s_pProcessAvgTurret);
 
 	logAvgBegin(s_pProcessAvgProjectile);
-	projectileSim();           // Projectiles: new positions, damage
+	projectileSim(); // Projectiles: new positions, damage
 	logAvgEnd(s_pProcessAvgProjectile);
 
 	logAvgBegin(s_pProcessAvgHud);

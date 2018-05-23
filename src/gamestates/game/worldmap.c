@@ -10,15 +10,25 @@
 #include "gamestates/game/turret.h"
 #include "gamestates/game/control.h"
 
-static tTileCoord s_pTilesToRedraw[9] = {{0, 0}};
-static UBYTE s_ubPendingTileCount;
+#define BUFFER_FRONT 0
+#define BUFFER_BACK 1
+
+static tTileCoord s_pTilesToRedraw[2][9] = {{{0, 0}}};
+static UBYTE s_ubPendingTiles[2];
+static UBYTE s_ubBufIdx;
 
 tBitMap *g_pMapTileset;
-static tBitMap *s_pBuffer;
+static tBitMap *s_pBuffers[2];
 
-void worldMapSetSrcDst(tBitMap *pTileset, tBitMap *pDst) {
+void worldMapSetBuffers(tBitMap *pTileset, tBitMap *pFront, tBitMap *pBack) {
 	g_pMapTileset = pTileset;
-	s_pBuffer = pDst;
+	s_pBuffers[BUFFER_FRONT] = pFront;
+	s_pBuffers[BUFFER_BACK] = pBack;
+	s_ubBufIdx = BUFFER_BACK;
+}
+
+void worldMapSwapBuffers(void) {
+	s_ubBufIdx = !s_ubBufIdx;
 }
 
 static UBYTE worldMapIsWater(UBYTE ubMapTile) {
@@ -102,7 +112,8 @@ static UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYT
 
 void worldMapCreate(void) {
 	logBlockBegin("worldMapCreate()");
-	s_ubPendingTileCount = 0;
+	s_ubPendingTiles[0] = 0;
+	s_ubPendingTiles[1] = 0;
 
 	buildingManagerReset();
 	controlManagerCreate(g_sMap.fubControlPointCount);
@@ -178,7 +189,7 @@ void worldMapGenerateLogic(void) {
 static void worldMapDrawTile(UBYTE ubX, UBYTE ubY, UBYTE ubTileIdx) {
 	blitCopyAligned(
 		g_pMapTileset, 0, ubTileIdx << MAP_TILE_SIZE,
-		s_pBuffer, ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
+		s_pBuffers[s_ubBufIdx], ubX << MAP_TILE_SIZE, ubY << MAP_TILE_SIZE,
 		MAP_FULL_TILE, MAP_FULL_TILE
 	);
 }
@@ -238,20 +249,23 @@ void worldMapDestroy(void) {
 void worldMapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
 	// TODO omit if not visible
 	// TODO when scrolling trick: omit if not yet drawn on redraw margin
-	++s_ubPendingTileCount;
-	s_pTilesToRedraw[s_ubPendingTileCount].ubX = ubTileX;
-	s_pTilesToRedraw[s_ubPendingTileCount].ubY = ubTileY;
+	++s_ubPendingTiles[0];
+	s_pTilesToRedraw[0][s_ubPendingTiles[0]].ubX = ubTileX;
+	s_pTilesToRedraw[0][s_ubPendingTiles[0]].ubY = ubTileY;
+	++s_ubPendingTiles[1];
+	s_pTilesToRedraw[1][s_ubPendingTiles[1]].ubX = ubTileX;
+	s_pTilesToRedraw[1][s_ubPendingTiles[1]].ubY = ubTileY;
 }
 
 /**
  * @todo Redraw proper tile type.
  */
 void worldMapUpdateTiles(void) {
-	while(s_ubPendingTileCount) {
-		FUBYTE fubTileX = s_pTilesToRedraw[s_ubPendingTileCount].ubX;
-		FUBYTE fubTileY = s_pTilesToRedraw[s_ubPendingTileCount].ubY;
+	if(s_ubPendingTiles[s_ubBufIdx]) {
+		FUBYTE fubTileX = s_pTilesToRedraw[s_ubBufIdx][s_ubPendingTiles[s_ubBufIdx]].ubX;
+		FUBYTE fubTileY = s_pTilesToRedraw[s_ubBufIdx][s_ubPendingTiles[s_ubBufIdx]].ubY;
 		worldMapDrawTile(fubTileX, fubTileY, worldMapTileFromLogic(fubTileX, fubTileY));
-		--s_ubPendingTileCount;
+		--s_ubPendingTiles[s_ubBufIdx];
 	}
 }
 

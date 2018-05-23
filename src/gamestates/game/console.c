@@ -29,18 +29,18 @@ void consoleDestroy(void) {
 void consoleWrite(char *szMsg, UBYTE ubColor) {
 	// Move remaining messages up
 	blitCopyAligned(
-		g_pHudBfr->pBuffer, 112, 9,
-		g_pHudBfr->pBuffer, 112, 3,
+		g_pHudBfr->pBack, 112, 9,
+		g_pHudBfr->pBack, 112, 3,
 		192, 41
 	);
 
 	// Clear last line
-	blitRect(g_pHudBfr->pBuffer, 112,45, 192, 5, 0);
+	blitRect(g_pHudBfr->pBack, 112,45, 192, 5, 0);
 
 	// Draw new message
 	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, szMsg);
 	fontDrawTextBitMap(
-		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 45,
+		g_pHudBfr->pBack, s_pChatLineBfr, 112, 45,
 		ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
 }
@@ -51,14 +51,14 @@ void consoleChatBegin(void) {
 	g_isChatting = 1;
 	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
 	fontDrawTextBitMap(
-		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
+		g_pHudBfr->pBack, s_pChatLineBfr, 112, 51,
 		CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
 }
 
 void consoleChatEnd(void) {
 	// Erase chat line
-	blitRect(g_pHudBfr->pBuffer, 112,51, 192, 5, 0);
+	blitRect(g_pHudBfr->pBack, 112,51, 192, 5, 0);
 	g_isChatting = 0;
 }
 
@@ -85,7 +85,7 @@ FUBYTE consoleChatProcessChar(char c) {
 			s_pChatBfr[s_fubChatLineLength] = 0; // for printing
 			fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
 			fontDrawTextBitMap(
-				g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
+				g_pHudBfr->pBack, s_pChatLineBfr, 112, 51,
 				CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 			);
 		}
