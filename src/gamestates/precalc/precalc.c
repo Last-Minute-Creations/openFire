@@ -98,6 +98,8 @@ void precalcLoop(void) {
 	viewDestroy(s_pView);
 	fontDestroy(s_pFont);
 
+	bitmapDestroy(s_pLoadingVehicle);
+
 	// All done - load menu
 	gamePushState(menuCreate, menuLoop, menuDestroy);
 	isInit = 1;
