@@ -132,33 +132,38 @@ UBYTE spawnIsCoveredByAnyPlayer(UBYTE ubSpawnIdx) {
 		if(pPlayer->ubState != PLAYER_STATE_DRIVING)
 			continue;
 		if(
-			ABS((pPlayer->sVehicle.uwX >> MAP_TILE_SIZE) - pSpawn->ubTileX) > 1 ||
-			ABS((pPlayer->sVehicle.uwY >> MAP_TILE_SIZE) - pSpawn->ubTileY) > 1
-		)
+			ABS((uwX >> MAP_TILE_SIZE) - pSpawn->ubTileX) > 1 ||
+			ABS((uwY >> MAP_TILE_SIZE) - pSpawn->ubTileY) > 1
+		) {
 			continue;
+		}
 
 		// Unrolled for performance
 		tBCoordYX *pEdges = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1].pPts;
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[0].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[0].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[0].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[0].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[2].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[2].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[2].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[2].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[5].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[5].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[5].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[5].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[7].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[7].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[7].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[7].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 	}
 	return 0;
 }

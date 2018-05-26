@@ -2,7 +2,6 @@
 #include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
 #include <fixmath/fix16.h>
-#include "gamestates/game/bob.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/precalc/precalc.h"
 #include "adler32.h"

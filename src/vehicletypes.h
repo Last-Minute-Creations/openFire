@@ -1,8 +1,8 @@
 #ifndef GUARD_OF_VEHICLETYPES_H
 #define GUARD_OF_VEHICLETYPES_H
 
-#include "gamestates/game/bob.h"
 #include "gamestates/game/team.h"
+#include <ace/utils/bitmap.h>
 
 #define VEHICLE_TYPE_COUNT 4
 #define VEHICLE_TYPE_TANK 0

@@ -57,9 +57,12 @@ void dataRecv(void) {
 void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
 	if(pPlayer->ubState != pState->ubPlayerState) {
 		pPlayer->ubState = pState->ubPlayerState;
-		if(pState->ubPlayerState == PLAYER_STATE_DRIVING)
-			pPlayer->sVehicle.pBob->ubState = BOB_STATE_START_DRAWING;
-		// TODO something here
+		if(pState->ubPlayerState == PLAYER_STATE_DRIVING) {
+			bobNewPush(&pPlayer->sVehicle.sBob);
+			if(pPlayer->ubCurrentVehicleType == VEHICLE_TYPE_TANK) {
+				bobNewPush(&pPlayer->sVehicle.sAuxBob);
+			}
+		}
 	}
 	if(pPlayer->ubState != PLAYER_STATE_LIMBO && pPlayer->ubState != PLAYER_STATE_OFF) {
 		// Driving, surfacing or bunkering

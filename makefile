@@ -36,18 +36,16 @@ OF_CC ?= vc
 TARGET ?= release
 TARGET_DEFINES=
 ifeq ($(TARGET), debug)
-	TARGET_DEFINES= -DGAME_DEBUG
+	TARGET_DEFINES += -DGAME_DEBUG -DACE_DEBUG
 endif
 
 INCLUDES = -I$(SRC_DIR) -I$(ACE_DIR)/include
 ifeq ($(OF_CC), vc)
 	CC_FLAGS = +kick13 -c99 $(INCLUDES) -DAMIGA
-	ACE_AS = vc
 	AS_FLAGS = +kick13 -c
 	OBJDUMP =
 else ifeq ($(OF_CC), m68k-amigaos-gcc)
 	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O3
-	ACE_AS = vasmm68k_mot
 	AS_FLAGS = -quiet -x -m68010 -Faout
 	OBJDUMP = m68k-amigaos-objdump -S -d $@ > $@.dasm
 endif
@@ -69,17 +67,13 @@ OF_GS_MENU_OBJS = $(addprefix $(TMP_DIR)$(SL)gsmenu_, $(notdir $(OF_GS_MENU_FILE
 OF_GS_PRECALC_FILES = $(wildcard $(SRC_DIR)/gamestates/precalc/*.c)
 OF_GS_PRECALC_OBJS = $(addprefix $(TMP_DIR)$(SL)gsprecalc_, $(notdir $(OF_GS_PRECALC_FILES:.c=.o)))
 
+ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_GAME_AI_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
 OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_GAME_AI_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
-ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
 
 #
 ace: $(ACE_OBJS)
 	$(MAKE) -C $(ACE_DIR) all ACE_CC=$(OF_CC) TARGET=$(TARGET)
-	$(NEWLINE)
-	@echo Copying ACE objs...
-	$(NEWLINE)
-	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) $(QUIETCOPY)
 
 of: $(OF_OBJS)
 	$(NEWLINE)

@@ -41,8 +41,9 @@ static UBYTE s_isScoreShown;
 UBYTE g_ubDoSiloHighlight;
 UWORD g_uwSiloHighlightY;
 UWORD g_uwSiloHighlightX;
-static tBob *s_pSiloHighlight;
-static UBYTE s_ubWasSiloHighlighted;
+
+tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
+static tBobNew s_sHighlightBob;
 
 // Speed logging
 // #ifdef GAME_DEBUG
@@ -84,28 +85,6 @@ void displayPrepareDriving(void) {
 	hudChangeState(HUD_STATE_DRIVING);
 }
 
-static void worldUndraw(void) {
-	UBYTE ubPlayer;
-
-	logAvgBegin(s_pUndrawAvgExplosions);
-	explosionsUndraw(g_pWorldMainBfr);
-	logAvgEnd(s_pUndrawAvgExplosions);
-
-	logAvgBegin(s_pUndrawAvgProjectiles);
-	projectileUndraw();
-	logAvgEnd(s_pUndrawAvgProjectiles);
-
-	// Vehicles
-	logAvgBegin(s_pUndrawAvgVehicles);
-	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
-		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
-	logAvgEnd(s_pUndrawAvgVehicles);
-
-	// Silo highlight
-	if(s_ubWasSiloHighlighted)
-		bobUndraw(s_pSiloHighlight, g_pWorldMainBfr);
-}
-
 void gsGameCreate(void) {
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
@@ -120,9 +99,6 @@ void gsGameCreate(void) {
 
 	// Load gfx
 	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	s_pSiloHighlight = bobUniqueCreate(
-		"data/silohighlight.bm", "data/silohighlight_mask.bm", 0, 0, 0
-	);
 
 	teamsInit();
 
@@ -150,6 +126,22 @@ void gsGameCreate(void) {
 	worldMapSetBuffers(s_pTiles, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
+
+	const UBYTE ubProjectilesMax = 16;
+	const UBYTE ubPlayersMax = 8;
+	bobNewManagerCreate(
+		ubPlayersMax*2 + ubProjectilesMax,
+		ubPlayersMax*2*(VEHICLE_BODY_WIDTH/16 + 1)*VEHICLE_BODY_HEIGHT +
+			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
+		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
+	);
+
+	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
+	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
+	bobNewInit(
+		&s_sHighlightBob, 32, 32, 1,
+		s_pHighlightBitmap, s_pHighlightMask, 0, 0
+	);
 
 	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
 	hudCreate(s_pSmallFont);
@@ -195,12 +187,11 @@ void gsGameCreate(void) {
 	#endif
 
 	// Initial values
-	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
 	// AI
-	playerListCreate(8);
+	playerListCreate(ubPlayersMax);
 	aiManagerCreate();
 
 	// Add players
@@ -318,7 +309,8 @@ void gsGameLoop(void) {
 
 	// Start refreshing gfx at hud
 	vPortWaitForEnd(s_pWorldMainVPort);
-	worldUndraw(); // This will take almost whole HUD time
+
+	bobNewBegin();
 
 	worldMapUpdateTiles();
 
@@ -328,14 +320,9 @@ void gsGameLoop(void) {
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight) {
-		if(bobDraw(
-			s_pSiloHighlight, g_pWorldMainBfr,
-			g_uwSiloHighlightX, g_uwSiloHighlightY, 0, 32
-		)) {
-			s_ubWasSiloHighlighted = 1;
-		}
-		else
-			s_ubWasSiloHighlighted = 0;
+		s_sHighlightBob.sPos.sUwCoord.uwX = g_uwSiloHighlightX - (1<<MAP_TILE_SIZE)/2;
+		s_sHighlightBob.sPos.sUwCoord.uwY = g_uwSiloHighlightY - (1<<MAP_TILE_SIZE)/2;
+		bobNewPush(&s_sHighlightBob);
 	}
 
 	logAvgBegin(s_pProcessAvgPlayer);
@@ -382,6 +369,8 @@ void gsGameDestroy(void) {
 	systemUse();
 	logBlockBegin("gsGameDestroy()");
 
+	bobNewManagerDestroy();
+
 	aiManagerDestroy();
 
 	cursorDestroy();
@@ -390,7 +379,8 @@ void gsGameDestroy(void) {
 	fontDestroy(s_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
-	bobUniqueDestroy(s_pSiloHighlight);
+	bitmapDestroy(s_pHighlightBitmap);
+	bitmapDestroy(s_pHighlightMask);
 	bitmapDestroy(s_pTiles);
 
 #ifdef SPEED_LOG

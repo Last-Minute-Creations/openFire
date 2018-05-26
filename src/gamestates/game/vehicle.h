@@ -6,6 +6,7 @@
 #include "gamestates/game/worldmap.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/game/projectile.h"
+#include "gamestates/game/bob_new.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN PROJECTILE_FRAME_LIFE
@@ -23,8 +24,8 @@ typedef struct _tSteerRequest {
 
 typedef struct _tVehicle {
 	tVehicleType *pType; ///< Ptr to vehicle type definition
-	tBob *pBob;          ///< Main body bob
-	tBob *pAuxBob;       ///< Tank - turret, chopper - takeoff anim
+	tBobNew sBob;        ///< Main body bob
+	tBobNew sAuxBob;     ///< Tank - turret, chopper - takeoff anim
 	fix16_t fX;          ///< Vehicle X-position relative to center of gfx.
 	fix16_t fY;          ///< Ditto, vehicle Y.
 	UWORD uwX;           ///< Same as fX, but converted to UWORD. Read-only.

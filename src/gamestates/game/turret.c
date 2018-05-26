@@ -7,7 +7,6 @@
 #include <ace/managers/system.h>
 #include <ace/utils/custom.h>
 #include "gamestates/game/vehicle.h"
-#include "gamestates/game/bob.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/team.h"

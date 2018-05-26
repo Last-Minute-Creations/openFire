@@ -3,7 +3,7 @@
 
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/turret.h"
-#include "gamestates/game/bob.h"
+#include "gamestates/game/bob_new.h"
 
 #define PROJECTILE_RANGE      ((320-32)/4)
 #define PROJECTILE_SPEED      (fix16_one*3)
@@ -29,8 +29,8 @@ typedef union _tProjectileOwner {
 } tProjectileOwner;
 
 typedef struct _tProjectile {
+	tBobNew sBob;            ///< Bob for projectile display
 	tProjectileOwner uOwner; ///< Owner for scoring kills
-	tBob *pBob;              ///< Bob for projectile display
 	fix16_t fX;              ///< X-coord of current position.
 	fix16_t fY;              ///< Ditto, Y-coord.
 	UBYTE ubAngle;           ///< For determining dx/dy

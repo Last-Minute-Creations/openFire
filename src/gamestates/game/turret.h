@@ -1,7 +1,6 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_TURRET_H
 #define GUARD_OF_GAMESTATES_GAME_TURRET_H
 
-#include "gamestates/game/bob.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/game.h"
 

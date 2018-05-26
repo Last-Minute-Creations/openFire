@@ -13,11 +13,6 @@ void explosionsCreate(void);
 
 void explosionsDestroy(void);
 
-void explosionsDraw(tSimpleBufferManager *pBfr);
-
-void explosionsUndraw(tSimpleBufferManager *pBfr);
-
-
 void explosionsProcess(void);
 
 #endif // GUARD_OF_GAMESTATES_GAME_EXPLOSIONS_H
