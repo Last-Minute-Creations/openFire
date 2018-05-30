@@ -18,6 +18,7 @@ static tVPort *s_pVPort;
 
 tSimpleBufferManager *g_pMenuBuffer;
 tFont *g_pMenuFont;
+tTextBitMap *g_pMenuTextBitmap;
 
 static void menuMainOnStartGame(void) {
 	gameChangeState(mapListCreate, mapListLoop, mapListDestroy);
@@ -118,6 +119,7 @@ void menuCreate(void) {
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << MENU_BPP);
 	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 1 << MENU_BPP);
 	g_pMenuFont = fontCreate("data/silkscreen5.fnt");
+	g_pMenuTextBitmap = fontCreateTextBitMap(320, g_pMenuFont->uwHeight);
 
 	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
 
@@ -133,6 +135,7 @@ void menuDestroy(void) {
 	systemSetDma(DMAB_SPRITE, 0);
 	viewLoad(0);
 	cursorDestroy();
+	fontDestroyTextBitMap(g_pMenuTextBitmap);
 	fontDestroy(g_pMenuFont);
 	viewDestroy(s_pView);
 	logBlockEnd("menuDestroy()");

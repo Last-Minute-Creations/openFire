@@ -75,16 +75,18 @@ static void mapListSelect(UWORD uwIdx) {
 		320-MAPLIST_MINIMAP_X, 3*(g_pMenuFont->uwHeight + 1), MENU_COLOR_BG
 	);
 	sprintf(szBfr, "Map name: %s", g_sMap.szName);
-	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, szBfr);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 0*(g_pMenuFont->uwHeight+1),
-		szBfr, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	sprintf(szBfr, "Author: %s", g_sMap.szAuthor);
-	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, szBfr);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 1*(g_pMenuFont->uwHeight+1),
-		szBfr, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	const char szModeConquest[] = "Mode: Conquest";
 	const char szModeCtf[] = "Mode: CTF";
@@ -95,10 +97,11 @@ static void mapListSelect(UWORD uwIdx) {
 	else if(g_sMap.ubMode == MAP_MODE_CTF) {
 		pMode = szModeCtf;
 	}
-	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, pMode);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 2*(g_pMenuFont->uwHeight+1),
-		pMode, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	systemUnuse();
 }
@@ -166,9 +169,16 @@ void mapListLoop(void) {
 		return;
 	}
 
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
-		if(!buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1)))
-			listCtlProcessClick(s_pListCtl, mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		if(!buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1))) {
+			if(listCtlProcessClick(
+				s_pListCtl, mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1)
+			)) {
+				return;
+			}
+		}
+		return;
+	}
 
 	menuProcess();
 }

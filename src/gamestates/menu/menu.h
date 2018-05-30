@@ -28,5 +28,6 @@ void menuDrawButton(
 
 extern tSimpleBufferManager *g_pMenuBuffer;
 extern tFont *g_pMenuFont;
+extern tTextBitMap *g_pMenuTextBitmap;
 
 #endif // GUARD_OF_GAMESTATES_MENU_MENU_H
