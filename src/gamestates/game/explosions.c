@@ -33,9 +33,9 @@ void explosionsCreate(void) {
 	s_pBitmap = bitmapCreateFromFile("data/explosion.bm");
 	s_pMask = bitmapCreateFromFile("data/explosion_mask.bm");
 
-	for(UWORD i = EXPLOSIONS_MAX; i--;) {
+	for(UBYTE i = EXPLOSIONS_MAX; i--;) {
 		bobNewInit(&s_pExplosions[i].sBob, 32, 32, 1, s_pBitmap, s_pMask, 0, 0);
-		s_pExplosions[i].uwDuration = 0;
+		s_pExplosions[i].uwDuration = EXPLOSION_DURATION;
 	}
 
 	logBlockEnd("explosionsCreate()");
@@ -49,7 +49,7 @@ void explosionsDestroy(void) {
 }
 
 void explosionsProcess(void) {
-	for(UWORD i = 0; i != EXPLOSIONS_MAX; ++i) {
+	for(UBYTE i = 0; i < EXPLOSIONS_MAX; ++i) {
 		if(s_pExplosions[i].uwDuration < EXPLOSION_DURATION) {
 			bobNewSetBitMapOffset(
 				&s_pExplosions[i].sBob,

@@ -136,14 +136,16 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 }
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
-	if(pPlayer->uwCooldown)
+	if(pPlayer->uwCooldown) {
 		return;
+	}
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
 	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 	pPlayer->ubState = PLAYER_STATE_SURFACING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
-	if(pPlayer == g_pLocalPlayer)
+	if(pPlayer == g_pLocalPlayer) {
 		displayPrepareDriving();
+	}
 }
 
 void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
@@ -181,15 +183,17 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 }
 
 void playerLocalProcessInput(void) {
-	if(g_isLocalBot)
+	if(g_isLocalBot) {
 		return;
+	}
 	switch(g_pLocalPlayer->ubState) {
 		case PLAYER_STATE_DRIVING: {
 			// Receive player's steer request
 			tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
 			if(g_isChatting) {
-				if(keyUse(g_sKeyManager.ubLastKey))
+				if(keyUse(g_sKeyManager.ubLastKey)) {
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+				}
 				pReq->ubForward  = 0;
 				pReq->ubBackward = 0;
 				pReq->ubLeft     = 0;
@@ -215,22 +219,25 @@ void playerLocalProcessInput(void) {
 		} break;
 		case PLAYER_STATE_LIMBO: {
 			if(g_isChatting) {
-				if(keyUse(g_sKeyManager.ubLastKey))
+				if(keyUse(g_sKeyManager.ubLastKey)) {
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+				}
 			}
 			else if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
-				tUwRect sTankRect = {
+				const tUwRect sTankRect = {
 					.uwX = 2 + 4, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
 				};
-				tUwRect sJeepRect = {
+				const tUwRect sJeepRect = {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
 				UWORD uwMouseX = mouseGetX(MOUSE_PORT_1), uwMouseY = mouseGetY(MOUSE_PORT_1);
-				if(inRect(uwMouseX, uwMouseY, sTankRect))
+				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
-				else if(inRect(uwMouseX, uwMouseY, sJeepRect))
+				}
+				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
+				}
 			}
 		} break;
 	}

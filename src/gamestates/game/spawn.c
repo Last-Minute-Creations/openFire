@@ -98,10 +98,12 @@ void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType)
 void spawnSim(void) {
 	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
-		if(pSpawn->ubFrame < PLAYER_SURFACING_COOLDOWN)
+		if(pSpawn->ubFrame < PLAYER_SURFACING_COOLDOWN) {
 			++pSpawn->ubFrame;
-		else
+		}
+		else {
 			pSpawn->ubBusy = SPAWN_BUSY_NOT;
+		}
 	}
 }
 
@@ -113,8 +115,9 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 		worldMapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
 	else {
 		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
-		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
+		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
 			ubFrameIdx = 5 - ubFrameIdx;
+		}
 		blitCopyAligned(
 			pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
 			0, ubFrameIdx << MAP_TILE_SIZE,

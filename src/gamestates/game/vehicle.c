@@ -224,13 +224,15 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	pVehicle->ubTurretAngle += ANGLE_360 + getDeltaAngleDirection(
 		pVehicle->ubTurretAngle, pSteerRequest->ubDestAngle, 1
 	);
-	if(pVehicle->ubTurretAngle >= ANGLE_360)
+	if(pVehicle->ubTurretAngle >= ANGLE_360) {
 		pVehicle->ubTurretAngle -= ANGLE_360;
 	bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
+	}
 
 	// Fire straight
-	if(pVehicle->ubCooldown)
+	if(pVehicle->ubCooldown) {
 		--pVehicle->ubCooldown;
+	}
 	else if(pSteerRequest->ubAction1 && pVehicle->ubBaseAmmo) {
 		tProjectileOwner uOwner;
 		uOwner.pVehicle = pVehicle;
