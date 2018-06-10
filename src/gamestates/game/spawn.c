@@ -111,8 +111,9 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
-	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
+	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN) {
 		worldMapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
+	}
 	else {
 		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
 		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
@@ -134,6 +135,8 @@ UBYTE spawnIsCoveredByAnyPlayer(UBYTE ubSpawnIdx) {
 		tPlayer *pPlayer = &g_pPlayers[i];
 		if(pPlayer->ubState != PLAYER_STATE_DRIVING)
 			continue;
+		UWORD uwX = pPlayer->sVehicle.uwX;
+		UWORD uwY = pPlayer->sVehicle.uwY;
 		if(
 			ABS((uwX >> MAP_TILE_SIZE) - pSpawn->ubTileX) > 1 ||
 			ABS((uwY >> MAP_TILE_SIZE) - pSpawn->ubTileY) > 1

@@ -38,8 +38,8 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask, 0, 0
 		);
 
-		bobNewInit(&g_pPlayers[i].sVehicle.sAuxBob,
-			&g_pPlayers[i].sVehicle.sBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 1,
+		bobNewInit(
+			&g_pPlayers[i].sVehicle.sAuxBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 0,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask, 0, 0
 		);
@@ -124,8 +124,6 @@ void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 }
 
 void playerRemoveByPtr(tPlayer *pPlayer) {
-	if(pPlayer->sVehicle.ubLife)
-		vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->ubState == PLAYER_STATE_OFF) {
 		logWrite("ERR: Tried to remove offline player: %p\n", pPlayer);
 		return;
@@ -148,7 +146,6 @@ void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
 }
 
 void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
-	vehicleUnset(&pPlayer->sVehicle);
 	pPlayer->ubState = PLAYER_STATE_BUNKERING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 	spawnSetBusy(fubSpawnIdx, SPAWN_BUSY_BUNKERING, VEHICLE_TYPE_TANK);
@@ -173,7 +170,6 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
 	if(g_pTeams[pPlayer->ubTeam].uwTicketsLeft)
 		--g_pTeams[pPlayer->ubTeam].uwTicketsLeft;
-	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
@@ -277,14 +273,12 @@ kill:
 }
 
 void playerSimVehicle(tPlayer *pPlayer) {
-	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
-	uwVx = pVehicle->uwX;
-	uwVy = pVehicle->uwY;
-	uwVTileX = uwVx >> MAP_TILE_SIZE;
-	uwVTileY = uwVy >> MAP_TILE_SIZE;
-	const tVehicle *pVehicle = &pPlayer->sVehicle;
+	tVehicle *pVehicle = &pPlayer->sVehicle;
+	UWORD uwVx = pVehicle->uwX;
+	UWORD uwVy = pVehicle->uwY;
+	UWORD uwVTileX = uwVx >> MAP_TILE_SIZE;
+	UWORD uwVTileY = uwVy >> MAP_TILE_SIZE;
 	UBYTE ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
-	g_ubDoSiloHighlight = 0;
 
 	// Drowning
 	if(ubTileType == MAP_LOGIC_WATER) {
@@ -313,15 +307,14 @@ void playerSimVehicle(tPlayer *pPlayer) {
 				uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18
 			) {
 				// Standing on bunkerable position
-				// If one of them is local player, save data for highlight draw
-				g_ubDoSiloHighlight = 1;
-				g_uwSiloHighlightX = uwVTileX << MAP_TILE_SIZE;
-				g_uwSiloHighlightY = uwVTileY << MAP_TILE_SIZE;
-				// Hide in bunker
 				if(pPlayer->sSteerRequest.ubAction1) {
+					// Hide in bunker
 					playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));
 					return;
 				}
+				// If not, just highlight
+				g_sHighlightBob.sPos.ulYX = pVehicle->sBob.sPos.ulYX;
+				bobNewPush(&g_sHighlightBob);
 			}
 		}
 	}
@@ -346,9 +339,12 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	switch(pPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
 			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
+			bobNewPush(&pVehicle->sAuxBob);
 			break;
 		case VEHICLE_TYPE_JEEP:
 			vehicleSteerJeep(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
 			break;
 	}
 }

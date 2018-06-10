@@ -2,6 +2,7 @@
 #define GUARD_OF_GAMESTATES_GAME_GAME_H
 
 #include <ace/managers/viewport/simplebuffer.h>
+#include <gamestates/game/bob_new.h>
 
 #define WORLD_BPP 4
 
@@ -37,8 +38,7 @@ extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;
 
 extern UBYTE g_ubDoSiloHighlight;
-extern UWORD g_uwSiloHighlightY;
-extern UWORD g_uwSiloHighlightX;
+extern tBobNew g_sHighlightBob;
 extern tCameraManager *g_pWorldCamera;
 
 extern ULONG g_ulGameFrame;

@@ -39,11 +39,8 @@ static UBYTE s_isScoreShown;
 // Silo highlight
 // TODO: struct?
 UBYTE g_ubDoSiloHighlight;
-UWORD g_uwSiloHighlightY;
-UWORD g_uwSiloHighlightX;
-
 tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
-static tBobNew s_sHighlightBob;
+tBobNew g_sHighlightBob;
 
 ULONG g_ulGameFrame;
 static tFont *s_pSmallFont;
@@ -105,16 +102,18 @@ void gsGameCreate(void) {
 	const UBYTE ubProjectilesMax = 16;
 	const UBYTE ubPlayersMax = 8;
 	bobNewManagerCreate(
-		ubPlayersMax*2 + ubProjectilesMax,
+		ubPlayersMax*2 + EXPLOSIONS_MAX + ubProjectilesMax,
 		ubPlayersMax*2*(VEHICLE_BODY_WIDTH/16 + 1)*VEHICLE_BODY_HEIGHT +
 			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
 		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
 	);
 
+	projectileListCreate(5);
+
 	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
 	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
 	bobNewInit(
-		&s_sHighlightBob, 32, 32, 1,
+		&g_sHighlightBob, 32, 32, 1,
 		s_pHighlightBitmap, s_pHighlightMask, 0, 0
 	);
 
@@ -225,24 +224,39 @@ void gsGameLoop(void) {
 		}
 	}
 
-	dataRecv(); // Receives positions of other players from server
+	// Refresh HUD before it gets displayed - still single buffered
+	hudUpdate();
 
-  cursorUpdate();
+	// Undraw bobs so that something goes on during data recv
+	dataRecv(); // Receives positions of other players from server
+	spawnSim();
+	controlSim();
+	controlRedrawPoints();
 
 	playerLocalProcessInput(); // Steer requests, chat, limbo
 	botProcess();
-
 	dataSend(); // Send input requests to server
 
-	spawnSim();
+	// Undraw bobs, draw pending tiles
+	bobNewBegin();
+	worldMapUpdateTiles();
 
-	controlSim();
+	// sim & draw
+	playerSim(); // Players & vehicles states
+	turretSim(); // Turrets: targeting, rotation & projectile spawn
+	if(!s_isScoreShown) {
+	turretUpdateSprites();
+	}
+	projectileSim(); // Projectiles: new positions, damage -> explosions
+	explosionsProcess();
+	// bobNewPushingDone();
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
 		gameChangeLoop(gameSummaryLoop);
 	}
 
+  cursorUpdate();
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		cameraCenterAt(
 			g_pWorldCamera,
@@ -259,27 +273,11 @@ void gsGameLoop(void) {
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 
+	bobNewEnd(); // SHOULD BE SOMEWHERE HERE
+	worldMapSwapBuffers();
+
 	// Start refreshing gfx at hud
 	vPortWaitForEnd(s_pWorldMainVPort);
-
-	bobNewBegin();
-	worldMapUpdateTiles();
-	controlRedrawPoints();
-
-	// Silo highlight
-	if(g_ubDoSiloHighlight) {
-		s_sHighlightBob.sPos.sUwCoord.uwX = g_uwSiloHighlightX - (1<<MAP_TILE_SIZE)/2;
-		s_sHighlightBob.sPos.sUwCoord.uwY = g_uwSiloHighlightY - (1<<MAP_TILE_SIZE)/2;
-		bobNewPush(&s_sHighlightBob);
-	}
-
-	playerSim(); // Players & vehicles states
-	projectileDraw();
-	explosionsDraw(g_pWorldMainBfr);
-
-	if(!s_isScoreShown) {
-		turretUpdateSprites();
-	}
 
 	// This should be done on vblank interrupt
 	if(!s_isScoreShown) {
@@ -289,15 +287,13 @@ void gsGameLoop(void) {
 	else {
 		scoreTableProcessView();
 	}
-
-	turretSim(); // Turrets: targeting, rotation & projectile spawn
-	projectileSim(); // Projectiles: new positions, damage
-	hudUpdate();
 }
 
 void gsGameDestroy(void) {
 	systemUse();
 	logBlockBegin("gsGameDestroy()");
+
+	projectileListDestroy();
 
 	bobNewManagerDestroy();
 

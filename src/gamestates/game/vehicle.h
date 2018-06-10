@@ -42,19 +42,9 @@ typedef struct _tVehicle {
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);
 
-void vehicleUnset(
-	tVehicle *pVehicle
-);
-
 void vehicleDrawFrame(UWORD uwX, UWORD uwY, UBYTE ubDAngle);
 
 void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
 void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
-
-void vehicleDraw(tVehicle *pVehicle);
-
-void vehicleUndraw(tVehicle *pVehicle);
-
-void vehicleSetupBob(tVehicle *pVehicle);
 
 #endif

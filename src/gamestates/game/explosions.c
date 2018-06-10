@@ -53,7 +53,7 @@ void explosionsProcess(void) {
 		if(s_pExplosions[i].uwDuration < EXPLOSION_DURATION) {
 			bobNewSetBitMapOffset(
 				&s_pExplosions[i].sBob,
-				s_pExplosions[i].uwDuration/EXPLOSION_FRAME_LENGTH
+				s_pExplosions[i].uwDuration/EXPLOSION_FRAME_LENGTH * EXPLOSION_SIZE
 			);
 			bobNewPush(&s_pExplosions[i].sBob);
 			++s_pExplosions[i].uwDuration;

@@ -112,8 +112,8 @@ static UBYTE worldMapCheckNeighbours(UBYTE ubX, UBYTE ubY, UBYTE (*checkFn)(UBYT
 
 void worldMapCreate(void) {
 	logBlockBegin("worldMapCreate()");
-	s_ubPendingTiles[0] = 0;
-	s_ubPendingTiles[1] = 0;
+	s_ubPendingTiles[BUFFER_BACK] = 0;
+	s_ubPendingTiles[BUFFER_FRONT] = 0;
 
 	buildingManagerReset();
 	controlManagerCreate(g_sMap.fubControlPointCount);
@@ -249,12 +249,12 @@ void worldMapDestroy(void) {
 void worldMapRequestUpdateTile(UBYTE ubTileX, UBYTE ubTileY) {
 	// TODO omit if not visible
 	// TODO when scrolling trick: omit if not yet drawn on redraw margin
-	++s_ubPendingTiles[0];
-	s_pTilesToRedraw[0][s_ubPendingTiles[0]].ubX = ubTileX;
-	s_pTilesToRedraw[0][s_ubPendingTiles[0]].ubY = ubTileY;
-	++s_ubPendingTiles[1];
-	s_pTilesToRedraw[1][s_ubPendingTiles[1]].ubX = ubTileX;
-	s_pTilesToRedraw[1][s_ubPendingTiles[1]].ubY = ubTileY;
+	++s_ubPendingTiles[BUFFER_BACK];
+	s_pTilesToRedraw[BUFFER_BACK][s_ubPendingTiles[BUFFER_BACK]].ubX = ubTileX;
+	s_pTilesToRedraw[BUFFER_BACK][s_ubPendingTiles[BUFFER_BACK]].ubY = ubTileY;
+	++s_ubPendingTiles[BUFFER_FRONT];
+	s_pTilesToRedraw[BUFFER_FRONT][s_ubPendingTiles[BUFFER_FRONT]].ubX = ubTileX;
+	s_pTilesToRedraw[BUFFER_FRONT][s_ubPendingTiles[BUFFER_FRONT]].ubY = ubTileY;
 }
 
 /**

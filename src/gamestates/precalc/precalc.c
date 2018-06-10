@@ -91,7 +91,6 @@ void precalcLoop(void) {
 	g_pTurretFrames = vehicleTypeGenerateRotatedFrames("vehicles/turret.bm");
 
 	precalcIncreaseProgress(10, "Working on projectiles");
-	projectileListCreate(5);
 
 	// View is no longer needed
 	viewLoad(0);
@@ -111,7 +110,6 @@ void precalcLoop(void) {
 void precalcDestroy(void) {
 	logBlockBegin("precalcDestroy()");
 
-	projectileListDestroy();
 	vehicleTypesDestroy();
 	bitmapDestroy(g_pTurretFrames);
 
