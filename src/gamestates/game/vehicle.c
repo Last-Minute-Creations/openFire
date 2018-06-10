@@ -26,6 +26,11 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 	pVehicle->bRotDiv = 0;
 	pVehicle->ubCooldown = 0;
 
+	UBYTE ubTeam = playerGetByVehicle(pVehicle)->ubTeam;
+	pVehicle->sBob.pBitmap = g_pVehicleTypes[ubVehicleType].pMainFrames[ubTeam];
+	pVehicle->sBob.pMask = g_pVehicleTypes[ubVehicleType].pMainMask;
+	pVehicle->sAuxBob.pBitmap = g_pVehicleTypes[ubVehicleType].pAuxFrames[ubTeam];
+	pVehicle->sAuxBob.pMask = g_pVehicleTypes[ubVehicleType].pAuxMask;
 	spawnSetBusy(ubSpawnIdx, SPAWN_BUSY_SURFACING, VEHICLE_TYPE_TANK);
 }
 
