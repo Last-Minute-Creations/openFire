@@ -43,11 +43,9 @@ typedef struct _tVehicleType {
 	// Main bob source
 	tBitMap *pMainFrames[TEAM_COUNT];
 	tBitMap *pMainMask;
-	tBobFrameOffset *pMainFrameOffsets;
 	// Aux bob source
 	tBitMap *pAuxFrames[TEAM_COUNT];
 	tBitMap *pAuxMask;
-	tBobFrameOffset *pAuxFrameOffsets;
 } tVehicleType;
 
 void vehicleTypesCreate(void);

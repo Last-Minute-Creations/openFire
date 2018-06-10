@@ -47,7 +47,6 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 }
 
 void playerListDestroy(void) {
-	UBYTE i;
 	logBlockBegin("playerListDestroy()");
 	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
 	logBlockEnd("playerListDestroy()");
@@ -386,7 +385,6 @@ void playerSim(void) {
 				continue;
 			case PLAYER_STATE_DRIVING:
 				playerSimVehicle(pPlayer);
-				vehicleDraw(&pPlayer->sVehicle);
 				continue;
 			case PLAYER_STATE_LIMBO:
 				if(pPlayer->uwCooldown)

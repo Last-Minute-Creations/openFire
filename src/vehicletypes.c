@@ -195,33 +195,6 @@ static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
 }
 
-static tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
-	tBobFrameOffset *pOffsets = memAllocFast(
-		sizeof(tBobFrameOffset) * VEHICLE_BODY_ANGLE_COUNT
-	);
-
-	const UWORD uwWordsPerRow = pMask->BytesPerRow >> 1;
-
-	for(uint8_t i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		UBYTE ubFirst = 0xFF;
-		UBYTE ubLast = 0;
-		for(uint8_t y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
-			for(uint8_t x = 0; x <= VEHICLE_BODY_WIDTH; x += 16) {
-				UWORD uwWordOffs = (i*VEHICLE_BODY_HEIGHT + y)*uwWordsPerRow + (x>>4);
-				if(((UWORD*)pMask->Planes[0])[uwWordOffs]) {
-					if(y < ubFirst)
-						ubFirst = y;
-					if(y > ubLast)
-						ubLast = y;
-				}
-			}
-		}
-		pOffsets[i].uwDy = ubFirst;
-		pOffsets[i].uwHeight = ubLast - ubFirst+1;
-	}
-	return pOffsets;
-}
-
 /**
  *  Generates vehicle type defs.
  *  This fn fills g_pVehicleTypes array
@@ -263,11 +236,6 @@ void vehicleTypesCreate(void) {
 	}
 
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
-	if(pType->pAuxMask)
-		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
-	else
-		pType->pAuxFrameOffsets = 0;
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -298,26 +266,11 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
-	if(pType->pAuxMask)
-		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
-	else
-		pType->pAuxFrameOffsets = 0;
 
 	logBlockEnd("vehicleTypesCreate");
 }
 
 static void vehicleTypeUnloadFrameData(tVehicleType *pType) {
-	memFree(
-		pType->pMainFrameOffsets,
-		VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
-	);
-	if(pType->pAuxFrameOffsets) {
-		memFree(
-			pType->pAuxFrameOffsets,
-			VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
-		);
-	}
 	bitmapDestroy(pType->pMainFrames[TEAM_BLUE]);
 	bitmapDestroy(pType->pMainFrames[TEAM_RED]);
 	bitmapDestroy(pType->pMainMask);

@@ -10,7 +10,7 @@
 
 static tVPort *s_pHudVPort;
 tSimpleBufferManager *g_pHudBfr;
-static tBitMap *s_pHudDriving, *s_pHudSelecting;
+static tBitMap *s_pHudPanels[2];
 static FUBYTE s_fubHudState, s_fubHudPrevState;
 static tFont *s_pHudFont;
 static tTextBitMap *s_pSpawnTextBfr;
@@ -62,8 +62,8 @@ void hudCreate(tFont *pFont) {
 
 	// Initial draw on buffer
 	bitmapLoadFromFile(g_pHudBfr->pBack, "data/hud/blank.bm", 0, 0);
-	s_pHudDriving = bitmapCreateFromFile("data/hud/driving.bm");
-	s_pHudSelecting = bitmapCreateFromFile("data/hud/selecting.bm");
+	s_pHudPanels[HUD_STATE_DRIVING] = bitmapCreateFromFile("data/hud/driving.bm");
+	s_pHudPanels[HUD_STATE_SELECTING] = bitmapCreateFromFile("data/hud/selecting.bm");
 
 	s_fubHudPrevState = 0xFF;
 	s_fubFrame = 0;
@@ -71,15 +71,8 @@ void hudCreate(tFont *pFont) {
 }
 
 void hudChangeState(FUBYTE fubState) {
-	tBitMap *pHudPanels[2];
-	pHudPanels[HUD_STATE_DRIVING] = s_pHudDriving;
-	pHudPanels[HUD_STATE_SELECTING] = s_pHudSelecting;
 
 	s_fubHudState = fubState;
-	blitCopy(
-		pHudPanels[fubState], 0, 0, g_pHudBfr->pBack, 2, 2,
-		104, (WORD)s_pHudDriving->Rows, MINTERM_COOKIE, 0xFF
-	);
 
 	UWORD uwDmaCon;
 	void *pCrossCtl;
@@ -101,8 +94,8 @@ void hudChangeState(FUBYTE fubState) {
 	copSetMove(&pFrontList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
 }
 
-static void drawHudBar(
-	const UWORD uwBarY, const UWORD uwValue, const UWORD uwMaxValue, const UBYTE ubColor
+static void hudDrawBar(
+	UWORD uwBarY, UWORD uwValue, UWORD uwMaxValue, UBYTE ubColor
 ) {
 	// TODO draw rects on only one bitplane
 	const UWORD uwBarHeight = 4;
@@ -143,6 +136,12 @@ static void hudDrawTeamScore(FUBYTE fubTeam) {
 }
 
 void hudUpdate(void) {
+	if(s_fubHudState != s_fubHudPrevState) {
+		blitCopy(
+			s_pHudPanels[s_fubHudState], 0, 0, g_pHudBfr->pBack, 2, 2,
+			104, (WORD)s_pHudPanels[0]->Rows, MINTERM_COOKIE, 0xFF
+		);
+	}
 	if(s_fubHudState == HUD_STATE_DRIVING) {
 		// TODO one thing per frame, HP - always
 		tVehicle *pVehicle = &g_pLocalPlayer->sVehicle;
@@ -169,10 +168,12 @@ void hudUpdate(void) {
 		hudDrawTeamScore(TEAM_RED);
 	}
 	else {
-		if(s_fubFrame == 30 && s_uwPrevTickets[TEAM_BLUE] != g_pTeams[TEAM_BLUE].uwTicketsLeft)
+		if(s_fubFrame == 30 && s_uwPrevTickets[TEAM_BLUE] != g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 			hudDrawTeamScore(TEAM_BLUE);
-		if(s_fubFrame == 40 && s_uwPrevTickets[TEAM_RED] != g_pTeams[TEAM_RED].uwTicketsLeft)
+		}
+		else if(s_fubFrame == 40 && s_uwPrevTickets[TEAM_RED] != g_pTeams[TEAM_RED].uwTicketsLeft) {
 			hudDrawTeamScore(TEAM_RED);
+		}
 	}
 
 	s_fubHudPrevState = s_fubHudState;
@@ -186,7 +187,7 @@ void hudDestroy(void) {
 	consoleDestroy();
 	fontDestroyTextBitMap(s_pSpawnTextBfr);
 
-	bitmapDestroy(s_pHudDriving);
-	bitmapDestroy(s_pHudSelecting);
+	bitmapDestroy(s_pHudPanels[HUD_STATE_DRIVING]);
+	bitmapDestroy(s_pHudPanels[HUD_STATE_SELECTING]);
 	// VPort & simpleBuffer are destroyed by g_pGameView
 }
