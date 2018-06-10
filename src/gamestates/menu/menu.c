@@ -30,7 +30,7 @@ static void menuMainOnQuit(void) {
 
 static void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
-	mapInit("fubar.json");
+	mapInit("min.json");
 	gamePopState(); // From current menu substate
 	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
 }
