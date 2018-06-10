@@ -148,6 +148,9 @@ static void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UB
 	}
 }
 
+#define MIN4(a,b,c,d) (MIN((a), MIN((b), MIN((c), (d)))))
+#define MAX4(a,b,c,d) (MAX((a), MAX((b), MAX((c), (d)))))
+
 static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockBegin(
 		"vehicleTypeGenerateRotatedCollisions(pFrameCollisions: %p)", pFrameCollisions
@@ -167,29 +170,21 @@ static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions
 			) + fHalf);
 		}
 
-		pNewCollisions->bLeftmost = MIN(
-			pNewCollisions->pPts[0].bX, MIN(
-				pNewCollisions->pPts[2].bX, MIN(
-					pNewCollisions->pPts[5].bX,
-					pNewCollisions->pPts[7].bX))
+		pNewCollisions->bLeftmost = MIN4(
+			pNewCollisions->pPts[0].bX, pNewCollisions->pPts[2].bX,
+			pNewCollisions->pPts[5].bX, pNewCollisions->pPts[7].bX
 		);
-		pNewCollisions->bRightmost = MAX(
-			pNewCollisions->pPts[0].bX, MAX(
-				pNewCollisions->pPts[2].bX, MAX(
-					pNewCollisions->pPts[5].bX,
-					pNewCollisions->pPts[7].bX))
+		pNewCollisions->bRightmost = MAX4(
+			pNewCollisions->pPts[0].bX, pNewCollisions->pPts[2].bX,
+			pNewCollisions->pPts[5].bX, pNewCollisions->pPts[7].bX
 		);
-		pNewCollisions->bTopmost = MIN(
-			pNewCollisions->pPts[0].bY, MIN(
-				pNewCollisions->pPts[2].bY, MIN(
-					pNewCollisions->pPts[5].bY,
-					pNewCollisions->pPts[7].bY))
+		pNewCollisions->bTopmost = MIN4(
+			pNewCollisions->pPts[0].bY, pNewCollisions->pPts[2].bY,
+			pNewCollisions->pPts[5].bY, pNewCollisions->pPts[7].bY
 		);
-		pNewCollisions->bBottommost = MAX(
-			pNewCollisions->pPts[0].bY, MAX(
-				pNewCollisions->pPts[2].bY, MAX(
-					pNewCollisions->pPts[5].bY,
-					pNewCollisions->pPts[7].bY))
+		pNewCollisions->bBottommost = MAX4(
+			pNewCollisions->pPts[0].bY, pNewCollisions->pPts[2].bY,
+			pNewCollisions->pPts[5].bY, pNewCollisions->pPts[7].bY
 		);
 	}
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
@@ -287,7 +282,6 @@ void vehicleTypesDestroy(void) {
 
 	// Free bob sources
 	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_TANK]);
-
 	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_JEEP]);
 	// TODO ASV
 	// TODO Chopper
