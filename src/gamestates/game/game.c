@@ -45,31 +45,6 @@ UWORD g_uwSiloHighlightX;
 tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
 static tBobNew s_sHighlightBob;
 
-// Speed logging
-// #ifdef GAME_DEBUG
-#define SPEED_LOG /* Log speed in main loop */
-// #endif
-
-#ifdef SPEED_LOG
-static tAvg *s_pDrawAvgExplosions;
-static tAvg *s_pDrawAvgProjectiles;
-static tAvg *s_pUndrawAvgExplosions;
-static tAvg *s_pUndrawAvgProjectiles;
-static tAvg *s_pUndrawAvgVehicles;
-static tAvg *s_pProcessAvgCursor;
-static tAvg *s_pProcessAvgDataRecv;
-static tAvg *s_pProcessAvgInput;
-static tAvg *s_pProcessAvgSpawn;
-static tAvg *s_pProcessAvgPlayer;
-static tAvg *s_pProcessAvgControl;
-static tAvg *s_pProcessAvgTurret;
-static tAvg *s_pProcessAvgProjectile;
-static tAvg *s_pProcessAvgDataSend;
-static tAvg *s_pAvgRedrawControl;
-static tAvg *s_pAvgUpdateSprites;
-static tAvg *s_pProcessAvgHud;
-#endif
-
 ULONG g_ulGameFrame;
 static tFont *s_pSmallFont;
 
@@ -164,28 +139,6 @@ void gsGameCreate(void) {
 	// Explosions
 	explosionsCreate();
 
-	#ifdef SPEED_LOG
-	s_pDrawAvgExplosions = logAvgCreate("draw explosions", 50);
-	s_pDrawAvgProjectiles = logAvgCreate("draw projectiles", 50);
-
-	s_pUndrawAvgExplosions = logAvgCreate("undraw explosions", 50);
-	s_pUndrawAvgProjectiles = logAvgCreate("undraw projectiles", 50);
-	s_pUndrawAvgVehicles = logAvgCreate("undraw vehicles", 50);
-
-	s_pProcessAvgCursor = logAvgCreate("cursor", 50);
-	s_pProcessAvgDataRecv = logAvgCreate("data recv", 50);
-	s_pProcessAvgInput = logAvgCreate("input", 50);
-	s_pProcessAvgSpawn = logAvgCreate("spawn", 50);
-	s_pProcessAvgPlayer = logAvgCreate("player", 50);
-	s_pProcessAvgControl = logAvgCreate("control", 50);
-	s_pProcessAvgTurret = logAvgCreate("turret", 50);
-	s_pProcessAvgProjectile = logAvgCreate("projectile", 50);
-	s_pProcessAvgDataSend = logAvgCreate("data send", 50);
-	s_pAvgRedrawControl = logAvgCreate("redraw control points", 50);
-	s_pAvgUpdateSprites = logAvgCreate("update sprites", 50);
-	s_pProcessAvgHud = logAvgCreate("hud update", 50);
-	#endif
-
 	// Initial values
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
@@ -236,6 +189,19 @@ static void gameSummaryLoop(void) {
 	scoreTableProcessView();
 }
 
+void gameDebugKeys(void) {
+#if defined(GAME_DEBUG)
+	if(keyUse(KEY_C)) {
+		bitmapSaveBmp(
+			g_pWorldMainBfr->pFront, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp"
+		);
+	}
+	if(keyUse(KEY_L)) {
+		copDumpBfr(g_pWorldView->pCopList->pFrontBfr);
+	}
+#endif
+}
+
 void gsGameLoop(void) {
 	++g_ulGameFrame;
 	// Quit?
@@ -243,13 +209,11 @@ void gsGameLoop(void) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}
+	gameDebugKeys();
 	// Steering-irrelevant player input
-	if(keyUse(KEY_C))
-		bitmapSaveBmp(g_pWorldMainBfr->pFront, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
-	if(keyUse(KEY_L))
-		copDumpBfr(g_pWorldView->pCopList->pFrontBfr);
-	if(keyUse(KEY_T))
+	if(keyUse(KEY_T)) {
 		consoleChatBegin();
+	}
 	if(keyUse(KEY_TAB)) {
 		s_isScoreShown = 1;
 		scoreTableShow();
@@ -261,30 +225,18 @@ void gsGameLoop(void) {
 		}
 	}
 
-	logAvgBegin(s_pProcessAvgDataRecv);
 	dataRecv(); // Receives positions of other players from server
-	logAvgEnd(s_pProcessAvgDataRecv);
 
-  logAvgBegin(s_pProcessAvgCursor);
   cursorUpdate();
-  logAvgEnd(s_pProcessAvgCursor);
 
-	logAvgBegin(s_pProcessAvgInput);
 	playerLocalProcessInput(); // Steer requests, chat, limbo
-	logAvgEnd(s_pProcessAvgInput);
 	botProcess();
 
-	logAvgBegin(s_pProcessAvgDataSend);
 	dataSend(); // Send input requests to server
-	logAvgEnd(s_pProcessAvgDataSend);
 
-	logAvgBegin(s_pProcessAvgSpawn);
 	spawnSim();
-	logAvgEnd(s_pProcessAvgSpawn);
 
-	logAvgBegin(s_pProcessAvgControl);
 	controlSim();
-	logAvgEnd(s_pProcessAvgControl);
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
@@ -311,12 +263,8 @@ void gsGameLoop(void) {
 	vPortWaitForEnd(s_pWorldMainVPort);
 
 	bobNewBegin();
-
 	worldMapUpdateTiles();
-
-	logAvgBegin(s_pAvgRedrawControl);
 	controlRedrawPoints();
-	logAvgEnd(s_pAvgRedrawControl);
 
 	// Silo highlight
 	if(g_ubDoSiloHighlight) {
@@ -325,22 +273,12 @@ void gsGameLoop(void) {
 		bobNewPush(&s_sHighlightBob);
 	}
 
-	logAvgBegin(s_pProcessAvgPlayer);
 	playerSim(); // Players & vehicles states
-	logAvgEnd(s_pProcessAvgPlayer);
-
-	logAvgBegin(s_pDrawAvgProjectiles);
 	projectileDraw();
-	logAvgEnd(s_pDrawAvgProjectiles);
-
-	logAvgBegin(s_pDrawAvgExplosions);
 	explosionsDraw(g_pWorldMainBfr);
-	logAvgEnd(s_pDrawAvgExplosions);
 
 	if(!s_isScoreShown) {
-		logAvgBegin(s_pAvgUpdateSprites);
 		turretUpdateSprites();
-		logAvgEnd(s_pAvgUpdateSprites);
 	}
 
 	// This should be done on vblank interrupt
@@ -352,17 +290,9 @@ void gsGameLoop(void) {
 		scoreTableProcessView();
 	}
 
-	logAvgBegin(s_pProcessAvgTurret);
 	turretSim(); // Turrets: targeting, rotation & projectile spawn
-	logAvgEnd(s_pProcessAvgTurret);
-
-	logAvgBegin(s_pProcessAvgProjectile);
 	projectileSim(); // Projectiles: new positions, damage
-	logAvgEnd(s_pProcessAvgProjectile);
-
-	logAvgBegin(s_pProcessAvgHud);
 	hudUpdate();
-	logAvgEnd(s_pProcessAvgHud);
 }
 
 void gsGameDestroy(void) {
@@ -382,26 +312,6 @@ void gsGameDestroy(void) {
 	bitmapDestroy(s_pHighlightBitmap);
 	bitmapDestroy(s_pHighlightMask);
 	bitmapDestroy(s_pTiles);
-
-#ifdef SPEED_LOG
-	logAvgDestroy(s_pUndrawAvgExplosions);
-	logAvgDestroy(s_pUndrawAvgProjectiles);
-	logAvgDestroy(s_pUndrawAvgVehicles);
-	logAvgDestroy(s_pDrawAvgProjectiles);
-	logAvgDestroy(s_pDrawAvgExplosions);
-	logAvgDestroy(s_pProcessAvgCursor);
-	logAvgDestroy(s_pProcessAvgDataRecv);
-	logAvgDestroy(s_pProcessAvgInput);
-	logAvgDestroy(s_pProcessAvgSpawn);
-	logAvgDestroy(s_pProcessAvgPlayer);
-	logAvgDestroy(s_pProcessAvgControl);
-	logAvgDestroy(s_pProcessAvgTurret);
-	logAvgDestroy(s_pProcessAvgProjectile);
-	logAvgDestroy(s_pProcessAvgDataSend);
-	logAvgDestroy(s_pAvgRedrawControl);
-	logAvgDestroy(s_pAvgUpdateSprites);
-	logAvgDestroy(s_pProcessAvgHud);
-#endif
 
 	worldMapDestroy();
 	playerListDestroy();
