@@ -99,8 +99,8 @@ tProjectile *projectileCreate(
 		pProjectile->fY = fix16_add(uOwner.pVehicle->fY, (VEHICLE_BODY_HEIGHT/2) * fSin);
 	}
 	else {
-		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwX);
-		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwY);
+		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwCenterX);
+		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwCenterY);
 		pProjectile->ubAngle = uOwner.pTurret->ubAngle;
 	}
 

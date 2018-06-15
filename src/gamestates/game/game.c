@@ -1,5 +1,4 @@
 #include "gamestates/game/game.h"
-#include <hardware/intbits.h> // INTB_COPER
 #include <ace/macros.h>
 #include <ace/managers/copper.h>
 #include <ace/managers/blit.h>
@@ -62,19 +61,12 @@ void gsGameCreate(void) {
 	randInit(2184);
 
 	// Prepare view
-	// Must be before mapCreate 'cuz turretListCreate() needs copperlist
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
 	TAG_DONE);
 
-	// Load gfx
-	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-
-	teamsInit();
-
-	worldMapCreate();
 	// Create viewports
 	s_pWorldMainVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, g_pWorldView,
@@ -95,9 +87,6 @@ void gsGameCreate(void) {
 		return;
 	}
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
-	worldMapSetBuffers(s_pTiles, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
-	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
-	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
 	const UBYTE ubProjectilesMax = 16;
 	const UBYTE ubPlayersMax = 8;
@@ -107,6 +96,16 @@ void gsGameCreate(void) {
 			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
 		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
 	);
+
+	worldMapCreate();
+
+	// Load gfx
+	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
+
+	teamsInit();
+	worldMapSetBuffers(s_pTiles, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
+	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
+	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
 	projectileListCreate(5);
 
@@ -244,9 +243,6 @@ void gsGameLoop(void) {
 	// sim & draw
 	playerSim(); // Players & vehicles states
 	turretSim(); // Turrets: targeting, rotation & projectile spawn
-	if(!s_isScoreShown) {
-	turretUpdateSprites();
-	}
 	projectileSim(); // Projectiles: new positions, damage -> explosions
 	explosionsProcess();
 	// bobNewPushingDone();

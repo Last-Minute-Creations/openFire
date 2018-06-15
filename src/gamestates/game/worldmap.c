@@ -241,7 +241,6 @@ void worldMapDestroy(void) {
 	logBlockBegin("worldMapDestroy()");
 	controlManagerDestroy();
 	spawnManagerDestroy();
-
 	turretListDestroy();
 	logBlockEnd("worldMapDestroy()");
 }

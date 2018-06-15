@@ -90,8 +90,8 @@ void hudChangeState(FUBYTE fubState) {
 	copSetMove(&pBackList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &g_pCustom->dmacon, uwDmaCon);
 	copSetMove(&pFrontList[WORLD_COP_VPHUD_DMAOFF_POS+1].sMove, &g_pCustom->dmacon, uwDmaCon);
 	// Disable/enable crosshair sprite during hud
-	copSetMove(&pBackList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
-	copSetMove(&pFrontList[WORLD_COP_CLEANUP_POS+2].sMove, pCrossCtl, 0);
+	copSetMove(&pBackList[WORLD_COP_VPHUD_DMAOFF_POS+2].sMove, pCrossCtl, 0);
+	copSetMove(&pFrontList[WORLD_COP_VPHUD_DMAOFF_POS+2].sMove, pCrossCtl, 0);
 }
 
 static void hudDrawBar(

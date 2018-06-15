@@ -150,8 +150,8 @@ static void controlMaskIterateTurrets(
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubTurretIdx)
 ) {
 	for(FUBYTE i = 0; i != g_uwTurretCount; ++i) {
-		FUBYTE fubX = g_pTurrets[i].uwX >> MAP_TILE_SIZE;
-		FUBYTE fubY = g_pTurrets[i].uwY >> MAP_TILE_SIZE;
+		FUBYTE fubX = g_pTurrets[i].uwCenterX >> MAP_TILE_SIZE;
+		FUBYTE fubY = g_pTurrets[i].uwCenterY >> MAP_TILE_SIZE;
 		if(fubX < fubX1 || fubX > fubX2)
 			continue;
 		FUBYTE isInPoly = 0;

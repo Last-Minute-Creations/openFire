@@ -88,7 +88,10 @@ void precalcLoop(void) {
 
 	// Turret stuff
 	precalcIncreaseProgress(20, "Generating turret frames");
-	g_pTurretFrames = vehicleTypeGenerateRotatedFrames("vehicles/turret.bm");
+	g_pTurretFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_red.bm");
+	g_pTurretFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_blue.bm");
+	g_pTurretFrames[TEAM_NONE] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_gray.bm");
+	g_pTurretMasks = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_mask.bm");
 
 	precalcIncreaseProgress(10, "Working on projectiles");
 
@@ -111,7 +114,10 @@ void precalcDestroy(void) {
 	logBlockBegin("precalcDestroy()");
 
 	vehicleTypesDestroy();
-	bitmapDestroy(g_pTurretFrames);
+	for(UBYTE i = 0; i < 3; ++i) {
+		bitmapDestroy(g_pTurretFrames[i]);
+	}
+	bitmapDestroy(g_pTurretMasks);
 
 	logBlockEnd("precalcDestroy()");
 }
