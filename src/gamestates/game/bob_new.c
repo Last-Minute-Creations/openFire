@@ -149,7 +149,15 @@ UBYTE bobNewProcessNext(void) {
 			WORD wSrcModulo = (pBob->uwWidth >> 3) - (uwBlitWords<<1);
 			UWORD uwLastMask = 0xFFFF << (uwBlitWidth-pBob->uwWidth);
 			UWORD uwBltCon1 = ubDstOffs << BSHIFTSHIFT;
-			UWORD uwBltCon0 = uwBltCon1 | USEA|USEB|USEC|USED | MINTERM_COOKIE;
+			UWORD uwBltCon0;
+			if(pBob->pMask) {
+				uwBltCon0 = uwBltCon1 | USEA|USEB|USEC|USED | MINTERM_COOKIE;
+			}
+			else {
+				// TODO change to A - performance boost
+				// TODO setting B & C regs isn't necessary - few write cycles less
+				uwBltCon0 = uwBltCon1 | USEB|USED | MINTERM_B;
+			}
 			ULONG ulSrcOffs = pBob->uwOffsetY;
 			ULONG ulDstOffs = (
 				pQueue->pDst->BytesPerRow * pPos->sUwCoord.uwY + (pPos->sUwCoord.uwX>>3)

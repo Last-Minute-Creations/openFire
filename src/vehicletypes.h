@@ -56,10 +56,8 @@ void vehicleTypesDestroy(void);
  *  Generates rotated frames for vehicle use.
  *  @param szPath Path to file with source frame.
  *  @return       Pointer to newly created bitmap with rotated frames, otherwise zero.
- *
- *  @todo Make it accept bitmaps wider than 32px?
  */
-tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath);
+tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath);
 
 void vehicleTypeFramesDestroy(tVehicleType *pType);
 

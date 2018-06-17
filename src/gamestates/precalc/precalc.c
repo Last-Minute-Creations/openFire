@@ -86,12 +86,15 @@ void precalcLoop(void) {
 	precalcIncreaseProgress(10, "Initializing vehicle types");
 	vehicleTypesCreate();
 
+	// TODO load tileset for turret use
+	g_pMapTileset = bitmapCreateFromFile("data/tiles.bm");
+
 	// Turret stuff
 	precalcIncreaseProgress(20, "Generating turret frames");
-	g_pTurretFrames[TEAM_RED] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_red.bm");
-	g_pTurretFrames[TEAM_BLUE] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_blue.bm");
-	g_pTurretFrames[TEAM_NONE] = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_gray.bm");
-	g_pTurretMasks = vehicleTypeGenerateRotatedFrames("vehicles/turret/turret_mask.bm");
+	g_pTurretFrames[TEAM_RED] = turretGenerateFrames("vehicles/turret/turret_red.bm");
+	g_pTurretFrames[TEAM_BLUE] = turretGenerateFrames("vehicles/turret/turret_blue.bm");
+	g_pTurretFrames[TEAM_NONE] = turretGenerateFrames("vehicles/turret/turret_gray.bm");
+	bitmapSaveBmp(g_pTurretFrames[TEAM_RED], s_pVPort->pPalette, "turretdbg.bmp");
 
 	precalcIncreaseProgress(10, "Working on projectiles");
 
@@ -117,7 +120,7 @@ void precalcDestroy(void) {
 	for(UBYTE i = 0; i < 3; ++i) {
 		bitmapDestroy(g_pTurretFrames[i]);
 	}
-	bitmapDestroy(g_pTurretMasks);
+	bitmapDestroy(g_pMapTileset);
 
 	logBlockEnd("precalcDestroy()");
 }

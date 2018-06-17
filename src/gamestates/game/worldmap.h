@@ -37,7 +37,6 @@
 #define MAP_TILE_DIRT     16
 #define MAP_TILE_ROAD     32
 #define MAP_TILE_WALL     48
-#define MAP_TILE_TURRET   64
 
 
 typedef struct _tTileCoord {

@@ -81,7 +81,7 @@ void mapJsonReadTiles(const tJson *pJson, tMap *pMap) {
 		// Read row to logic tiles
 		for(FUBYTE x = 0; x < fuwWidth; ++x) {
 			pMap->pData[x][y].ubIdx = (UBYTE)pJson->szData[pTokRow->start + x];
-			pMap->pData[x][y].ubData = BUILDING_IDX_INVALID;
+			pMap->pData[x][y].ubBuilding = BUILDING_IDX_INVALID;
 			if(
 				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN0 ||
 				pMap->pData[x][y].ubIdx == MAP_LOGIC_SPAWN1 ||

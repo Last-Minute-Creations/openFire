@@ -140,7 +140,7 @@ void projectileSim(void) {
 		// Check collistion with buildings
 		UBYTE ubMapX = fix16_to_int(pProjectile->fX) >> MAP_TILE_SIZE;
 		UBYTE ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
-		UBYTE ubBuildingIdx = g_sMap.pData[ubMapX][ubMapY].ubData;
+		UBYTE ubBuildingIdx = g_sMap.pData[ubMapX][ubMapY].ubBuilding;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
 			if(
 				pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
@@ -150,7 +150,7 @@ void projectileSim(void) {
 			}
 			if(buildingDamage(ubBuildingIdx, PROJECTILE_DAMAGE) == BUILDING_DESTROYED) {
 				g_sMap.pData[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
-				g_sMap.pData[ubMapX][ubMapY].ubData = 0;
+				g_sMap.pData[ubMapX][ubMapY].ubBuilding = 0;
 				worldMapRequestUpdateTile(ubMapX, ubMapY);
 				explosionsAdd(
 					(ubMapX << MAP_TILE_SIZE) + MAP_HALF_TILE,

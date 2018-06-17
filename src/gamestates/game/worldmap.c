@@ -153,11 +153,11 @@ void worldMapGenerateLogic(void) {
 				case MAP_LOGIC_WALL_VERTICAL:
 					g_sMap.pData[x][y].ubIdx = MAP_LOGIC_WALL;
 				case MAP_LOGIC_WALL:
-					g_sMap.pData[x][y].ubData = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
+					g_sMap.pData[x][y].ubBuilding = buildingAdd(x, y, BUILDING_TYPE_WALL, TEAM_NONE);
 					break;
 				case MAP_LOGIC_FLAG1:
 				case MAP_LOGIC_FLAG2:
-					g_sMap.pData[x][y].ubData = buildingAdd(
+					g_sMap.pData[x][y].ubBuilding = buildingAdd(
 						x, y,
 						BUILDING_TYPE_FLAG,
 						ubTileIdx == MAP_LOGIC_FLAG1 ? TEAM_BLUE : TEAM_RED
@@ -169,7 +169,7 @@ void worldMapGenerateLogic(void) {
 					// Change logic type so that projectiles will threat turret walls
 					// in same way as any other
 					g_sMap.pData[x][y].ubIdx = MAP_LOGIC_WALL;
-					g_sMap.pData[x][y].ubData = buildingAdd(
+					g_sMap.pData[x][y].ubBuilding = buildingAdd(
 						x, y,
 						BUILDING_TYPE_TURRET,
 						ubTileIdx == MAP_LOGIC_SENTRY0? TEAM_NONE
@@ -215,8 +215,13 @@ UBYTE worldMapTileFromLogic(FUBYTE fubTileX, FUBYTE fubTileY) {
 			return MAP_TILE_SPAWN_RED;
 		case MAP_LOGIC_ROAD:
 			return MAP_TILE_ROAD + worldMapCheckNeighbours(fubTileX, fubTileY, worldMapIsRoadFriend);
-		case MAP_LOGIC_WALL:
+		case MAP_LOGIC_WALL: {
+			tBuilding *pBuilding = buildingGet(g_sMap.pData[fubTileX][fubTileY].ubBuilding);
+			if(pBuilding->ubType == BUILDING_TYPE_TURRET) {
+				return MAP_TILE_WALL;
+			}
 			return MAP_TILE_WALL + worldMapCheckNeighbours(fubTileX, fubTileY, worldMapIsWall);
+		}
 		case MAP_LOGIC_FLAG1:
 			return MAP_TILE_FLAG1L;
 		case MAP_LOGIC_FLAG2:

@@ -4,17 +4,19 @@
 #include <ace/managers/rand.h>
 #include <ace/managers/system.h>
 #include <ace/utils/custom.h>
+#include <ace/utils/chunky.h>
+#include "cache.h"
 #include "gamestates/game/vehicle.h"
 #include "gamestates/game/player.h"
 #include "gamestates/game/explosions.h"
 #include "gamestates/game/team.h"
 
-#define TURRET_BOB_SIZE  16
+#define TURRET_BOB_WIDTH  32
+#define TURRET_BOB_HEIGHT 16
 
 UWORD g_uwTurretCount;
 tTurret *g_pTurrets; // 20x25: 1100*7 ~ 8KiB
 tBitMap *g_pTurretFrames[TEAM_COUNT+1];
-tBitMap *g_pTurretMasks;
 
 static UWORD s_uwMaxTurrets;
 UWORD g_pTurretTiles[MAP_MAX_SIZE][MAP_MAX_SIZE]; // 32k FAST
@@ -33,8 +35,8 @@ void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight) {
 	// TODO: could be only number of turrets per frame + prev for undraw (or not)
 	for(UWORD i = 0; i < s_uwMaxTurrets; ++i) {
 		bobNewInit(
-			&g_pTurrets[i].sBob, TURRET_BOB_SIZE, TURRET_BOB_SIZE, 1,
-			g_pTurretFrames[TEAM_NONE], g_pTurretMasks, 0, 0
+			&g_pTurrets[i].sBob, TURRET_BOB_WIDTH, TURRET_BOB_HEIGHT, 0,
+			g_pTurretFrames[TEAM_NONE], 0, 0, 0
 		);
 	}
 
@@ -57,8 +59,6 @@ UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 
 	// Initial values
 	tTurret *pTurret = &g_pTurrets[g_uwTurretCount];
-	pTurret->sBob.sPos.sUwCoord.uwX = uwTileX << MAP_TILE_SIZE;
-	pTurret->sBob.sPos.sUwCoord.uwY = uwTileY << MAP_TILE_SIZE;
 	pTurret->uwCenterX = (uwTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->uwCenterY = (uwTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->ubTeam = ubTeam;
@@ -67,10 +67,14 @@ UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->isTargeting = 0;
 	pTurret->ubCooldown = 0;
 	pTurret->fubSeq = (uwTileX & 3) |	((uwTileY & 3) << 2);
-	pTurret->sBob.pBitmap = g_pTurretFrames[ubTeam];
 
 	// Add to tile-based list
 	g_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;
+
+	// Setup bob
+	pTurret->sBob.sPos.sUwCoord.uwX = pTurret->uwCenterX - TURRET_BOB_WIDTH/2;
+	pTurret->sBob.sPos.sUwCoord.uwY = pTurret->uwCenterY - TURRET_BOB_HEIGHT/2;
+	pTurret->sBob.pBitmap = g_pTurretFrames[ubTeam];
 
 	logBlockEnd("turretAdd()");
 	return g_uwTurretCount++;
@@ -124,6 +128,7 @@ static void turretUpdateTarget(tTurret *pTurret) {
 
 void turretSim(void) {
 	FUBYTE fubSeq = g_ulGameFrame & 15;
+	UBYTE ubDrawSeq = (g_ulGameFrame>>1) & 15;
 
 	for(UWORD uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
 		tTurret *pTurret = &g_pTurrets[uwTurretIdx];
@@ -148,7 +153,7 @@ void turretSim(void) {
 				pTurret->ubAngle -= ANGLE_360;
 			}
 			bobNewSetBitMapOffset(
-				&pTurret->sBob, angleToFrame(pTurret->ubAngle) * TURRET_BOB_SIZE
+				&pTurret->sBob, angleToFrame(pTurret->ubAngle) * TURRET_BOB_HEIGHT
 			);
 		}
 		else if(pTurret->isTargeting && !pTurret->ubCooldown) {
@@ -158,7 +163,9 @@ void turretSim(void) {
 			pTurret->ubCooldown = TURRET_COOLDOWN;
 		}
 
-		bobNewPush(&pTurret->sBob);
+		if(pTurret->fubSeq == ubDrawSeq) {
+			bobNewPush(&pTurret->sBob);
+		}
 	}
 }
 
@@ -167,4 +174,85 @@ void turretCapture(UWORD uwIdx, FUBYTE fubTeam) {
 	pTurret->ubTeam = fubTeam;
 	pTurret->isTargeting = 0;
 	pTurret->sBob.pBitmap = g_pTurretFrames[fubTeam];
+}
+
+tBitMap *turretGenerateFrames(const char *szPath) {
+	logBlockBegin("turretGenerateFrames(szPath: '%s')", szPath);
+
+	// Check for cache
+	char szBitmapFileName[100];
+	if(cacheIsValid(szPath)) {
+		sprintf(szBitmapFileName, "precalc/%s", szPath);
+		tBitMap *pBitmap = bitmapCreateFromFile(szBitmapFileName);
+		logBlockEnd("turretGenerateFrames()");
+		return pBitmap;
+	}
+
+	// Load source frame
+	sprintf(szBitmapFileName, "data/%s", szPath);
+	tBitMap *pFirstFrame = bitmapCreateFromFile(szBitmapFileName);
+	UWORD uwFrameWidth = bitmapGetByteWidth(pFirstFrame) * 8;
+
+	// Create huge-ass bitmap
+	tBitMap *pBitmapDst = bitmapCreate(
+		TURRET_BOB_WIDTH, TURRET_BOB_HEIGHT * VEHICLE_BODY_ANGLE_COUNT,
+		pFirstFrame->Depth, BMF_INTERLEAVED
+	);
+
+	UBYTE *pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
+	chunkyFromBitmap(pFirstFrame, pChunkySrc, 0, 0, uwFrameWidth, uwFrameWidth);
+	bitmapDestroy(pFirstFrame);
+
+	// Get background for blending
+	UBYTE *pChunkyBg = memAllocFast(TURRET_BOB_WIDTH * TURRET_BOB_HEIGHT);
+	UWORD uwMargin = (MAP_FULL_TILE-uwFrameWidth) / 2;
+	chunkyFromBitmap(
+		g_pMapTileset, pChunkyBg,
+		0, MAP_TILE_WALL*MAP_FULL_TILE + uwMargin,
+		TURRET_BOB_WIDTH, TURRET_BOB_HEIGHT
+	);
+
+	UBYTE *pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
+	UBYTE *pChunkyDst = memAllocFast(TURRET_BOB_WIDTH * TURRET_BOB_HEIGHT);
+	for(UBYTE ubFrame = 0; ubFrame < VEHICLE_BODY_ANGLE_COUNT; ++ubFrame) {
+		// Rotate frame
+		UBYTE ubAngle = (ANGLE_360 - (ubFrame<<1)) % ANGLE_360;
+		chunkyRotate(
+			pChunkySrc, pChunkyRotated,	csin(ubAngle), ccos(ubAngle),
+			0, uwFrameWidth, uwFrameWidth
+		);
+
+		// Blend it with background
+		memcpy(pChunkyDst, pChunkyBg, TURRET_BOB_WIDTH * TURRET_BOB_HEIGHT);
+		UWORD uwIdxSrc = 0, uwIdxDst = 0;
+		for(UWORD y = 0; y < uwFrameWidth; ++y) {
+			uwIdxDst += uwMargin;
+			for(UWORD x = 0; x < uwFrameWidth; ++x) {
+				if(pChunkyRotated[uwIdxSrc]) {
+					pChunkyDst[uwIdxDst] = pChunkyRotated[uwIdxSrc];
+				}
+				++uwIdxDst;
+				++uwIdxSrc;
+			}
+			uwIdxDst += uwMargin;
+		}
+
+		// Put it on huge-ass bitmap
+		chunkyToBitmap(
+			pChunkyDst, pBitmapDst, 0, TURRET_BOB_HEIGHT*ubFrame,
+			TURRET_BOB_WIDTH, TURRET_BOB_HEIGHT
+		);
+	}
+
+	// Write cache
+	sprintf(szBitmapFileName, "precalc/%s", szPath);
+	bitmapSave(pBitmapDst, szBitmapFileName);
+	cacheGenerateChecksum(szPath);
+
+	memFree(pChunkyBg, TURRET_BOB_WIDTH * TURRET_BOB_HEIGHT);
+	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
+	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
+	memFree(pChunkyDst, TURRET_BOB_WIDTH * TURRET_BOB_HEIGHT);
+	logBlockEnd("turretGenerateFrames()");
+	return pBitmapDst;
 }

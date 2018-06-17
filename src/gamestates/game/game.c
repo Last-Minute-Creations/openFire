@@ -32,7 +32,6 @@ tView *g_pWorldView;
 tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
-static tBitMap *s_pTiles;
 static UBYTE s_isScoreShown;
 
 // Silo highlight
@@ -99,11 +98,8 @@ void gsGameCreate(void) {
 
 	worldMapCreate();
 
-	// Load gfx
-	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-
 	teamsInit();
-	worldMapSetBuffers(s_pTiles, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
+	worldMapSetBuffers(g_pMapTileset, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
@@ -303,7 +299,6 @@ void gsGameDestroy(void) {
 	viewDestroy(g_pWorldView);
 	bitmapDestroy(s_pHighlightBitmap);
 	bitmapDestroy(s_pHighlightMask);
-	bitmapDestroy(s_pTiles);
 
 	worldMapDestroy();
 	playerListDestroy();

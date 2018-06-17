@@ -32,6 +32,10 @@ void buildingManagerReset(void) {
 	}
 }
 
+tBuilding *buildingGet(UBYTE ubIdx) {
+	return &s_sBuildingManager.pBuildings[ubIdx];
+}
+
 UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 	UBYTE ubIdx;
 
@@ -47,6 +51,7 @@ UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam) {
 		if(!s_sBuildingManager.pBuildings[ubIdx].ubHp) {
 			// Setup building
 			s_sBuildingManager.pBuildings[ubIdx].ubHp = s_pBuildingHps[ubType];
+			s_sBuildingManager.pBuildings[ubIdx].ubType = ubType;
 			if(ubType == BUILDING_TYPE_TURRET)
 				s_sBuildingManager.pBuildings[ubIdx].uwTurretIdx = turretAdd(
 					ubX, ubY,	ubTeam

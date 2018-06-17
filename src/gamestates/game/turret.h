@@ -28,7 +28,6 @@ typedef struct _tTurret {
 } tTurret;
 
 tBitMap *g_pTurretFrames[TEAM_COUNT+1];
-tBitMap *g_pTurretMasks;
 extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
 extern UWORD g_pTurretTiles[MAP_MAX_SIZE][MAP_MAX_SIZE];
@@ -43,5 +42,7 @@ void turretDestroy(UWORD uwIdx);
 void turretCapture(UWORD uwIdx, FUBYTE fubTeam);
 
 void turretSim(void);
+
+tBitMap *turretGenerateFrames(const char *szPath);
 
 #endif

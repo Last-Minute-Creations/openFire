@@ -17,8 +17,9 @@
 #define BUILDING_MAX_COUNT 256
 
 typedef struct {
-	UWORD uwTurretIdx;
+	UBYTE ubType;
 	UBYTE ubHp;
+	UWORD uwTurretIdx;
 } tBuilding;
 
 typedef struct {
@@ -31,5 +32,7 @@ void buildingManagerReset(void);
 UBYTE buildingAdd(UBYTE ubX, UBYTE ubY, UBYTE ubType, UBYTE ubTeam);
 
 UBYTE buildingDamage(UBYTE ubIdx, UBYTE ubDamage);
+
+tBuilding *buildingGet(UBYTE ubIdx);
 
 #endif // GUARD_OF_GAMESTATES_GAME_BUILDING_H
