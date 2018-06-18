@@ -226,7 +226,6 @@ void gsGameLoop(void) {
 	dataRecv(); // Receives positions of other players from server
 	spawnSim();
 	controlSim();
-	controlRedrawPoints();
 
 	playerLocalProcessInput(); // Steer requests, chat, limbo
 	botProcess();
@@ -234,6 +233,7 @@ void gsGameLoop(void) {
 
 	// Undraw bobs, draw pending tiles
 	bobNewBegin();
+	controlRedrawPoints();
 	worldMapUpdateTiles();
 
 	// sim & draw
