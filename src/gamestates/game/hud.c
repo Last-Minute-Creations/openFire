@@ -179,6 +179,9 @@ void hudUpdate(void) {
 			hudDrawTeamScore(TEAM_RED);
 		}
 	}
+	if(s_fubFrame == 2 || s_fubFrame == 27) {
+		consoleUpdate();
+	}
 
 	s_fubHudPrevState = s_fubHudState;
 	++s_fubFrame;
