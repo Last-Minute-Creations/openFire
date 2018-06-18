@@ -98,9 +98,8 @@ void turretDestroy(UWORD uwIdx) {
 	g_pTurretTiles[uwTileX][uwTileY] = TURRET_INVALID;
 
 	// Add explosion
-	explosionsAdd(
-		uwTileX << MAP_TILE_SIZE, uwTileY << MAP_TILE_SIZE
-	);
+	explosionsAdd(pTurret->uwCenterX, pTurret->uwCenterY);
+	worldMapRequestUpdateTile(uwTileX, uwTileY);
 
 	// Mark turret as destroyed
 	pTurret->uwCenterX = 0;

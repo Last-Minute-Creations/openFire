@@ -106,18 +106,20 @@ static void hudDrawBar(
 	UWORD uwCurrBarWidth = (uwMaxBarWidth*uwValue)/ uwMaxValue;
 
 	// Black part of bar
-	if(uwCurrBarWidth != uwMaxBarWidth)
+	if(uwCurrBarWidth != uwMaxBarWidth) {
 		blitRect(
 			g_pHudBfr->pBack,	(WORD)(uwBarX + uwCurrBarWidth), (WORD)uwBarY,
 			(WORD)(uwMaxBarWidth - uwCurrBarWidth), uwBarHeight, 0
 		);
+	}
 
 	// Colored part of bar
-	if(uwCurrBarWidth)
+	if(uwCurrBarWidth) {
 		blitRect(
 			g_pHudBfr->pBack, (WORD)uwBarX, (WORD)uwBarY,
 			(WORD)uwCurrBarWidth, (WORD)uwBarHeight, ubColor
 		);
+	}
 }
 
 static void hudDrawTeamScore(FUBYTE fubTeam) {
@@ -151,15 +153,17 @@ void hudUpdate(void) {
 		const UWORD uwBarLifeY = 5;
 		const UWORD uwBarAmmoY = 13;
 		const UWORD uwBarFuelY = 21;
-		drawHudBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
+		hudDrawBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
 		if(s_fubHudPrevState != s_fubHudState) {
-			drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
-			drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
+			hudDrawBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
+			hudDrawBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
 		}
-		else if(s_fubFrame == 0 || s_fubFrame == 25)
-			drawHudBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
-		else if(s_fubFrame == 1 || s_fubFrame == 26)
-			drawHudBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
+		else if(s_fubFrame == 0 || s_fubFrame == 25) {
+			hudDrawBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
+		}
+		else if(s_fubFrame == 1 || s_fubFrame == 26) {
+			hudDrawBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
+		}
 	}
 
 	// Update ticket count

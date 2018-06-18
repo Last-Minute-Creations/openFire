@@ -94,7 +94,6 @@ void precalcLoop(void) {
 	g_pTurretFrames[TEAM_RED] = turretGenerateFrames("vehicles/turret/turret_red.bm");
 	g_pTurretFrames[TEAM_BLUE] = turretGenerateFrames("vehicles/turret/turret_blue.bm");
 	g_pTurretFrames[TEAM_NONE] = turretGenerateFrames("vehicles/turret/turret_gray.bm");
-	bitmapSaveBmp(g_pTurretFrames[TEAM_RED], s_pVPort->pPalette, "turretdbg.bmp");
 
 	precalcIncreaseProgress(10, "Working on projectiles");
 
