@@ -298,7 +298,7 @@ void controlSim(void) {
 		}
 		else {
 			if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
-				// Brown taking over green
+				// red taking over blue
 				fbCaptureDir = -1;
 				if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
@@ -308,7 +308,7 @@ void controlSim(void) {
 				}
 			}
 			else {
-				// Green taking over brown
+				// blue taking over red
 				fbCaptureDir = 1;
 				if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
