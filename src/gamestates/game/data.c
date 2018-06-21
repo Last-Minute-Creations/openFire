@@ -57,12 +57,6 @@ void dataRecv(void) {
 void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
 	if(pPlayer->ubState != pState->ubPlayerState) {
 		pPlayer->ubState = pState->ubPlayerState;
-		if(pState->ubPlayerState == PLAYER_STATE_DRIVING) {
-			bobNewPush(&pPlayer->sVehicle.sBob);
-			if(pPlayer->ubCurrentVehicleType == VEHICLE_TYPE_TANK) {
-				bobNewPush(&pPlayer->sVehicle.sAuxBob);
-			}
-		}
 	}
 	if(pPlayer->ubState != PLAYER_STATE_LIMBO && pPlayer->ubState != PLAYER_STATE_OFF) {
 		// Driving, surfacing or bunkering
@@ -77,7 +71,6 @@ void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState) {
 		if(pPlayer->ubCurrentVehicleType != pState->ubVehicleType) {
 			pPlayer->ubCurrentVehicleType = pState->ubVehicleType;
 			pPlayer->sVehicle.pType = &g_pVehicleTypes[pState->ubVehicleType];
-			vehicleSetupBob(&pPlayer->sVehicle);
 		}
 	}
 }

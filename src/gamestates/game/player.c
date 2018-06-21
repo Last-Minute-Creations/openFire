@@ -155,8 +155,8 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 FUBYTE playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
 		explosionsAdd(
-			pPlayer->sVehicle.uwX - (VEHICLE_BODY_HEIGHT >> 1),
-			pPlayer->sVehicle.uwY - (VEHICLE_BODY_WIDTH >> 1)
+			pPlayer->sVehicle.uwX,
+			pPlayer->sVehicle.uwY
 		);
 		playerLoseVehicle(pPlayer);
 		return 1;

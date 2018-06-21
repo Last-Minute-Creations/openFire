@@ -241,7 +241,7 @@ void gsGameLoop(void) {
 	turretSim(); // Turrets: targeting, rotation & projectile spawn
 	projectileSim(); // Projectiles: new positions, damage -> explosions
 	explosionsProcess();
-	// bobNewPushingDone();
+	bobNewPushingDone();
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
