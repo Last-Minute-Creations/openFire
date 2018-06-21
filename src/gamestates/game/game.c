@@ -160,15 +160,11 @@ void gsGameCreate(void) {
 
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
-	if(g_pWorldMainBfr->pBack != g_pWorldMainBfr->pFront) {
-		// Might be too big to do in a single blit
-		for(UWORD i = 0; i < g_pWorldMainBfr->pBack->Rows; i+=32) {
-			blitCopyAligned(
-				g_pWorldMainBfr->pBack, 0, i, g_pWorldMainBfr->pFront, 0, i,
-				bitmapGetByteWidth(g_pWorldMainBfr->pBack) * 8, 32
-			);
-		}
-	}
+	blitWait();
+	CopyMemQuick(
+		g_pWorldMainBfr->pBack->Planes[0], g_pWorldMainBfr->pFront->Planes[0],
+		g_pWorldMainBfr->pBack->BytesPerRow * g_pWorldMainBfr->pBack->Rows
+	);
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
