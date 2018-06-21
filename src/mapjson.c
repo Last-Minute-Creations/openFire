@@ -107,7 +107,6 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 	logWrite("Adding %hu control points\n", fubControlPointCount);
 	for(FUBYTE fubPt = 0; fubPt < fubControlPointCount; ++fubPt) {
 		UWORD uwTokPoint = jsonGetElementInArray(pJson, uwTokPts, fubPt);
-		logWrite("Token %hu - type: %d\n", uwTokPoint, pJson->pTokens[uwTokPoint].type); // <- FIXME this prevents malformed reads, heisenbug
 		if(!uwTokPoint || pJson->pTokens[uwTokPoint].type != JSMN_OBJECT) {
 			logWrite(
 				"ERR: Malformed control point: %"PRI_FUBYTE" (%hu => %d)\n",
