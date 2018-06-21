@@ -27,7 +27,7 @@ typedef struct _tTurret {
 	UBYTE ubCooldown; ///< Cooldown between shots.
 } tTurret;
 
-tBitMap *g_pTurretFrames[TEAM_COUNT+1];
+extern tBitMap *g_pTurretFrames[TEAM_COUNT+1];
 extern UWORD g_uwTurretCount;
 extern tTurret *g_pTurrets;
 extern UWORD g_pTurretTiles[MAP_MAX_SIZE][MAP_MAX_SIZE];
