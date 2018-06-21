@@ -26,30 +26,25 @@
 // Iterating other player's position during targeting could be done with:
 // for(p = next; p != self; ++p)
 
-void playerListCreate(UBYTE ubPlayerLimit) {
-	UBYTE i;
+void playerListInit(UBYTE ubPlayerLimit) {
+	logBlockBegin("playerListInit(ubPlayerLimit: %hhu)", ubPlayerLimit);
 
+	memset(g_pPlayers, 0, PLAYER_MAX_COUNT * sizeof(tPlayer));
 	g_ubPlayerLimit = ubPlayerLimit;
-	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
-	for(i = 0; i < ubPlayerLimit; ++i) {
+	for(UBYTE i = 0; i < ubPlayerLimit; ++i) {
 		bobNewInit(
 			&g_pPlayers[i].sVehicle.sBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 1,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask, 0, 0
 		);
-
 		bobNewInit(
 			&g_pPlayers[i].sVehicle.sAuxBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 0,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask, 0, 0
 		);
 	}
-}
 
-void playerListDestroy(void) {
-	logBlockBegin("playerListDestroy()");
-	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
-	logBlockEnd("playerListDestroy()");
+	logBlockEnd("playerListInit()");
 }
 
 static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
@@ -442,7 +437,7 @@ tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTe
 	return pClosest;
 }
 
-tPlayer *g_pPlayers;
+tPlayer g_pPlayers[PLAYER_MAX_COUNT];
 UBYTE g_ubPlayerLimit;
 UBYTE g_ubPlayerCount;
 tPlayer *g_pLocalPlayer;

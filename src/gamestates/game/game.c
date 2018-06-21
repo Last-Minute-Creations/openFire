@@ -138,7 +138,7 @@ void gsGameCreate(void) {
 	g_ulGameFrame = 0;
 
 	// AI
-	playerListCreate(ubPlayersMax);
+	playerListInit(ubPlayersMax);
 	aiManagerCreate();
 
 	// Add players
@@ -291,7 +291,6 @@ void gsGameDestroy(void) {
 	bitmapDestroy(s_pHighlightMask);
 
 	worldMapDestroy();
-	playerListDestroy();
 
 	logBlockEnd("gsGameDestroy()");
 }
