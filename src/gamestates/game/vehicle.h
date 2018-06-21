@@ -44,7 +44,7 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);
 
 void vehicleDrawFrame(UWORD uwX, UWORD uwY, UBYTE ubDAngle);
 
-void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
-void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
+void vehicleSteerTank(tVehicle *pVehicle, const tSteerRequest *pSteerRequest);
+void vehicleSteerJeep(tVehicle *pVehicle, const tSteerRequest *pSteerRequest);
 
 #endif
