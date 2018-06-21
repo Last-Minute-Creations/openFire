@@ -53,10 +53,11 @@ void consoleWrite(const char *szMsg, UBYTE ubColor) {
 }
 
 void consoleUpdate(void) {
-	// Move remaining messages up
 	if(s_uwToDraw == s_sLog.uwTailIdx) {
 		return;
 	}
+
+	// Move remaining messages up
 	blitCopyAligned(
 		g_pHudBfr->pBack, 112, 9,
 		g_pHudBfr->pBack, 112, 3,

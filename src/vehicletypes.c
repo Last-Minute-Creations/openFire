@@ -35,7 +35,8 @@ tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
 	);
 	if(!pBitmap) {
 		logWrite("ERR: Couldn't allocate bitmap\n");
-		goto fail;
+		logBlockEnd("vehicleTypeGenerateRotatedFrames()");
+		return 0;
 	}
 
 	// Copy first frame to main bitmap
@@ -69,14 +70,6 @@ tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
 
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 	return pBitmap;
-fail:
-	if(pBitmap) {
-		bitmapDestroy(pBitmap);
-	}
-	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
-	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
-	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
-	return 0;
 }
 
 static void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UBYTE isAux) {

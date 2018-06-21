@@ -98,11 +98,15 @@ static void controlPolygonMaskDestroy(UBYTE **pMask) {
 	memFree(pMask, g_sMap.fubWidth * sizeof(UBYTE*));
 }
 
-static void increaseSpawnCount(tControlPoint *pPoint, FUBYTE fubSpawnIdx) {
+static void increaseSpawnCount(
+	UNUSED_ARG tControlPoint *pPoint, UNUSED_ARG FUBYTE fubSpawnIdx
+) {
 	++s_ubAllocSpawnCount;
 }
 
-static void increaseTurretCount(tControlPoint *pPoint, FUBYTE fubTurretIdx) {
+static void increaseTurretCount(
+	UNUSED_ARG tControlPoint *pPoint, UNUSED_ARG FUBYTE fubTurretIdx
+) {
 	++s_ubAllocTurretCount;
 }
 

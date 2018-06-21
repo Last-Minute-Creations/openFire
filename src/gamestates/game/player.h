@@ -66,7 +66,7 @@ void playerSimVehicle(tPlayer *pPlayer);
 
 void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam);
 
-static inline tPlayer *playerGetByVehicle(tVehicle *pVehicle) {
+static inline tPlayer *playerGetByVehicle(const tVehicle *pVehicle) {
 	UBYTE *pVehicleByteAddr = (UBYTE*)pVehicle;
 	tPlayer sPlayer;
 	UBYTE ubDist = ((UBYTE*)&sPlayer.sVehicle) - ((UBYTE*)&sPlayer);

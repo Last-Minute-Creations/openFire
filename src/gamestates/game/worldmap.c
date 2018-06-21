@@ -31,10 +31,6 @@ void worldMapSwapBuffers(void) {
 	s_ubBufIdx = !s_ubBufIdx;
 }
 
-static UBYTE worldMapIsWater(UBYTE ubMapTile) {
-	return ubMapTile == MAP_LOGIC_WATER;
-}
-
 UBYTE worldMapIsWall(UBYTE ubMapTile) {
 	return (
 		ubMapTile == MAP_LOGIC_WALL    ||

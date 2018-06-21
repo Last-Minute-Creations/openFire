@@ -110,11 +110,11 @@ void botAdd(const char *szName, UBYTE ubTeam) {
 	botSay(pBot, "Ich bin ein computer");
 }
 
-static void botRemoveByPtr(tBot *pBot) {
+void botRemoveByPtr(tBot *pBot) {
 	astarDestroy(pBot->pNavData);
 }
 
-static void botRemoveByName(const char *szName) {
+void botRemoveByName(const char *szName) {
 	for(UBYTE i = 0; i < s_fubBotCount; ++i) {
 		if(!strcmp(s_pBots[i].pPlayer->szName, szName)) {
 			botRemoveByPtr(&s_pBots[i]);

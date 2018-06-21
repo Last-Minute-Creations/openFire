@@ -192,7 +192,7 @@ void vehicleSteerTank(
 	// Check collision
 	UWORD uwNewPosX = fix16_to_int(fNewPosX);
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
-	tCollisionPts *pPts = pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts;
+	const tBCoordYX * const pPts = pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts;
 	if(
 		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pPts) &&
 		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
@@ -291,7 +291,7 @@ void vehicleSteerJeep(
 	}
 	UWORD uwNewPosX = fix16_to_int(fNewPosX);
 	UWORD uwNewPosY = fix16_to_int(fNewPosY);
-	const tCollisionPts *pPts = pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts;
+	const tBCoordYX * const pPts = pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts;
 	if(
 		!vehicleCollidesWithWall(uwNewPosX, uwNewPosY, pPts) &&
 		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)

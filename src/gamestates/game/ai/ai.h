@@ -29,6 +29,10 @@ void aiCalculateTileCostsFrag(
 	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2
 );
 
+void aiGraphDump(void);
+
+void aiDumpTileCosts(void);
+
 UWORD aiGetCostBetweenNodes(tAiNode *pSrc, tAiNode *pDst);
 
 /**
