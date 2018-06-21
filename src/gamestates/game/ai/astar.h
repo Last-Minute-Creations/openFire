@@ -42,9 +42,7 @@ tAstarData *astarCreate(void);
  * Frees A* data structure.
  * @param pNav A* data structure to be freed.
  */
-void astarDestroy(
-	IN tAstarData *pNav
-);
+void astarDestroy(tAstarData *pNav);
 
 /**
  * Prepares A* initial conditions.
@@ -52,17 +50,11 @@ void astarDestroy(
  * @param pNodeSrc Route's first node.
  * @param pNodeDst Route's destination node.
  */
-void astarStart(
-	IN tAstarData *pNav,
-	IN tAiNode *pNodeSrc,
-	IN tAiNode *pNodeDst
-);
+void astarStart(tAstarData *pNav, tAiNode *pNodeSrc, tAiNode *pNodeDst);
 
 /**
  *
  */
-UBYTE astarProcess(
-	IN tAstarData *pNav
-);
+UBYTE astarProcess(tAstarData *pNav);
 
 #endif // OF_GAMESTATES_GAME_AI_ASTAR_H

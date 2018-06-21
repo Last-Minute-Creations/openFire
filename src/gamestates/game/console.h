@@ -14,7 +14,9 @@ void consoleCreate(tFont *pFont);
 
 void consoleDestroy(void);
 
-void consoleWrite(char *szMsg, UBYTE ubColor);
+void consoleWrite(const char *szMsg, UBYTE ubColor);
+
+void consoleUpdate(void);
 
 void consoleChatBegin(void);
 

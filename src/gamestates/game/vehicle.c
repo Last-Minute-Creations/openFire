@@ -11,12 +11,6 @@
 #include "vehicletypes.h"
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
-
-	logBlockBegin(
-		"vehicleInit(pVehicle: %p, ubVehicleType: %hhu)",
-		pVehicle, ubVehicleType
-	);
-
 	// Fill struct fields
 	pVehicle->pType = &g_pVehicleTypes[ubVehicleType];
 	pVehicle->fX = fix16_from_int((g_pSpawns[ubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE);
@@ -32,36 +26,12 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 	pVehicle->bRotDiv = 0;
 	pVehicle->ubCooldown = 0;
 
-	vehicleSetupBob(pVehicle);
+	UBYTE ubTeam = playerGetByVehicle(pVehicle)->ubTeam;
+	pVehicle->sBob.pBitmap = g_pVehicleTypes[ubVehicleType].pMainFrames[ubTeam];
+	pVehicle->sBob.pMask = g_pVehicleTypes[ubVehicleType].pMainMask;
+	pVehicle->sAuxBob.pBitmap = g_pVehicleTypes[ubVehicleType].pAuxFrames[ubTeam];
+	pVehicle->sAuxBob.pMask = g_pVehicleTypes[ubVehicleType].pAuxMask;
 	spawnSetBusy(ubSpawnIdx, SPAWN_BUSY_SURFACING, VEHICLE_TYPE_TANK);
-
-	logBlockEnd("vehicleInit()");
-}
-
-void vehicleSetupBob(tVehicle *pVehicle) {
-	// Set main bob frames
-	bobSetData(
-		pVehicle->pBob,	pVehicle->pType->pMainFrames[TEAM_BLUE],
-		pVehicle->pType->pMainMask, pVehicle->pType->pMainFrameOffsets
-	);
-	bobChangeFrame(pVehicle->pBob, angleToFrame(pVehicle->ubBodyAngle));
-	pVehicle->pBob->isDrawn = 0;
-
-	// Set aux bob frames
-	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		bobSetData(
-			pVehicle->pAuxBob, pVehicle->pType->pAuxFrames[TEAM_BLUE],
-			pVehicle->pType->pAuxMask, pVehicle->pType->pAuxFrameOffsets
-		);
-		bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
-	}
-	else
-		pVehicle->pAuxBob->ubState = BOB_STATE_NODRAW;
-}
-
-void vehicleUnset(tVehicle *pVehicle) {
-	pVehicle->pBob->ubState = BOB_STATE_STOP_DRAWING;
-	pVehicle->pAuxBob->ubState = BOB_STATE_STOP_DRAWING;
 }
 
 static UBYTE vehicleCollidesWithOtherVehicle(tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle) {
@@ -170,8 +140,6 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		fNewPosX -= ccos(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
 		fNewPosY -= csin(pVehicle->ubBodyAngle) * pVehicle->pType->ubBwSpeed;
 	}
-	UWORD uwNewPosX = fix16_to_int(fNewPosX);
-	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 
 	// Body rotation: left/right
 	ubNewAngle = pVehicle->ubBodyAngle;
@@ -206,31 +174,46 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 	}
 
 	// Check collision
+	UWORD uwNewPosX = fix16_to_int(fNewPosX);
+	UWORD uwNewPosY = fix16_to_int(fNewPosY);
 	if(
 		!vehicleCollidesWithWall(
 			uwNewPosX, uwNewPosY, pVehicle->pType->pCollisionPts[angleToFrame(ubNewAngle)].pPts
 		) &&
 		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
 	) {
+		// Exact center pos
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
+		// Rounded center pos
 		pVehicle->uwX = uwNewPosX;
 		pVehicle->uwY = uwNewPosY;
+		// Top-left draw pos
+		pVehicle->sBob.sPos.sUwCoord.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+		pVehicle->sBob.sPos.sUwCoord.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+		// Angle frame
 		pVehicle->ubBodyAngle = ubNewAngle;
 		pVehicle->ubTurretAngle = ubNewTurretAngle;
-		bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
+		bobNewSetBitMapOffset(
+			&pVehicle->sBob, angleToFrame(ubNewAngle) * VEHICLE_BODY_HEIGHT
+		);
 	}
 
 	pVehicle->ubTurretAngle += ANGLE_360 + getDeltaAngleDirection(
 		pVehicle->ubTurretAngle, pSteerRequest->ubDestAngle, 1
 	);
-	if(pVehicle->ubTurretAngle >= ANGLE_360)
+	if(pVehicle->ubTurretAngle >= ANGLE_360) {
 		pVehicle->ubTurretAngle -= ANGLE_360;
-	bobChangeFrame(pVehicle->pAuxBob, angleToFrame(pVehicle->ubTurretAngle));
+	}
+	bobNewSetBitMapOffset(
+		&pVehicle->sAuxBob, angleToFrame(pVehicle->ubTurretAngle) * VEHICLE_BODY_HEIGHT
+	);
+	pVehicle->sAuxBob.sPos.ulYX = pVehicle->sBob.sPos.ulYX;
 
 	// Fire straight
-	if(pVehicle->ubCooldown)
+	if(pVehicle->ubCooldown) {
 		--pVehicle->ubCooldown;
+	}
 	else if(pSteerRequest->ubAction1 && pVehicle->ubBaseAmmo) {
 		tProjectileOwner uOwner;
 		uOwner.pVehicle = pVehicle;
@@ -238,7 +221,6 @@ void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		pVehicle->ubCooldown = VEHICLE_TANK_COOLDOWN;
 		--pVehicle->ubBaseAmmo;
 	}
-
 }
 
 void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
@@ -291,45 +273,17 @@ void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest) {
 		) &&
 		!vehicleCollidesWithOtherVehicle(pVehicle, uwNewPosX, uwNewPosY, ubNewAngle)
 	) {
+		// Exact center pos
 		pVehicle->fX = fNewPosX;
 		pVehicle->fY = fNewPosY;
+		// Rounded center pos
 		pVehicle->uwX = fix16_to_int(fNewPosX);
 		pVehicle->uwY = fix16_to_int(fNewPosY);
+		// Top-left draw pos
+		pVehicle->sBob.sPos.sUwCoord.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+		pVehicle->sBob.sPos.sUwCoord.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+		// Angle frame
 		pVehicle->ubBodyAngle = ubNewAngle;
-		bobChangeFrame(pVehicle->pBob, angleToFrame(ubNewAngle));
+		bobNewSetBitMapOffset(&pVehicle->sBob, angleToFrame(ubNewAngle) * VEHICLE_BODY_HEIGHT);
 	}
-}
-
-void vehicleDraw(tVehicle *pVehicle) {
-	UWORD uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
-	UWORD uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
-	tBob *pMainBob = pVehicle->pBob;
-	if(pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-		tBob *pAuxBob = pVehicle->pAuxBob;
-		UBYTE ubMainY1 = pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy;
-		UBYTE ubMainY2 = ubMainY1 + pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight - 1;
-		UBYTE ubAuxY1 = pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwDy;
-		UBYTE ubAuxY2 = ubAuxY1 + pAuxBob->sData.pFrameOffsets[pAuxBob->fubCurrFrame].uwHeight - 1;
-		UBYTE ubBgDy = MIN(ubMainY1, ubAuxY1);
-		UBYTE ubBgHeight = MAX(ubMainY2, ubAuxY2) - ubBgDy + 1;
-		if(bobDraw(pMainBob, g_pWorldMainBfr, uwX, uwY, ubBgDy, ubBgHeight)) {
-			blitCopyMask(
-				pAuxBob->sData.pBitmap, 0, pAuxBob->uwOffsY,
-				g_pWorldMainBfr->pBuffer, uwX, uwY,
-				VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT,
-				(UWORD*)pAuxBob->sData.pMask->Planes[0]
-			);
-		}
-	}
-	else {
-		bobDraw(
-			pMainBob, g_pWorldMainBfr, uwX, uwY,
-			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwDy,
-			pMainBob->sData.pFrameOffsets[pMainBob->fubCurrFrame].uwHeight
-		);
-	}
-}
-
-void vehicleUndraw(tVehicle *pVehicle) {
-	bobUndraw(pVehicle->pBob,	g_pWorldMainBfr);
 }

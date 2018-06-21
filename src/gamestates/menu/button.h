@@ -13,28 +13,17 @@ typedef struct _tButton {
 	void (*onClick)(void);
 } tButton;
 
-void buttonListCreate(
-	IN FUBYTE fubButtonCount,
-	IN tBitMap *pBfr,
-	IN tFont *pFont
-);
+void buttonListCreate(FUBYTE fubButtonCount, tBitMap *pBfr, tFont *pFont);
 
 void buttonListDestroy(void);
 
 void buttonAdd(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UWORD uwWidth,
-	IN UWORD uwHeight,
-	IN char *szText,
-	IN void (*onClick)(void)
+	UWORD uwX, UWORD uwY, UWORD uwWidth, UWORD uwHeight,
+	char *szText, void (*onClick)(void)
 );
 
 void buttonDrawAll(void);
 
-FUBYTE buttonProcessClick(
-	IN UWORD uwX,
-	IN UWORD uwY
-);
+FUBYTE buttonProcessClick(UWORD uwX, UWORD uwY);
 
 #endif // GUARD_OF_GAMESTATES_MENU_BUTTON_H

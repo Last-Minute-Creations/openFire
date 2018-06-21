@@ -33,18 +33,23 @@ ACE_INC_DIR = $(ACE_DIR)$(SL)include
 
 OF_CC ?= vc
 
+TARGET ?= release
+TARGET_DEFINES=
+ifeq ($(TARGET), debug)
+	TARGET_DEFINES += -DGAME_DEBUG -DACE_DEBUG
+endif
+
 INCLUDES = -I$(SRC_DIR) -I$(ACE_DIR)/include
 ifeq ($(OF_CC), vc)
 	CC_FLAGS = +kick13 -c99 $(INCLUDES) -DAMIGA
-	ACE_AS = vc
 	AS_FLAGS = +kick13 -c
 	OBJDUMP =
 else ifeq ($(OF_CC), m68k-amigaos-gcc)
-	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O0
-	ACE_AS = vasmm68k_mot
+	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O2
 	AS_FLAGS = -quiet -x -m68010 -Faout
 	OBJDUMP = m68k-amigaos-objdump -S -d $@ > $@.dasm
 endif
+CC_FLAGS += $(TARGET_DEFINES)
 
 # File list
 OF_MAIN_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -62,22 +67,31 @@ OF_GS_MENU_OBJS = $(addprefix $(TMP_DIR)$(SL)gsmenu_, $(notdir $(OF_GS_MENU_FILE
 OF_GS_PRECALC_FILES = $(wildcard $(SRC_DIR)/gamestates/precalc/*.c)
 OF_GS_PRECALC_OBJS = $(addprefix $(TMP_DIR)$(SL)gsprecalc_, $(notdir $(OF_GS_PRECALC_FILES:.c=.o)))
 
+ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
+ACE_OBJS_CP = $(addprefix $(TMP_DIR)$(SL), $(notdir $(ACE_OBJS:.c=.o)))
 OF_FILES = $(OF_MAIN_FILES) $(OF_GS_GAME_FILES) $(OF_GS_GAME_AI_FILES) $(OF_GS_MENU_FILES) $(OF_GS_PRECALC_FILES)
 OF_OBJS = $(OF_MAIN_OBJS) $(OF_GS_GAME_OBJS) $(OF_GS_GAME_AI_OBJS) $(OF_GS_MENU_OBJS) $(OF_GS_PRECALC_OBJS)
-ACE_OBJS = $(wildcard $(ACE_DIR)/build/*.o)
-
+OF_SU = $(OF_OBJS:.o=.su)
 #
-ace: $(ACE_OBJS)
-	$(MAKE) -C $(ACE_DIR) all ACE_CC=$(OF_CC)
-	$(NEWLINE)
-	@echo Copying ACE objs...
-	$(NEWLINE)
-	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) $(QUIETCOPY)
 
-of: $(OF_OBJS)
+oface: ace of
+
+of: $(OF_OBJS) $(ACE_OBJS_CP)
 	$(NEWLINE)
 	@echo Linking...
-	@$(OF_CC) $(CC_FLAGS) -lamiga -o $@ $^ $(ACE_OBJS)
+	@$(OF_CC) $(CC_FLAGS) -lamiga -o $@ $^
+
+ace: $(ACE_OBJS)
+	$(MAKE) -C $(ACE_DIR) all ACE_CC=$(OF_CC) TARGET=$(TARGET)
+	$(NEWLINE)
+	@echo Copying ACE objs...
+	@$(CP) $(ACE_DIR)$(SL)build$(SL)*.o $(TMP_DIR) $(QUIETCOPY)
+
+stack_usage: $(OF_SU)
+	@rm $@
+	@for file in $^; do \
+		cat $$file; \
+	done | sort -nrk 2 > $@
 
 # Main files
 $(TMP_DIR)$(SL)%.o: $(SRC_DIR)/%.c
@@ -104,8 +118,8 @@ $(TMP_DIR)$(SL)gsprecalc_%.o: $(SRC_DIR)/gamestates/precalc/%.c
 	@echo Building $<
 	@$(OF_CC) $(CC_FLAGS) -c -o $@ $<
 
-all: clear ace of
+all: clean ace of stack_usage
 
-clear:
+clean:
 	$(ECHO) "a" > $(TMP_DIR)$(SL)foo.o
-	$(RM) $(TMP_DIR)$(SL)*.o
+	@$(RM) $(TMP_DIR)$(SL)*.o

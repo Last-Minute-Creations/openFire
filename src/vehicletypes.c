@@ -2,68 +2,34 @@
 #include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
 #include <fixmath/fix16.h>
-#include "gamestates/game/bob.h"
+#include "cache.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/precalc/precalc.h"
-#include "adler32.h"
 
 tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 
-tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
-	char szBitmapFileName[100], szChecksumFileName[100];
-	tBitMap *pBitmap;
+tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
+	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: '%s')", szPath);
 
-	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: %s)", szPath);
-
-	// Calc source frame checksum
-	sprintf(szBitmapFileName, "data/%s", szPath);
-	ULONG ulAdlerBm = adler32file(szBitmapFileName);
-
-	// Check for precalc
-	sprintf(szChecksumFileName, "precalc/%s.adl", szPath);
-	sprintf(szBitmapFileName, "precalc/%s", szPath);
-
-	tFile *pBitmapFile = fileOpen(szBitmapFileName, "rb");
-	tFile *pChecksumFile = fileOpen(szChecksumFileName, "rb");
-	if(pChecksumFile && pBitmapFile) {
-		ULONG ulPrevAdlerBm;
-		fileRead(pChecksumFile, &ulPrevAdlerBm, sizeof(ULONG));
-		fileClose(pChecksumFile);
-		fileClose(pBitmapFile);
-		// Check if adler is same
-		if(ulAdlerBm == ulPrevAdlerBm) {
-			logWrite("Loading from cache...\n");
-			pBitmap = bitmapCreateFromFile(szBitmapFileName);
-			logBlockEnd("vehicleTypeGenerateRotatedFrames()");
-			return pBitmap;
-		}
-		else {
-			logWrite("WARN: Adler mismatch for %s!\n", szChecksumFileName);
-		}
-	}
-	else {
-		if(pBitmapFile) {
-			fileClose(pBitmapFile);
-		}
-		if(pChecksumFile) {
-			fileClose(pChecksumFile);
-		}
+	char szBitmapFileName[100];
+	if(cacheIsValid(szPath)) {
+		sprintf(szBitmapFileName, "precalc/%s", szPath);
+		tBitMap *pBitmap = bitmapCreateFromFile(szBitmapFileName);
+		logBlockEnd("vehicleTypeGenerateRotatedFrames()");
+		return pBitmap;
 	}
 
 	// Load first frame to determine sizes
 	sprintf(szBitmapFileName, "data/%s", szPath);
 	tBitMap *pFirstFrame = bitmapCreateFromFile(szBitmapFileName);
-	logWrite("Read first frame\n");
-	UWORD uwFrameWidth = bitmapGetByteWidth(pFirstFrame) << 3;
-
-	UBYTE *pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
-	UBYTE *pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
+	UWORD uwFrameWidth = bitmapGetByteWidth(pFirstFrame) * 8;
 
 	// Create huge-ass bitmap for all frames
 	UBYTE ubFlags = 0;
-	if(bitmapIsInterleaved(pFirstFrame))
+	if(bitmapIsInterleaved(pFirstFrame)) {
 		ubFlags = BMF_INTERLEAVED;
-	pBitmap = bitmapCreate(
+	}
+	tBitMap *pBitmap = bitmapCreate(
 		uwFrameWidth, uwFrameWidth * VEHICLE_BODY_ANGLE_COUNT,
 		pFirstFrame->Depth, ubFlags
 	);
@@ -77,44 +43,36 @@ tBitMap *vehicleTypeGenerateRotatedFrames(char *szPath) {
 	bitmapDestroy(pFirstFrame);
 
 	// Convert first frame to chunky
-	for(UWORD y = 0; y != uwFrameWidth; ++y) {
-		// Read bitmap row to chunky
-		chunkyFromPlanar16(pBitmap,  0, y, &pChunkySrc[y*uwFrameWidth]);
-		if(VEHICLE_BODY_WIDTH > 16)
-			chunkyFromPlanar16(pBitmap, 16, y, &pChunkySrc[y*uwFrameWidth+16]);
-	}
+	UBYTE *pChunkySrc = memAllocFast(uwFrameWidth * uwFrameWidth);
+	chunkyFromBitmap(pBitmap, pChunkySrc, 0, 0, uwFrameWidth, uwFrameWidth);
 
-	for(FUBYTE fubFrame = 1; fubFrame != VEHICLE_BODY_ANGLE_COUNT; ++fubFrame) {
-		// Rotate chunky source
+	UBYTE *pChunkyRotated = memAllocFast(uwFrameWidth * uwFrameWidth);
+	for(FUBYTE fubFrame = 1; fubFrame < VEHICLE_BODY_ANGLE_COUNT; ++fubFrame) {
+		// Rotate chunky source and place on huge-ass bitmap
 		UBYTE ubAngle = ANGLE_360 - (fubFrame<<1);
 		chunkyRotate(
 			pChunkySrc, pChunkyRotated,	csin(ubAngle), ccos(ubAngle),
 			0, uwFrameWidth, uwFrameWidth
 		);
-
-		// Convert rotated chunky frame to planar on huge-ass bitmap
-		for(UWORD y = 0; y != uwFrameWidth; ++y) {
-			for(UWORD x = 0; x != (uwFrameWidth>>4); ++x)
-				chunkyToPlanar16(
-					&pChunkyRotated[(y*uwFrameWidth) + (x<<4)],
-					x<<4, y + uwFrameWidth*fubFrame,
-					pBitmap
-				);
-		}
+		chunkyToBitmap(
+			pChunkyRotated, pBitmap,
+			0, uwFrameWidth*fubFrame, uwFrameWidth, uwFrameWidth
+		);
 	}
-
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
+
+	// Generate cache
 	sprintf(szBitmapFileName, "precalc/%s", szPath);
 	bitmapSave(pBitmap, szBitmapFileName);
-	pChecksumFile = fileOpen(szChecksumFileName, "wb");
-	fileWrite(pChecksumFile, &ulAdlerBm, sizeof(ULONG));
-	fileClose(pChecksumFile);
+	cacheGenerateChecksum(szPath);
+
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 	return pBitmap;
 fail:
-	if(pBitmap)
+	if(pBitmap) {
 		bitmapDestroy(pBitmap);
+	}
 	memFree(pChunkySrc, uwFrameWidth * uwFrameWidth);
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");
@@ -149,6 +107,9 @@ static void vehicleTypeFramesCreate(tVehicleType *pType, char *szVehicleName, UB
 	}
 }
 
+#define MIN4(a,b,c,d) (MIN((a), MIN((b), MIN((c), (d)))))
+#define MAX4(a,b,c,d) (MAX((a), MAX((b), MAX((c), (d)))))
+
 static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions) {
 	logBlockBegin(
 		"vehicleTypeGenerateRotatedCollisions(pFrameCollisions: %p)", pFrameCollisions
@@ -168,59 +129,24 @@ static void vehicleTypeGenerateRotatedCollisions(tCollisionPts *pFrameCollisions
 			) + fHalf);
 		}
 
-		pNewCollisions->bLeftmost = MIN(
-			pNewCollisions->pPts[0].bX, MIN(
-				pNewCollisions->pPts[2].bX, MIN(
-					pNewCollisions->pPts[5].bX,
-					pNewCollisions->pPts[7].bX))
+		pNewCollisions->bLeftmost = MIN4(
+			pNewCollisions->pPts[0].bX, pNewCollisions->pPts[2].bX,
+			pNewCollisions->pPts[5].bX, pNewCollisions->pPts[7].bX
 		);
-		pNewCollisions->bRightmost = MAX(
-			pNewCollisions->pPts[0].bX, MAX(
-				pNewCollisions->pPts[2].bX, MAX(
-					pNewCollisions->pPts[5].bX,
-					pNewCollisions->pPts[7].bX))
+		pNewCollisions->bRightmost = MAX4(
+			pNewCollisions->pPts[0].bX, pNewCollisions->pPts[2].bX,
+			pNewCollisions->pPts[5].bX, pNewCollisions->pPts[7].bX
 		);
-		pNewCollisions->bTopmost = MIN(
-			pNewCollisions->pPts[0].bY, MIN(
-				pNewCollisions->pPts[2].bY, MIN(
-					pNewCollisions->pPts[5].bY,
-					pNewCollisions->pPts[7].bY))
+		pNewCollisions->bTopmost = MIN4(
+			pNewCollisions->pPts[0].bY, pNewCollisions->pPts[2].bY,
+			pNewCollisions->pPts[5].bY, pNewCollisions->pPts[7].bY
 		);
-		pNewCollisions->bBottommost = MAX(
-			pNewCollisions->pPts[0].bY, MAX(
-				pNewCollisions->pPts[2].bY, MAX(
-					pNewCollisions->pPts[5].bY,
-					pNewCollisions->pPts[7].bY))
+		pNewCollisions->bBottommost = MAX4(
+			pNewCollisions->pPts[0].bY, pNewCollisions->pPts[2].bY,
+			pNewCollisions->pPts[5].bY, pNewCollisions->pPts[7].bY
 		);
 	}
 	logBlockEnd("vehicleTypeGenerateRotatedCollisions()");
-}
-
-static tBobFrameOffset *vehicleTypeFramesGenerateOffsets(tBitMap *pMask) {
-	tBobFrameOffset *pOffsets = memAllocFast(
-		sizeof(tBobFrameOffset) * VEHICLE_BODY_ANGLE_COUNT
-	);
-
-	const UWORD uwWordsPerRow = pMask->BytesPerRow >> 1;
-
-	for(uint8_t i = 0; i != VEHICLE_BODY_ANGLE_COUNT; ++i) {
-		UBYTE ubFirst = 0xFF;
-		UBYTE ubLast = 0;
-		for(uint8_t y = 0; y != VEHICLE_BODY_HEIGHT; ++y) {
-			for(uint8_t x = 0; x <= VEHICLE_BODY_WIDTH; x += 16) {
-				UWORD uwWordOffs = (i*VEHICLE_BODY_HEIGHT + y)*uwWordsPerRow + (x>>4);
-				if(((UWORD*)pMask->Planes[0])[uwWordOffs]) {
-					if(y < ubFirst)
-						ubFirst = y;
-					if(y > ubLast)
-						ubLast = y;
-				}
-			}
-		}
-		pOffsets[i].uwDy = ubFirst;
-		pOffsets[i].uwHeight = ubLast - ubFirst+1;
-	}
-	return pOffsets;
 }
 
 /**
@@ -264,11 +190,6 @@ void vehicleTypesCreate(void) {
 	}
 
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
-	if(pType->pAuxMask)
-		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
-	else
-		pType->pAuxFrameOffsets = 0;
 
 	// Jeep
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_JEEP];
@@ -299,26 +220,11 @@ void vehicleTypesCreate(void) {
 		pType->pCollisionPts[0].pPts[i].bY -= VEHICLE_BODY_HEIGHT/2;
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
-	pType->pMainFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pMainMask);
-	if(pType->pAuxMask)
-		pType->pAuxFrameOffsets = vehicleTypeFramesGenerateOffsets(pType->pAuxMask);
-	else
-		pType->pAuxFrameOffsets = 0;
 
 	logBlockEnd("vehicleTypesCreate");
 }
 
 static void vehicleTypeUnloadFrameData(tVehicleType *pType) {
-	memFree(
-		pType->pMainFrameOffsets,
-		VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
-	);
-	if(pType->pAuxFrameOffsets) {
-		memFree(
-			pType->pAuxFrameOffsets,
-			VEHICLE_BODY_ANGLE_COUNT * sizeof(tBobFrameOffset)
-		);
-	}
 	bitmapDestroy(pType->pMainFrames[TEAM_BLUE]);
 	bitmapDestroy(pType->pMainFrames[TEAM_RED]);
 	bitmapDestroy(pType->pMainMask);
@@ -335,7 +241,6 @@ void vehicleTypesDestroy(void) {
 
 	// Free bob sources
 	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_TANK]);
-
 	vehicleTypeUnloadFrameData(&g_pVehicleTypes[VEHICLE_TYPE_JEEP]);
 	// TODO ASV
 	// TODO Chopper

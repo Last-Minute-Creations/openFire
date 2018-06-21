@@ -37,7 +37,6 @@
 #define MAP_TILE_DIRT     16
 #define MAP_TILE_ROAD     32
 #define MAP_TILE_WALL     48
-#define MAP_TILE_TURRET   64
 
 
 typedef struct _tTileCoord {
@@ -52,30 +51,17 @@ void worldMapDestroy(void);
 void worldMapRedraw(void);
 void worldMapGenerateLogic(void);
 
-void worldMapChangeTile(
-	IN UBYTE ubX,
-	IN UBYTE ubY,
-	IN UBYTE ubLogicTileIdx
-);
+void worldMapChangeTile(UBYTE ubX, UBYTE ubY, UBYTE ubLogicTileIdx);
 
-void worldMapSetSrcDst(
-	IN tBitMap *pTileset,
-	IN tBitMap *pDst
-);
+void worldMapSetBuffers(tBitMap *pTileset, tBitMap *pFront, tBitMap *pBack);
 
-void worldMapRequestUpdateTile(
-	IN UBYTE ubX,
-	IN UBYTE ubY
-);
+void worldMapSwapBuffers(void);
 
-UBYTE worldMapTileFromLogic(
-	IN FUBYTE ubTileX,
-	IN FUBYTE ubTileY
-);
+void worldMapRequestUpdateTile(UBYTE ubX, UBYTE ubY);
 
-UBYTE worldMapIsWall(
-	IN UBYTE ubMapTile
-);
+UBYTE worldMapTileFromLogic(FUBYTE ubTileX, FUBYTE ubTileY);
+
+UBYTE worldMapIsWall(UBYTE ubMapTile);
 
 void worldMapUpdateTiles(void);
 

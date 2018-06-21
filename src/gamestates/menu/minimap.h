@@ -5,9 +5,6 @@
 #include <ace/utils/bitmap.h>
 #include "map.h"
 
-void minimapDraw(
-	IN tBitMap *pDest,
-	IN tMap *pMap
-);
+void minimapDraw(tBitMap *pDest, tMap *pMap);
 
 #endif // GUARD_OF_GAMESTATES_MENU_MINIMAP_H

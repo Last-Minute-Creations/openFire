@@ -214,7 +214,7 @@ static UBYTE botTarget(tBot *pBot) {
 	if(pTurret) {
 		pBot->pPlayer->sSteerRequest.ubDestAngle = getAngleBetweenPoints(
 			pBot->pPlayer->sVehicle.uwX, pBot->pPlayer->sVehicle.uwY,
-			pTurret->uwX, pTurret->uwY
+			pTurret->uwCenterX, pTurret->uwCenterY
 		);
 		return 1;
 	}

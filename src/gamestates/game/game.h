@@ -2,8 +2,7 @@
 #define GUARD_OF_GAMESTATES_GAME_GAME_H
 
 #include <ace/managers/viewport/simplebuffer.h>
-#include <ace/managers/key.h>
-#include "gamestates/game/bob.h"
+#include <gamestates/game/bob_new.h>
 
 #define WORLD_BPP 4
 
@@ -15,12 +14,8 @@
 #define WORLD_COP_SPRITEEN_POS     0
 #define WORLD_COP_CROSS_POS        (WORLD_COP_SPRITEEN_POS+1+7*2)
 #define WORLD_COP_VPMAIN_POS       (WORLD_COP_CROSS_POS + 2)
-#define WORLD_COP_INIT_POS         (WORLD_COP_VPMAIN_POS+14)
-#define WORLD_COP_TURRET_START_POS (WORLD_COP_INIT_POS+2)
-#define WORLD_COP_TURRET_CMDS      (16*6*5*4)
-#define WORLD_COP_VPHUD_DMAOFF_POS (WORLD_COP_TURRET_START_POS + WORLD_COP_TURRET_CMDS)
-#define WORLD_COP_CLEANUP_POS      (WORLD_COP_VPHUD_DMAOFF_POS+2)
-#define WORLD_COP_VPHUD_POS        (WORLD_COP_CLEANUP_POS+3)
+#define WORLD_COP_VPHUD_DMAOFF_POS (WORLD_COP_VPMAIN_POS+14)
+#define WORLD_COP_VPHUD_POS        (WORLD_COP_VPHUD_DMAOFF_POS+3)
 #define WORLD_COP_VPHUD_DMAON_POS  (WORLD_COP_VPHUD_POS+14)
 #define WORLD_COP_SIZE             (WORLD_COP_VPHUD_DMAON_POS+1)
 
@@ -39,11 +34,9 @@ extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;
 
 extern UBYTE g_ubDoSiloHighlight;
-extern UWORD g_uwSiloHighlightY;
-extern UWORD g_uwSiloHighlightX;
+extern tBobNew g_sHighlightBob;
 extern tCameraManager *g_pWorldCamera;
 
-extern UBYTE g_ubActiveState;
 extern ULONG g_ulGameFrame;
 extern UBYTE g_isLocalBot;
 

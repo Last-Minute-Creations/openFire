@@ -1,11 +1,13 @@
 #include "gamestates/game/console.h"
 #include <ace/utils/font.h>
+#include <ace/managers/key.h>
 #include "gamestates/game/game.h"
 #include "gamestates/game/hud.h"
 #include "gamestates/game/player.h"
 
 // 210x59
 #define CONSOLE_MAX_ENTRIES 8
+#define CONSOLE_LOG_MAX 24
 #define CHAT_MAX (192/6)
 
 static tFont *s_pConsoleFont;
@@ -15,34 +17,65 @@ static FUBYTE s_fubChatLineLength;
 
 static tTextBitMap *s_pChatLineBfr;
 
+UWORD s_uwToDraw;
+
+typedef struct _tConsoleEntry {
+	UBYTE ubColor;
+	char szMessage[CHAT_MAX];
+} tConsoleEntry;
+
+typedef struct _tConsoleLog {
+	UWORD uwTailIdx;
+	tConsoleEntry pLog[CONSOLE_LOG_MAX];
+} tConsoleLog;
+
+tConsoleLog s_sLog;
 
 void consoleCreate(tFont *pFont) {
 	s_pConsoleFont = pFont;
 	g_isChatting = 0;
 	s_pChatLineBfr = fontCreateTextBitMap(192, pFont->uwHeight);
+	s_sLog.uwTailIdx = 0;
+	s_uwToDraw = 0;
 }
 
 void consoleDestroy(void) {
 	fontDestroyTextBitMap(s_pChatLineBfr);
 }
 
-void consoleWrite(char *szMsg, UBYTE ubColor) {
+void consoleWrite(const char *szMsg, UBYTE ubColor) {
+	s_sLog.pLog[s_sLog.uwTailIdx].ubColor = ubColor;
+	strcpy(s_sLog.pLog[s_sLog.uwTailIdx].szMessage, szMsg);
+	++s_sLog.uwTailIdx;
+	if(s_sLog.uwTailIdx >= CONSOLE_LOG_MAX) {
+		s_sLog.uwTailIdx -= CONSOLE_LOG_MAX;
+	}
+}
+
+void consoleUpdate(void) {
 	// Move remaining messages up
+	if(s_uwToDraw == s_sLog.uwTailIdx) {
+		return;
+	}
 	blitCopyAligned(
-		g_pHudBfr->pBuffer, 112, 9,
-		g_pHudBfr->pBuffer, 112, 3,
+		g_pHudBfr->pBack, 112, 9,
+		g_pHudBfr->pBack, 112, 3,
 		192, 41
 	);
 
 	// Clear last line
-	blitRect(g_pHudBfr->pBuffer, 112,45, 192, 5, 0);
+	blitRect(g_pHudBfr->pBack, 112,45, 192, 5, 0);
 
 	// Draw new message
-	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, szMsg);
+	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_sLog.pLog[s_uwToDraw].szMessage);
 	fontDrawTextBitMap(
-		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 45,
-		ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
+		g_pHudBfr->pBack, s_pChatLineBfr, 112, 45,
+		s_sLog.pLog[s_uwToDraw].ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
+	++s_uwToDraw;
+	if(s_uwToDraw >= CONSOLE_LOG_MAX) {
+		s_uwToDraw -= CONSOLE_LOG_MAX;
+	}
 }
 
 void consoleChatBegin(void) {
@@ -51,14 +84,14 @@ void consoleChatBegin(void) {
 	g_isChatting = 1;
 	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
 	fontDrawTextBitMap(
-		g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
+		g_pHudBfr->pBack, s_pChatLineBfr, 112, 51,
 		CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 	);
 }
 
 void consoleChatEnd(void) {
 	// Erase chat line
-	blitRect(g_pHudBfr->pBuffer, 112,51, 192, 5, 0);
+	blitRect(g_pHudBfr->pBack, 112,51, 192, 5, 0);
 	g_isChatting = 0;
 }
 
@@ -85,7 +118,7 @@ FUBYTE consoleChatProcessChar(char c) {
 			s_pChatBfr[s_fubChatLineLength] = 0; // for printing
 			fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_pChatBfr);
 			fontDrawTextBitMap(
-				g_pHudBfr->pBuffer, s_pChatLineBfr, 112, 51,
+				g_pHudBfr->pBack, s_pChatLineBfr, 112, 51,
 				CONSOLE_COLOR_GENERAL, FONT_TOP | FONT_LEFT | FONT_LAZY
 			);
 		}

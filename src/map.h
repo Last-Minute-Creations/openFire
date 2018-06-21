@@ -31,7 +31,7 @@
 
 typedef struct _tTile {
 	UBYTE ubIdx;  ///< Tileset idx
-	UBYTE ubData; ///< Data field. For buildings/gates/spawns used as array idx.
+	UBYTE ubBuilding; ///< For buildings/gates/spawns used as array idx.
 } tMapTile;
 
 typedef struct _tMap {
@@ -46,9 +46,7 @@ typedef struct _tMap {
 	tMapTile pData[MAP_MAX_SIZE][MAP_MAX_SIZE];
 } tMap;
 
-void mapInit(
-	IN char *szPath
-);
+void mapInit(char *szPath);
 
 extern tMap g_sMap;
 

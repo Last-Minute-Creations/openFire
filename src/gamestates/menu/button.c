@@ -92,12 +92,12 @@ static void buttonDraw(tButton *pButton) {
 }
 
 void buttonDrawAll(void) {
-	for(FUBYTE i = 0; i != s_fubButtonCount; ++i)
+	for(FUBYTE i = 0; i < s_fubButtonCount; ++i)
 		buttonDraw(&s_pButtons[i]);
 }
 
 FUBYTE buttonProcessClick(UWORD uwX, UWORD uwY) {
-	for(FUBYTE i = 0; i != s_fubButtonCount; ++i) {
+	for(FUBYTE i = 0; i < s_fubButtonCount; ++i) {
 		if(inRect(uwX, uwY, s_pButtons[i].sRect)) {
 			if(s_pButtons[i].onClick)
 				s_pButtons[i].onClick();

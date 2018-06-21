@@ -1,6 +1,6 @@
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/vehicle.h"
-#include "gamestates/game/bob.h"
+#include "gamestates/game/bob_new.h"
 #include "gamestates/game/game.h"
 #include "gamestates/game/worldmap.h"
 #include "gamestates/game/building.h"
@@ -35,11 +35,11 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 	s_fubPrevProjectileAdded = fubProjectileMaxCount - 1;
 	for(FUBYTE i = 0; i != fubProjectileMaxCount; ++i) {
 		s_pProjectiles[i].ubType = PROJECTILE_TYPE_OFF;
-		s_pProjectiles[i].pBob = bobCreate(
-			s_pBulletBitmap, s_pBulletMask, 0,
-			PROJECTILE_BULLET_HEIGHT, 0
+		bobNewInit(
+			&s_pProjectiles[i].sBob,
+			bitmapGetByteWidth(s_pBulletBitmap) * 8, PROJECTILE_BULLET_HEIGHT, 1,
+			s_pBulletBitmap, s_pBulletMask, 0, 0
 		);
-		s_pProjectiles[i].pBob->ubState = BOB_STATE_NODRAW;
 	}
 
 	logBlockEnd("projectileListCreate()");
@@ -52,15 +52,9 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 }
 
 void projectileListDestroy(void) {
-	UBYTE i;
-
 	logBlockBegin("projectileListDestroy()");
 
-	// Dealloc bobs
-	for(i = s_fubProjectileMaxCount; i--;)
-		bobDestroy(s_pProjectiles[i].pBob);
 	memFree(s_pProjectiles, s_fubProjectileMaxCount * sizeof(tProjectile));
-
 	// Dealloc bob bitmaps
 	bitmapDestroy(s_pBulletBitmap);
 	bitmapDestroy(s_pBulletMask);
@@ -83,8 +77,9 @@ tProjectile *projectileCreate(
 			break;
 		}
 	} while(i++ != s_fubPrevProjectileAdded);
-	if(!pProjectile)
+	if(!pProjectile) {
 		return 0;
+	}
 
 	pProjectile->uOwner = uOwner;
 	pProjectile->ubType = ubType;
@@ -92,67 +87,39 @@ tProjectile *projectileCreate(
 
 	// Initial projectile position & angle
 	if(ubOwnerType == PROJECTILE_OWNER_TYPE_VEHICLE) {
-		if(uOwner.pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK])
+		if(uOwner.pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
 			pProjectile->ubAngle = uOwner.pVehicle->ubTurretAngle;
-		else
+		}
+		else {
 			pProjectile->ubAngle = uOwner.pVehicle->ubBodyAngle;
+		}
 		fix16_t fSin = csin(pProjectile->ubAngle);
 		fix16_t fCos = ccos(pProjectile->ubAngle);
 		pProjectile->fX = fix16_add(uOwner.pVehicle->fX, (VEHICLE_BODY_WIDTH/2) * fCos);
 		pProjectile->fY = fix16_add(uOwner.pVehicle->fY, (VEHICLE_BODY_HEIGHT/2) * fSin);
 	}
 	else {
-		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwX);
-		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwY);
+		pProjectile->fX = fix16_from_int(uOwner.pTurret->uwCenterX);
+		pProjectile->fY = fix16_from_int(uOwner.pTurret->uwCenterY);
 		pProjectile->ubAngle = uOwner.pTurret->ubAngle;
 	}
 
 	// Frame life
 	pProjectile->uwFrameLife = PROJECTILE_FRAME_LIFE;
-
-	// Bob
-	pProjectile->pBob->ubState = BOB_STATE_START_DRAWING;
-	pProjectile->pBob->isDrawn = 0;
 	return pProjectile;
 }
 
 void projectileDestroy(tProjectile *pProjectile) {
 	pProjectile->ubType = PROJECTILE_TYPE_OFF;
-	pProjectile->pBob->ubState = BOB_STATE_STOP_DRAWING;
-}
-
-void projectileUndraw(void) {
-	tProjectile *pProjectile;
-	UBYTE i;
-
-	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile)
-		bobUndraw(pProjectile->pBob, g_pWorldMainBfr);
-}
-
-void projectileDraw(void) {
-	tProjectile *pProjectile;
-	FUBYTE i;
-
-	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile) {
-		if(!pProjectile->uwFrameLife)
-			continue;
-		WORD wProjectileX, wProjectileY;
-		wProjectileX = fix16_to_int(pProjectile->fX)-PROJECTILE_BULLET_HEIGHT/2;
-		wProjectileY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
-		bobDraw(
-			pProjectile->pBob, g_pWorldMainBfr,
-			wProjectileX, wProjectileY, 0, 2
-		);
-	}
 }
 
 void projectileSim(void) {
 	tProjectile *pProjectile;
 	FUBYTE i;
 	for(i = s_fubProjectileMaxCount, pProjectile = &s_pProjectiles[0]; i--; ++pProjectile) {
-		if(pProjectile->ubType == PROJECTILE_TYPE_OFF)
+		if(pProjectile->ubType == PROJECTILE_TYPE_OFF) {
 			continue;
-
+		}
 		// Verify projectile lifespan
 		if(!pProjectile->uwFrameLife) {
 			projectileDestroy(pProjectile);
@@ -173,7 +140,7 @@ void projectileSim(void) {
 		// Check collistion with buildings
 		UBYTE ubMapX = fix16_to_int(pProjectile->fX) >> MAP_TILE_SIZE;
 		UBYTE ubMapY = fix16_to_int(pProjectile->fY) >> MAP_TILE_SIZE;
-		UBYTE ubBuildingIdx = g_sMap.pData[ubMapX][ubMapY].ubData;
+		UBYTE ubBuildingIdx = g_sMap.pData[ubMapX][ubMapY].ubBuilding;
 		if(ubBuildingIdx != BUILDING_IDX_INVALID) {
 			if(
 				pProjectile->ubOwnerType == PROJECTILE_OWNER_TYPE_TURRET
@@ -183,13 +150,19 @@ void projectileSim(void) {
 			}
 			if(buildingDamage(ubBuildingIdx, PROJECTILE_DAMAGE) == BUILDING_DESTROYED) {
 				g_sMap.pData[ubMapX][ubMapY].ubIdx = MAP_LOGIC_DIRT;
-				g_sMap.pData[ubMapX][ubMapY].ubData = 0;
+				g_sMap.pData[ubMapX][ubMapY].ubBuilding = 0;
 				worldMapRequestUpdateTile(ubMapX, ubMapY);
-				explosionsAdd(ubMapX << MAP_TILE_SIZE, ubMapY << MAP_TILE_SIZE);
+				explosionsAdd(
+					(ubMapX << MAP_TILE_SIZE) + MAP_HALF_TILE,
+					(ubMapY << MAP_TILE_SIZE) + MAP_HALF_TILE
+				);
 			}
 			projectileDestroy(pProjectile);
 			continue;
 		}
+		pProjectile->sBob.sPos.sUwCoord.uwX = fix16_to_int(pProjectile->fX)-PROJECTILE_BULLET_HEIGHT/2;
+		pProjectile->sBob.sPos.sUwCoord.uwY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
+		bobNewPush(&pProjectile->sBob);
 	}
 }
 

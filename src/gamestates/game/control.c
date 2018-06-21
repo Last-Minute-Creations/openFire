@@ -150,8 +150,8 @@ static void controlMaskIterateTurrets(
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubTurretIdx)
 ) {
 	for(FUBYTE i = 0; i != g_uwTurretCount; ++i) {
-		FUBYTE fubX = g_pTurrets[i].uwX >> MAP_TILE_SIZE;
-		FUBYTE fubY = g_pTurrets[i].uwY >> MAP_TILE_SIZE;
+		FUBYTE fubX = g_pTurrets[i].uwCenterX >> MAP_TILE_SIZE;
+		FUBYTE fubY = g_pTurrets[i].uwCenterY >> MAP_TILE_SIZE;
 		if(fubX < fubX1 || fubX > fubX2)
 			continue;
 		FUBYTE isInPoly = 0;
@@ -298,7 +298,7 @@ void controlSim(void) {
 		}
 		else {
 			if(pPoint->fubBrownCount > pPoint->fubGreenCount) {
-				// Brown taking over green
+				// red taking over blue
 				fbCaptureDir = -1;
 				if(pPoint->fuwLife > CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
@@ -308,7 +308,7 @@ void controlSim(void) {
 				}
 			}
 			else {
-				// Green taking over brown
+				// blue taking over red
 				fbCaptureDir = 1;
 				if(pPoint->fuwLife < CONTROL_POINT_LIFE_NEUTRAL) {
 					pPoint->fubDestTeam = TEAM_NONE;
@@ -374,7 +374,7 @@ void controlRedrawPoints(void) {
 		)) {
 			continue;
 		}
-		// TODO could be drawn only on fubTileLife change
+		// TODO could be drawn only on fubTileLife change, but watch out for dblbuf
 		UWORD uwX = pPoint->fubTileX << MAP_TILE_SIZE;
 		UWORD uwY = pPoint->fubTileY << MAP_TILE_SIZE;
 		FUWORD fuwTileProgress = ABS(CONTROL_POINT_LIFE_NEUTRAL - pPoint->fuwLife);
@@ -388,7 +388,7 @@ void controlRedrawPoints(void) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
 				(MAP_TILE_CAPTURE_BLUE + pPoint->fubTeam) << MAP_TILE_SIZE,
-				g_pWorldMainBfr->pBuffer, uwX, uwY,
+				g_pWorldMainBfr->pBack, uwX, uwY,
 				MAP_FULL_TILE, fuwAntiProgress
 			);
 		}
@@ -396,7 +396,7 @@ void controlRedrawPoints(void) {
 			blitCopyAligned(
 				g_pMapTileset, 0,
 				((MAP_TILE_CAPTURE_BLUE + pPoint->fubDestTeam) << MAP_TILE_SIZE) + fuwAntiProgress,
-				g_pWorldMainBfr->pBuffer, uwX, uwY + fuwAntiProgress,
+				g_pWorldMainBfr->pBack, uwX, uwY + fuwAntiProgress,
 				MAP_FULL_TILE, fuwTileProgress
 			);
 		}

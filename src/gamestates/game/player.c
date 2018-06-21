@@ -32,51 +32,46 @@ void playerListCreate(UBYTE ubPlayerLimit) {
 	g_ubPlayerLimit = ubPlayerLimit;
 	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
 	for(i = 0; i < ubPlayerLimit; ++i) {
-		g_pPlayers[i].sVehicle.pBob = bobCreate(
+		bobNewInit(
+			&g_pPlayers[i].sVehicle.sBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 1,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrames[TEAM_BLUE],
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrameOffsets,
-			VEHICLE_BODY_HEIGHT, angleToFrame(ANGLE_90)
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask, 0, 0
 		);
-		g_pPlayers[i].sVehicle.pBob->ubState = BOB_STATE_NODRAW;
 
-		g_pPlayers[i].sVehicle.pAuxBob = bobCreate(
+		bobNewInit(
+			&g_pPlayers[i].sVehicle.sAuxBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 0,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask,
-			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrameOffsets,
-			VEHICLE_TURRET_HEIGHT, angleToFrame(ANGLE_90)
+			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask, 0, 0
 		);
-		g_pPlayers[i].sVehicle.pAuxBob->ubState = BOB_STATE_NODRAW;
 	}
 }
 
 void playerListDestroy(void) {
-	UBYTE i;
 	logBlockBegin("playerListDestroy()");
-	for(i = 0; i < g_ubPlayerLimit; ++i) {
-		bobDestroy(g_pPlayers[i].sVehicle.pBob);
-		bobDestroy(g_pPlayers[i].sVehicle.pAuxBob);
-	}
 	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
 	logBlockEnd("playerListDestroy()");
 }
 
 static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
-	if(fubSpawnIdx == SPAWN_INVALID)
+	if(fubSpawnIdx == SPAWN_INVALID) {
 		fubSpawnIdx = pPlayer->ubSpawnIdx = spawnGetNearest(
 			pPlayer->sVehicle.uwX >> MAP_TILE_SIZE,
 			pPlayer->sVehicle.uwY >> MAP_TILE_SIZE,
 			pPlayer->ubTeam
 		);
-	else
+	}
+	else {
 		pPlayer->ubSpawnIdx = fubSpawnIdx;
+	}
 
 	pPlayer->sVehicle.uwX = (g_pSpawns[fubSpawnIdx].ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pPlayer->sVehicle.uwY = (g_pSpawns[fubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pPlayer->sVehicle.fX = fix16_from_int(pPlayer->sVehicle.uwX);
 	pPlayer->sVehicle.fY = fix16_from_int(pPlayer->sVehicle.uwY);
 	if(pPlayer == g_pLocalPlayer)
+	if(pPlayer == g_pLocalPlayer) {
 		displayPrepareLimbo();
+	}
 }
 
 /**
@@ -85,8 +80,9 @@ static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
  */
 tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 	for(FUBYTE i = 0; i < g_ubPlayerLimit; ++i) {
-		if(g_pPlayers[i].szName[0])
+		if(g_pPlayers[i].szName[0]) {
 			continue;
+		}
 		tPlayer *pPlayer = &g_pPlayers[i];
 		strcpy(pPlayer->szName, szName);
 		pPlayer->ubTeam = ubTeam;
@@ -97,10 +93,12 @@ tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
 		char szMessage[35];
-		if(ubTeam == TEAM_BLUE)
+		if(ubTeam == TEAM_BLUE) {
 			sprintf(szMessage, "%s joined BLUE", szName);
-		else
+		}
+		else {
 			sprintf(szMessage, "%s joined RED", szName);
+		}
 		consoleWrite(szMessage, CONSOLE_COLOR_GENERAL);
 
 		// Set vehicle coordinates 'cuz playerMoveToLimbo finds closest spawn
@@ -126,8 +124,6 @@ void playerRemoveByIdx(UBYTE ubPlayerIdx) {
 }
 
 void playerRemoveByPtr(tPlayer *pPlayer) {
-	if(pPlayer->sVehicle.ubLife)
-		vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->ubState == PLAYER_STATE_OFF) {
 		logWrite("ERR: Tried to remove offline player: %p\n", pPlayer);
 		return;
@@ -137,18 +133,19 @@ void playerRemoveByPtr(tPlayer *pPlayer) {
 }
 
 void playerSelectVehicle(tPlayer *pPlayer, UBYTE ubVehicleType) {
-	if(pPlayer->uwCooldown)
+	if(pPlayer->uwCooldown) {
 		return;
+	}
 	pPlayer->ubCurrentVehicleType = ubVehicleType;
 	vehicleInit(&pPlayer->sVehicle, ubVehicleType, pPlayer->ubSpawnIdx);
 	pPlayer->ubState = PLAYER_STATE_SURFACING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
-	if(pPlayer == g_pLocalPlayer)
+	if(pPlayer == g_pLocalPlayer) {
 		displayPrepareDriving();
+	}
 }
 
 void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
-	vehicleUnset(&pPlayer->sVehicle);
 	pPlayer->ubState = PLAYER_STATE_BUNKERING;
 	pPlayer->uwCooldown = PLAYER_SURFACING_COOLDOWN;
 	spawnSetBusy(fubSpawnIdx, SPAWN_BUSY_BUNKERING, VEHICLE_TYPE_TANK);
@@ -158,8 +155,8 @@ void playerHideInBunker(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 FUBYTE playerDamageVehicle(tPlayer *pPlayer, UBYTE ubDamage) {
 	if(pPlayer->sVehicle.ubLife <= ubDamage) {
 		explosionsAdd(
-			pPlayer->sVehicle.uwX - (VEHICLE_BODY_HEIGHT >> 1),
-			pPlayer->sVehicle.uwY - (VEHICLE_BODY_WIDTH >> 1)
+			pPlayer->sVehicle.uwX,
+			pPlayer->sVehicle.uwY
 		);
 		playerLoseVehicle(pPlayer);
 		return 1;
@@ -173,7 +170,6 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 	pPlayer->sVehicle.ubLife = 0;
 	if(g_pTeams[pPlayer->ubTeam].uwTicketsLeft)
 		--g_pTeams[pPlayer->ubTeam].uwTicketsLeft;
-	vehicleUnset(&pPlayer->sVehicle);
 	if(pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType])
 		--pPlayer->pVehiclesLeft[pPlayer->ubCurrentVehicleType];
 	pPlayer->ubState = PLAYER_STATE_LIMBO;
@@ -182,15 +178,17 @@ void playerLoseVehicle(tPlayer *pPlayer) {
 }
 
 void playerLocalProcessInput(void) {
-	if(g_isLocalBot)
+	if(g_isLocalBot) {
 		return;
+	}
 	switch(g_pLocalPlayer->ubState) {
 		case PLAYER_STATE_DRIVING: {
 			// Receive player's steer request
 			tSteerRequest *pReq = &g_pLocalPlayer->sSteerRequest;
 			if(g_isChatting) {
-				if(keyUse(g_sKeyManager.ubLastKey))
+				if(keyUse(g_sKeyManager.ubLastKey)) {
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+				}
 				pReq->ubForward  = 0;
 				pReq->ubBackward = 0;
 				pReq->ubLeft     = 0;
@@ -216,22 +214,25 @@ void playerLocalProcessInput(void) {
 		} break;
 		case PLAYER_STATE_LIMBO: {
 			if(g_isChatting) {
-				if(keyUse(g_sKeyManager.ubLastKey))
+				if(keyUse(g_sKeyManager.ubLastKey)) {
 					g_isChatting = consoleChatProcessChar(g_sKeyManager.ubLastKey);
+				}
 			}
 			else if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 				const UWORD uwHudOffs = 192 + 1 + 2; // + black line + border
-				tUwRect sTankRect = {
+				const tUwRect sTankRect = {
 					.uwX = 2 + 4, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
 				};
-				tUwRect sJeepRect = {
+				const tUwRect sJeepRect = {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
 				UWORD uwMouseX = mouseGetX(MOUSE_PORT_1), uwMouseY = mouseGetY(MOUSE_PORT_1);
-				if(inRect(uwMouseX, uwMouseY, sTankRect))
+				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
-				else if(inRect(uwMouseX, uwMouseY, sJeepRect))
+				}
+				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
+				}
 			}
 		} break;
 	}
@@ -272,18 +273,12 @@ kill:
 }
 
 void playerSimVehicle(tPlayer *pPlayer) {
-	tVehicle *pVehicle;
-	UWORD uwVx, uwVy, uwVTileX, uwVTileY;
-	UBYTE ubTileType;
-
-	pVehicle = &pPlayer->sVehicle;
-
-	uwVx = pVehicle->uwX;
-	uwVy = pVehicle->uwY;
-	uwVTileX = uwVx >> MAP_TILE_SIZE;
-	uwVTileY = uwVy >> MAP_TILE_SIZE;
-	ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
-	g_ubDoSiloHighlight = 0;
+	tVehicle *pVehicle = &pPlayer->sVehicle;
+	UWORD uwVx = pVehicle->uwX;
+	UWORD uwVy = pVehicle->uwY;
+	UWORD uwVTileX = uwVx >> MAP_TILE_SIZE;
+	UWORD uwVTileY = uwVy >> MAP_TILE_SIZE;
+	UBYTE ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
 
 	// Drowning
 	if(ubTileType == MAP_LOGIC_WATER) {
@@ -312,15 +307,14 @@ void playerSimVehicle(tPlayer *pPlayer) {
 				uwSiloDx > 12 && uwSiloDx < 18 && uwSiloDy > 12 && uwSiloDy < 18
 			) {
 				// Standing on bunkerable position
-				// If one of them is local player, save data for highlight draw
-				g_ubDoSiloHighlight = 1;
-				g_uwSiloHighlightX = uwVTileX << MAP_TILE_SIZE;
-				g_uwSiloHighlightY = uwVTileY << MAP_TILE_SIZE;
-				// Hide in bunker
 				if(pPlayer->sSteerRequest.ubAction1) {
+					// Hide in bunker
 					playerHideInBunker(pPlayer, spawnGetAt(uwVTileX, uwVTileY));
 					return;
 				}
+				// If not, just highlight
+				g_sHighlightBob.sPos.ulYX = pVehicle->sBob.sPos.ulYX;
+				bobNewPush(&g_sHighlightBob);
 			}
 		}
 	}
@@ -345,9 +339,12 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	switch(pPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
 			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
+			bobNewPush(&pVehicle->sAuxBob);
 			break;
 		case VEHICLE_TYPE_JEEP:
 			vehicleSteerJeep(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
 			break;
 	}
 }
@@ -365,29 +362,25 @@ void playerSim(void) {
 			case PLAYER_STATE_OFF:
 				continue;
 			case PLAYER_STATE_SURFACING:
-				if(pPlayer->uwCooldown)
+				if(pPlayer->uwCooldown) {
 					--pPlayer->uwCooldown;
+				}
 				else {
 					pPlayer->ubState = PLAYER_STATE_DRIVING;
-					// TODO: somewhere else?
-					pPlayer->sVehicle.pBob->ubState = BOB_STATE_START_DRAWING;
-					if(pPlayer->ubCurrentVehicleType == VEHICLE_TYPE_TANK)
-						pPlayer->sVehicle.pAuxBob->ubState = BOB_STATE_START_DRAWING;
-					else
-						pPlayer->sVehicle.pAuxBob->ubState = BOB_STATE_NODRAW;
 				}
 				spawnAnimate(pPlayer->ubSpawnIdx);
 				continue;
 			case PLAYER_STATE_BUNKERING:
-				if(pPlayer->uwCooldown)
+				if(pPlayer->uwCooldown) {
 					--pPlayer->uwCooldown;
-				else
+				}
+				else {
 					pPlayer->ubState = PLAYER_STATE_LIMBO;
+				}
 				spawnAnimate(pPlayer->ubSpawnIdx);
 				continue;
 			case PLAYER_STATE_DRIVING:
 				playerSimVehicle(pPlayer);
-				vehicleDraw(&pPlayer->sVehicle);
 				continue;
 			case PLAYER_STATE_LIMBO:
 				if(pPlayer->uwCooldown)

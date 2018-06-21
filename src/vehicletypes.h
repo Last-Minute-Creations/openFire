@@ -1,8 +1,8 @@
 #ifndef GUARD_OF_VEHICLETYPES_H
 #define GUARD_OF_VEHICLETYPES_H
 
-#include "gamestates/game/bob.h"
 #include "gamestates/game/team.h"
+#include <ace/utils/bitmap.h>
 
 #define VEHICLE_TYPE_COUNT 4
 #define VEHICLE_TYPE_TANK 0
@@ -43,11 +43,9 @@ typedef struct _tVehicleType {
 	// Main bob source
 	tBitMap *pMainFrames[TEAM_COUNT];
 	tBitMap *pMainMask;
-	tBobFrameOffset *pMainFrameOffsets;
 	// Aux bob source
 	tBitMap *pAuxFrames[TEAM_COUNT];
 	tBitMap *pAuxMask;
-	tBobFrameOffset *pAuxFrameOffsets;
 } tVehicleType;
 
 void vehicleTypesCreate(void);
@@ -58,16 +56,10 @@ void vehicleTypesDestroy(void);
  *  Generates rotated frames for vehicle use.
  *  @param szPath Path to file with source frame.
  *  @return       Pointer to newly created bitmap with rotated frames, otherwise zero.
- *
- *  @todo Make it accept bitmaps wider than 32px?
  */
-tBitMap *vehicleTypeGenerateRotatedFrames(
-	IN char *szPath
-);
+tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath);
 
-void vehicleTypeFramesDestroy(
-	IN tVehicleType *pType
-);
+void vehicleTypeFramesDestroy(tVehicleType *pType);
 
 extern tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 

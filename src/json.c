@@ -10,8 +10,9 @@ tJson *jsonCreate(const char *szFilePath) {
 
 	// Read whole file to string
 	tFile *pFile = fileOpen(szFilePath, "rb");
-	if(!pFile)
+	if(!pFile) {
 		logWrite("ERR: File doesn't exist: '%s'\n", szFilePath);
+	}
 	fileSeek(pFile, 0, FILE_SEEK_END);
 	ULONG ulFileSize = fileGetPos(pFile);
 	fileSeek(pFile, 0, FILE_SEEK_SET);

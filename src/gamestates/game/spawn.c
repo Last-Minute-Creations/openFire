@@ -98,10 +98,12 @@ void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType)
 void spawnSim(void) {
 	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
 		tSpawn *pSpawn = &g_pSpawns[i];
-		if(pSpawn->ubFrame < PLAYER_SURFACING_COOLDOWN)
+		if(pSpawn->ubFrame < PLAYER_SURFACING_COOLDOWN) {
 			++pSpawn->ubFrame;
-		else
+		}
+		else {
 			pSpawn->ubBusy = SPAWN_BUSY_NOT;
+		}
 	}
 }
 
@@ -109,16 +111,18 @@ void spawnAnimate(UBYTE ubSpawnIdx) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
 	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
 		return; // Most likely
-	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN)
+	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN) {
 		worldMapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
+	}
 	else {
 		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
-		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING)
+		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
 			ubFrameIdx = 5 - ubFrameIdx;
+		}
 		blitCopyAligned(
 			pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
 			0, ubFrameIdx << MAP_TILE_SIZE,
-			g_pWorldMainBfr->pBuffer,
+			g_pWorldMainBfr->pBack,
 			pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,
 			MAP_FULL_TILE, MAP_FULL_TILE
 		);
@@ -131,34 +135,41 @@ UBYTE spawnIsCoveredByAnyPlayer(UBYTE ubSpawnIdx) {
 		tPlayer *pPlayer = &g_pPlayers[i];
 		if(pPlayer->ubState != PLAYER_STATE_DRIVING)
 			continue;
+		UWORD uwX = pPlayer->sVehicle.uwX;
+		UWORD uwY = pPlayer->sVehicle.uwY;
 		if(
-			ABS((pPlayer->sVehicle.uwX >> MAP_TILE_SIZE) - pSpawn->ubTileX) > 1 ||
-			ABS((pPlayer->sVehicle.uwY >> MAP_TILE_SIZE) - pSpawn->ubTileY) > 1
-		)
+			ABS((uwX >> MAP_TILE_SIZE) - pSpawn->ubTileX) > 1 ||
+			ABS((uwY >> MAP_TILE_SIZE) - pSpawn->ubTileY) > 1
+		) {
 			continue;
+		}
 
 		// Unrolled for performance
 		tBCoordYX *pEdges = pPlayer->sVehicle.pType->pCollisionPts[pPlayer->sVehicle.ubBodyAngle >> 1].pPts;
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[0].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[0].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[0].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[0].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[2].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[2].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[2].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[2].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[5].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[5].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[5].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[5].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 		if(
-			((pPlayer->sVehicle.uwX + pEdges[7].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
-			((pPlayer->sVehicle.uwY + pEdges[7].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
-		)
+			((uwX + pEdges[7].bX) >> MAP_TILE_SIZE) == pSpawn->ubTileX &&
+			((uwY + pEdges[7].bY) >> MAP_TILE_SIZE) == pSpawn->ubTileY
+		) {
 			return 1;
+		}
 	}
 	return 0;
 }

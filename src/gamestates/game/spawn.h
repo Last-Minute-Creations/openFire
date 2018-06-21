@@ -18,49 +18,25 @@ typedef struct _tSpawn {
 	UBYTE ubVehicleType;
 } tSpawn;
 
-void spawnManagerCreate(
-	IN FUBYTE fubMaxCount
-);
+void spawnManagerCreate(FUBYTE fubMaxCount);
 
 void spawnManagerDestroy(void);
 
-UBYTE spawnAdd(
-	IN UBYTE ubTileX,
-	IN UBYTE ubTileY,
-	IN UBYTE ubTeam
-);
+UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam);
 
-void spawnCapture(
-	IN UBYTE ubSpawnIdx,
-	IN UBYTE ubTeam
-);
+void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam);
 
-UBYTE spawnGetNearest(
-	IN UBYTE ubTileX,
-	IN UBYTE ubTileY,
-	IN UBYTE ubTeam
-);
+UBYTE spawnGetNearest(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam);
 
-UBYTE spawnGetAt(
-	IN UBYTE ubTileX,
-	IN UBYTE ubTileY
-);
+UBYTE spawnGetAt(UBYTE ubTileX, UBYTE ubTileY);
 
-void spawnSetBusy(
-	IN FUBYTE fubSpawnIdx,
-	IN FUBYTE fubBusyType,
-	IN FUBYTE fubVehicleType
-);
+void spawnSetBusy(FUBYTE fubSpawnIdx, FUBYTE fubBusyType, FUBYTE fubVehicleType);
 
-void spawnAnimate(
-	IN UBYTE ubSpawnIdx
-);
+void spawnAnimate(UBYTE ubSpawnIdx);
 
 void spawnSim(void);
 
-UBYTE spawnIsCoveredByAnyPlayer(
-	IN UBYTE ubSpawnIdx
-);
+UBYTE spawnIsCoveredByAnyPlayer(UBYTE ubSpawnIdx);
 
 extern tSpawn *g_pSpawns;
 extern UBYTE g_ubSpawnCount;

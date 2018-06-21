@@ -6,6 +6,7 @@
 #include "gamestates/game/worldmap.h"
 #include "gamestates/game/gamemath.h"
 #include "gamestates/game/projectile.h"
+#include "gamestates/game/bob_new.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN PROJECTILE_FRAME_LIFE
@@ -23,8 +24,8 @@ typedef struct _tSteerRequest {
 
 typedef struct _tVehicle {
 	tVehicleType *pType; ///< Ptr to vehicle type definition
-	tBob *pBob;          ///< Main body bob
-	tBob *pAuxBob;       ///< Tank - turret, chopper - takeoff anim
+	tBobNew sBob;        ///< Main body bob
+	tBobNew sAuxBob;     ///< Tank - turret, chopper - takeoff anim
 	fix16_t fX;          ///< Vehicle X-position relative to center of gfx.
 	fix16_t fY;          ///< Ditto, vehicle Y.
 	UWORD uwX;           ///< Same as fX, but converted to UWORD. Read-only.
@@ -37,44 +38,13 @@ typedef struct _tVehicle {
 	UBYTE ubFuel;
 	UBYTE ubLife;
 	UBYTE ubCooldown; ///< Cooldown timer after fire
-	UBYTE ubIsOnSilo;
 } tVehicle;
 
-void vehicleInit(
-	IN tVehicle *pVehicle,
-	IN UBYTE ubVehicleType,
-	IN UBYTE ubSpawnIdx
-);
+void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);
 
-void vehicleUnset(
-	tVehicle *pVehicle
-);
+void vehicleDrawFrame(UWORD uwX, UWORD uwY, UBYTE ubDAngle);
 
-void vehicleDrawFrame(
-	IN UWORD uwX,
-	IN UWORD uwY,
-	IN UBYTE ubDAngle
-);
-
-void vehicleSteerTank(
-	IN tVehicle *pVehicle,
-	IN tSteerRequest *pSteerRequest
-);
-void vehicleSteerJeep(
-	IN tVehicle *pVehicle,
-	IN tSteerRequest *pSteerRequest
-);
-
-void vehicleDraw(
-	IN tVehicle *pVehicle
-);
-
-void vehicleUndraw(
-	IN tVehicle *pVehicle
-);
-
-void vehicleSetupBob(
-	IN tVehicle *pVehicle
-);
+void vehicleSteerTank(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
+void vehicleSteerJeep(tVehicle *pVehicle, tSteerRequest *pSteerRequest);
 
 #endif

@@ -1,5 +1,4 @@
 #include "gamestates/game/game.h"
-#include <hardware/intbits.h> // INTB_COPER
 #include <ace/macros.h>
 #include <ace/managers/copper.h>
 #include <ace/managers/blit.h>
@@ -33,41 +32,13 @@ tView *g_pWorldView;
 tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
-static tBitMap *s_pTiles;
 static UBYTE s_isScoreShown;
 
 // Silo highlight
 // TODO: struct?
 UBYTE g_ubDoSiloHighlight;
-UWORD g_uwSiloHighlightY;
-UWORD g_uwSiloHighlightX;
-static tBob *s_pSiloHighlight;
-static UBYTE s_ubWasSiloHighlighted;
-
-// Speed logging
-// #ifdef GAME_DEBUG
-#define SPEED_LOG /* Log speed in main loop */
-// #endif
-
-#ifdef SPEED_LOG
-static tAvg *s_pDrawAvgExplosions;
-static tAvg *s_pDrawAvgProjectiles;
-static tAvg *s_pUndrawAvgExplosions;
-static tAvg *s_pUndrawAvgProjectiles;
-static tAvg *s_pUndrawAvgVehicles;
-static tAvg *s_pProcessAvgCursor;
-static tAvg *s_pProcessAvgDataRecv;
-static tAvg *s_pProcessAvgInput;
-static tAvg *s_pProcessAvgSpawn;
-static tAvg *s_pProcessAvgPlayer;
-static tAvg *s_pProcessAvgControl;
-static tAvg *s_pProcessAvgTurret;
-static tAvg *s_pProcessAvgProjectile;
-static tAvg *s_pProcessAvgDataSend;
-static tAvg *s_pAvgRedrawControl;
-static tAvg *s_pAvgUpdateSprites;
-static tAvg *s_pProcessAvgHud;
-#endif
+tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
+tBobNew g_sHighlightBob;
 
 ULONG g_ulGameFrame;
 static tFont *s_pSmallFont;
@@ -84,74 +55,62 @@ void displayPrepareDriving(void) {
 	hudChangeState(HUD_STATE_DRIVING);
 }
 
-static void worldUndraw(void) {
-	UBYTE ubPlayer;
-
-	logAvgBegin(s_pUndrawAvgExplosions);
-	explosionsUndraw(g_pWorldMainBfr);
-	logAvgEnd(s_pUndrawAvgExplosions);
-
-	logAvgBegin(s_pUndrawAvgProjectiles);
-	projectileUndraw();
-	logAvgEnd(s_pUndrawAvgProjectiles);
-
-	// Vehicles
-	logAvgBegin(s_pUndrawAvgVehicles);
-	for(ubPlayer = g_ubPlayerLimit; ubPlayer--;)
-		vehicleUndraw(&g_pPlayers[ubPlayer].sVehicle);
-	logAvgEnd(s_pUndrawAvgVehicles);
-
-	// Silo highlight
-	if(s_ubWasSiloHighlighted)
-		bobUndraw(s_pSiloHighlight, g_pWorldMainBfr);
-}
-
 void gsGameCreate(void) {
 	logBlockBegin("gsGameCreate()");
 	randInit(2184);
 
 	// Prepare view
-	// Must be before mapCreate 'cuz turretListCreate() needs copperlist
 	g_pWorldView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
-		TAG_DONE
-	);
+	TAG_DONE);
 
-	// Load gfx
-	s_pTiles = bitmapCreateFromFile("data/tiles.bm");
-	s_pSiloHighlight = bobUniqueCreate(
-		"data/silohighlight.bm", "data/silohighlight_mask.bm", 0, 0, 0
-	);
-
-	teamsInit();
-
-	worldMapCreate();
 	// Create viewports
 	s_pWorldMainVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, g_pWorldView,
 		TAG_VPORT_HEIGHT, WORLD_VPORT_HEIGHT,
 		TAG_VPORT_BPP, WORLD_BPP,
-		TAG_DONE
-	);
+	TAG_DONE);
 	g_pWorldMainBfr = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pWorldMainVPort,
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_sMap.fubWidth << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_sMap.fubHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
-		TAG_DONE
-	);
+		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
+	TAG_DONE);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
 		gamePopState();
 		return;
 	}
 	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
-	worldMapSetSrcDst(s_pTiles, g_pWorldMainBfr->pBuffer);
+
+	const UBYTE ubProjectilesMax = 16;
+	const UBYTE ubPlayersMax = 8;
+	bobNewManagerCreate(
+		ubPlayersMax*2 + EXPLOSIONS_MAX + ubProjectilesMax,
+		ubPlayersMax*2*(VEHICLE_BODY_WIDTH/16 + 1)*VEHICLE_BODY_HEIGHT +
+			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
+		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
+	);
+
+	worldMapCreate();
+
+	teamsInit();
+	worldMapSetBuffers(g_pMapTileset, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
+
+	projectileListCreate(5);
+
+	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
+	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
+	bobNewInit(
+		&g_sHighlightBob, 32, 32, 1,
+		s_pHighlightBitmap, s_pHighlightMask, 0, 0
+	);
 
 	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
 	hudCreate(s_pSmallFont);
@@ -174,35 +133,12 @@ void gsGameCreate(void) {
 	// Explosions
 	explosionsCreate();
 
-	#ifdef SPEED_LOG
-	s_pDrawAvgExplosions = logAvgCreate("draw explosions", 50);
-	s_pDrawAvgProjectiles = logAvgCreate("draw projectiles", 50);
-
-	s_pUndrawAvgExplosions = logAvgCreate("undraw explosions", 50);
-	s_pUndrawAvgProjectiles = logAvgCreate("undraw projectiles", 50);
-	s_pUndrawAvgVehicles = logAvgCreate("undraw vehicles", 50);
-
-	s_pProcessAvgCursor = logAvgCreate("cursor", 50);
-	s_pProcessAvgDataRecv = logAvgCreate("data recv", 50);
-	s_pProcessAvgInput = logAvgCreate("input", 50);
-	s_pProcessAvgSpawn = logAvgCreate("spawn", 50);
-	s_pProcessAvgPlayer = logAvgCreate("player", 50);
-	s_pProcessAvgControl = logAvgCreate("control", 50);
-	s_pProcessAvgTurret = logAvgCreate("turret", 50);
-	s_pProcessAvgProjectile = logAvgCreate("projectile", 50);
-	s_pProcessAvgDataSend = logAvgCreate("data send", 50);
-	s_pAvgRedrawControl = logAvgCreate("redraw control points", 50);
-	s_pAvgUpdateSprites = logAvgCreate("update sprites", 50);
-	s_pProcessAvgHud = logAvgCreate("hud update", 50);
-	#endif
-
 	// Initial values
-	s_ubWasSiloHighlighted = 0;
 	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
 	// AI
-	playerListCreate(8);
+	playerListCreate(ubPlayersMax);
 	aiManagerCreate();
 
 	// Add players
@@ -224,6 +160,15 @@ void gsGameCreate(void) {
 
 	// Now that world buffer is created, do the first draw
 	worldMapRedraw();
+	if(g_pWorldMainBfr->pBack != g_pWorldMainBfr->pFront) {
+		// Might be too big to do in a single blit
+		for(UWORD i = 0; i < g_pWorldMainBfr->pBack->Rows; i+=32) {
+			blitCopyAligned(
+				g_pWorldMainBfr->pBack, 0, i, g_pWorldMainBfr->pFront, 0, i,
+				bitmapGetByteWidth(g_pWorldMainBfr->pBack) * 8, 32
+			);
+		}
+	}
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
@@ -238,6 +183,19 @@ static void gameSummaryLoop(void) {
 	scoreTableProcessView();
 }
 
+void gameDebugKeys(void) {
+#if defined(GAME_DEBUG)
+	if(keyUse(KEY_C)) {
+		bitmapSaveBmp(
+			g_pWorldMainBfr->pFront, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp"
+		);
+	}
+	if(keyUse(KEY_L)) {
+		copDumpBfr(g_pWorldView->pCopList->pFrontBfr);
+	}
+#endif
+}
+
 void gsGameLoop(void) {
 	++g_ulGameFrame;
 	// Quit?
@@ -245,13 +203,11 @@ void gsGameLoop(void) {
 		gameChangeState(menuCreate, menuLoop, menuDestroy);
 		return;
 	}
+	gameDebugKeys();
 	// Steering-irrelevant player input
-	if(keyUse(KEY_C))
-		bitmapSaveBmp(g_pWorldMainBfr->pBuffer, s_pWorldMainVPort->pPalette, "debug/bufDump.bmp");
-	if(keyUse(KEY_L))
-		copDumpBfr(g_pWorldView->pCopList->pBackBfr);
-	if(keyUse(KEY_T))
+	if(keyUse(KEY_T)) {
 		consoleChatBegin();
+	}
 	if(keyUse(KEY_TAB)) {
 		s_isScoreShown = 1;
 		scoreTableShow();
@@ -263,36 +219,36 @@ void gsGameLoop(void) {
 		}
 	}
 
-	logAvgBegin(s_pProcessAvgDataRecv);
+	// Refresh HUD before it gets displayed - still single buffered
+	hudUpdate();
+
+	// Undraw bobs so that something goes on during data recv
 	dataRecv(); // Receives positions of other players from server
-	logAvgEnd(s_pProcessAvgDataRecv);
-
-  logAvgBegin(s_pProcessAvgCursor);
-  cursorUpdate();
-  logAvgEnd(s_pProcessAvgCursor);
-
-	logAvgBegin(s_pProcessAvgInput);
-	playerLocalProcessInput(); // Steer requests, chat, limbo
-	logAvgEnd(s_pProcessAvgInput);
-	botProcess();
-
-	logAvgBegin(s_pProcessAvgDataSend);
-	dataSend(); // Send input requests to server
-	logAvgEnd(s_pProcessAvgDataSend);
-
-	logAvgBegin(s_pProcessAvgSpawn);
 	spawnSim();
-	logAvgEnd(s_pProcessAvgSpawn);
-
-	logAvgBegin(s_pProcessAvgControl);
 	controlSim();
-	logAvgEnd(s_pProcessAvgControl);
+
+	playerLocalProcessInput(); // Steer requests, chat, limbo
+	botProcess();
+	dataSend(); // Send input requests to server
+
+	// Undraw bobs, draw pending tiles
+	bobNewBegin();
+	controlRedrawPoints();
+	worldMapUpdateTiles();
+
+	// sim & draw
+	playerSim(); // Players & vehicles states
+	turretSim(); // Turrets: targeting, rotation & projectile spawn
+	projectileSim(); // Projectiles: new positions, damage -> explosions
+	explosionsProcess();
+	bobNewPushingDone();
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
 		gameChangeLoop(gameSummaryLoop);
 	}
 
+  cursorUpdate();
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		cameraCenterAt(
 			g_pWorldCamera,
@@ -309,70 +265,29 @@ void gsGameLoop(void) {
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 
+	bobNewEnd(); // SHOULD BE SOMEWHERE HERE
+	worldMapSwapBuffers();
+
 	// Start refreshing gfx at hud
 	vPortWaitForEnd(s_pWorldMainVPort);
-	worldUndraw(); // This will take almost whole HUD time
-
-	worldMapUpdateTiles();
-
-	logAvgBegin(s_pAvgRedrawControl);
-	controlRedrawPoints();
-	logAvgEnd(s_pAvgRedrawControl);
-
-	// Silo highlight
-	if(g_ubDoSiloHighlight) {
-		if(bobDraw(
-			s_pSiloHighlight, g_pWorldMainBfr,
-			g_uwSiloHighlightX, g_uwSiloHighlightY, 0, 32
-		)) {
-			s_ubWasSiloHighlighted = 1;
-		}
-		else
-			s_ubWasSiloHighlighted = 0;
-	}
-
-	logAvgBegin(s_pProcessAvgPlayer);
-	playerSim(); // Players & vehicles states
-	logAvgEnd(s_pProcessAvgPlayer);
-
-	logAvgBegin(s_pDrawAvgProjectiles);
-	projectileDraw();
-	logAvgEnd(s_pDrawAvgProjectiles);
-
-	logAvgBegin(s_pDrawAvgExplosions);
-	explosionsDraw(g_pWorldMainBfr);
-	logAvgEnd(s_pDrawAvgExplosions);
-
-	if(!s_isScoreShown) {
-		logAvgBegin(s_pAvgUpdateSprites);
-		turretUpdateSprites();
-		logAvgEnd(s_pAvgUpdateSprites);
-	}
 
 	// This should be done on vblank interrupt
 	if(!s_isScoreShown) {
 		viewProcessManagers(g_pWorldView);
 		copProcessBlocks();
 	}
-	else
+	else {
 		scoreTableProcessView();
-
-	logAvgBegin(s_pProcessAvgTurret);
-	turretSim();               // Turrets: targeting, rotation & projectile spawn
-	logAvgEnd(s_pProcessAvgTurret);
-
-	logAvgBegin(s_pProcessAvgProjectile);
-	projectileSim();           // Projectiles: new positions, damage
-	logAvgEnd(s_pProcessAvgProjectile);
-
-	logAvgBegin(s_pProcessAvgHud);
-	hudUpdate();
-	logAvgEnd(s_pProcessAvgHud);
+	}
 }
 
 void gsGameDestroy(void) {
 	systemUse();
 	logBlockBegin("gsGameDestroy()");
+
+	projectileListDestroy();
+
+	bobNewManagerDestroy();
 
 	aiManagerDestroy();
 
@@ -382,28 +297,8 @@ void gsGameDestroy(void) {
 	fontDestroy(s_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
-	bobUniqueDestroy(s_pSiloHighlight);
-	bitmapDestroy(s_pTiles);
-
-#ifdef SPEED_LOG
-	logAvgDestroy(s_pUndrawAvgExplosions);
-	logAvgDestroy(s_pUndrawAvgProjectiles);
-	logAvgDestroy(s_pUndrawAvgVehicles);
-	logAvgDestroy(s_pDrawAvgProjectiles);
-	logAvgDestroy(s_pDrawAvgExplosions);
-	logAvgDestroy(s_pProcessAvgCursor);
-	logAvgDestroy(s_pProcessAvgDataRecv);
-	logAvgDestroy(s_pProcessAvgInput);
-	logAvgDestroy(s_pProcessAvgSpawn);
-	logAvgDestroy(s_pProcessAvgPlayer);
-	logAvgDestroy(s_pProcessAvgControl);
-	logAvgDestroy(s_pProcessAvgTurret);
-	logAvgDestroy(s_pProcessAvgProjectile);
-	logAvgDestroy(s_pProcessAvgDataSend);
-	logAvgDestroy(s_pAvgRedrawControl);
-	logAvgDestroy(s_pAvgUpdateSprites);
-	logAvgDestroy(s_pProcessAvgHud);
-#endif
+	bitmapDestroy(s_pHighlightBitmap);
+	bitmapDestroy(s_pHighlightMask);
 
 	worldMapDestroy();
 	playerListDestroy();

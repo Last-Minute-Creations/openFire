@@ -13,42 +13,22 @@ typedef struct _tJson {
 	FWORD fwTokenCount;
 } tJson;
 
-tJson *jsonCreate(
-	IN const char *szFilePath
-);
+tJson *jsonCreate(const char *szFilePath);
 
-void jsonDestroy(
-	IN tJson *pJson
-);
+void jsonDestroy(tJson *pJson);
 
-UWORD jsonGetElementInArray(
-	IN const tJson *pJson,
-	IN UWORD uwParentIdx,
-	IN UWORD uwIdx
-);
+UWORD jsonGetElementInArray(const tJson *pJson,UWORD uwParentIdx,UWORD uwIdx);
 
 UWORD jsonGetElementInStruct(
-	IN const tJson *pJson,
-	IN UWORD uwParentIdx,
-	IN const char *szElement
+	const tJson *pJson,UWORD uwParentIdx,const char *szElement
 );
 
-UWORD jsonGetDom(
-	IN const tJson *pJson,
-	IN const char *szPattern
-);
+UWORD jsonGetDom(const tJson *pJson,const char *szPattern);
 
-ULONG jsonTokToUlong(
-	IN const tJson *pJson,
-	IN UWORD uwTok,
-	IN LONG lBase
-);
+ULONG jsonTokToUlong(const tJson *pJson,UWORD uwTok,LONG lBase);
 
 UWORD jsonTokStrCpy(
-	IN const tJson *pJson,
-	IN UWORD uwTok,
-	IN char *pDst,
-	IN UWORD uwMaxLength
+	const tJson *pJson,UWORD uwTok,char *pDst,UWORD uwMaxLength
 );
 
 #endif // GUARD_OF_JSON_H

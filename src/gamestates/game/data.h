@@ -11,7 +11,7 @@
 #define DATA_MAX_CHAT        40
 #define DATA_MAX_PACKET_SIZE 1000
 
-#define DATA_PACKET_TYPE_JOIN          1 /* C->S Join request */
+#define DATA_PACKET_TYPE_JO         1 /* C->S Join request */
 #define DATA_PACKET_TYPE_JOIN_RESPONSE 2 /* S->C Join request reply */
 #define DATA_PACKET_TYPE_SRV_STATE     3 /* S->C State frame */
 #define DATA_PACKET_TYPE_CLT_FRAME     4 /* C->S Move request from client */
@@ -120,9 +120,6 @@ typedef struct _tDataJoinResponse {
 void dataSend(void);
 void dataRecv(void);
 
-void dataForcePlayerState(
-	IN tPlayer *pPlayer,
-	IN tVehicleState *pState
-);
+void dataForcePlayerState(tPlayer *pPlayer, tVehicleState *pState);
 
 #endif // GUARD_OF_GAMESTATES_GAME_DATA_H

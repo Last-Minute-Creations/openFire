@@ -26,16 +26,10 @@ void aiManagerDestroy(void);
 void aiCalculateTileCosts(void);
 
 void aiCalculateTileCostsFrag(
-	IN FUBYTE fubX1,
-	IN FUBYTE fubY1,
-	IN FUBYTE fubX2,
-	IN FUBYTE fubY2
+	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2
 );
 
-UWORD aiGetCostBetweenNodes(
-	IN tAiNode *pSrc,
-	IN tAiNode *pDst
-);
+UWORD aiGetCostBetweenNodes(tAiNode *pSrc, tAiNode *pDst);
 
 /**
  * Finds closest node to specified tile coordinates.
@@ -46,10 +40,7 @@ UWORD aiGetCostBetweenNodes(
  * @param  fubTileY Ditto, Y.
  * @return If found, pointer to closest node, otherwise false.
  */
-tAiNode *aiFindClosestNode(
-	IN FUBYTE fubTileX,
-	IN FUBYTE fubTileY
-);
+tAiNode *aiFindClosestNode(FUBYTE fubTileX, FUBYTE fubTileY);
 
 
 extern tAiNode g_pNodes[AI_MAX_NODES];

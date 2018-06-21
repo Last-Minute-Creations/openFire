@@ -67,24 +67,26 @@ static void mapListPrepareList(void) {
 static void mapListSelect(UWORD uwIdx) {
 	systemUse();
 	mapInit(s_sMapList.pMaps[uwIdx]);
-	minimapDraw(g_pMenuBuffer->pBuffer, &g_sMap);
+	minimapDraw(g_pMenuBuffer->pBack, &g_sMap);
 	char szBfr[20 + MAX(MAP_AUTHOR_MAX, MAP_NAME_MAX)];
 	blitRect(
-		g_pMenuBuffer->pBuffer, MAPLIST_MINIMAP_X,
+		g_pMenuBuffer->pBack, MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16,
 		320-MAPLIST_MINIMAP_X, 3*(g_pMenuFont->uwHeight + 1), MENU_COLOR_BG
 	);
 	sprintf(szBfr, "Map name: %s", g_sMap.szName);
-	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, szBfr);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 0*(g_pMenuFont->uwHeight+1),
-		szBfr, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	sprintf(szBfr, "Author: %s", g_sMap.szAuthor);
-	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, szBfr);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 1*(g_pMenuFont->uwHeight+1),
-		szBfr, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	const char szModeConquest[] = "Mode: Conquest";
 	const char szModeCtf[] = "Mode: CTF";
@@ -95,10 +97,11 @@ static void mapListSelect(UWORD uwIdx) {
 	else if(g_sMap.ubMode == MAP_MODE_CTF) {
 		pMode = szModeCtf;
 	}
-	fontDrawStr(
-		g_pMenuBuffer->pBuffer, g_pMenuFont, MAPLIST_MINIMAP_X,
+	fontFillTextBitMap(g_pMenuFont, g_pMenuTextBitmap, pMode);
+	fontDrawTextBitMap(g_pMenuBuffer->pBack, g_pMenuTextBitmap,
+		MAPLIST_MINIMAP_X,
 		MAPLIST_MINIMAP_Y + MAPLIST_MINIMAP_WIDTH + 16 + 2*(g_pMenuFont->uwHeight+1),
-		pMode, MENU_COLOR_TEXT, 0
+		MENU_COLOR_TEXT, 0
 	);
 	systemUnuse();
 }
@@ -122,19 +125,19 @@ void mapListCreate(void) {
 	logBlockBegin("mapListCreate()");
 	// Clear bg
 	blitRect(
-		g_pMenuBuffer->pBuffer, 0, 0,
-		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBuffer) << 3),
-		(WORD)(g_pMenuBuffer->pBuffer->Rows),
+		g_pMenuBuffer->pBack, 0, 0,
+		(WORD)(bitmapGetByteWidth(g_pMenuBuffer->pBack) << 3),
+		(WORD)(g_pMenuBuffer->pBack->Rows),
 		MENU_COLOR_BG
 	);
 	blitWait();
 
-	buttonListCreate(10, g_pMenuBuffer->pBuffer, g_pMenuFont);
+	buttonListCreate(10, g_pMenuBuffer->pBack, g_pMenuFont);
 
 	mapListPrepareList();
 
 	s_pListCtl = listCtlCreate(
-		g_pMenuBuffer->pBuffer, 10, 10, 100, 200,
+		g_pMenuBuffer->pBack, 10, 10, 100, 200,
 		g_pMenuFont, s_sMapList.uwMapCount,
 		mapListOnMapChange
 	);
@@ -150,7 +153,7 @@ void mapListCreate(void) {
 	buttonDrawAll();
 
 	blitRect(
-		g_pMenuBuffer->pBuffer,
+		g_pMenuBuffer->pBack,
 		MAPLIST_MINIMAP_X - 1, MAPLIST_MINIMAP_Y - 1,
 		MAPLIST_MINIMAP_WIDTH + 2, MAPLIST_MINIMAP_WIDTH + 2,
 		MAPLIST_COLOR_MINIMAP_BORDER
@@ -166,9 +169,16 @@ void mapListLoop(void) {
 		return;
 	}
 
-	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB))
-		if(!buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1)))
-			listCtlProcessClick(s_pListCtl, mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1));
+	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		if(!buttonProcessClick(mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1))) {
+			if(listCtlProcessClick(
+				s_pListCtl, mouseGetX(MOUSE_PORT_1), mouseGetY(MOUSE_PORT_1)
+			)) {
+				return;
+			}
+		}
+		return;
+	}
 
 	menuProcess();
 }
