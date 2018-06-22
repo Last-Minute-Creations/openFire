@@ -12,7 +12,7 @@
 #define CONTROL_POINT_LIFE_BLUE   (CONTROL_POINT_LIFE*2)
 
 tControlPoint *g_pControlPoints;
-FUBYTE g_fubControlPointCount;
+FUBYTE g_fubControlPointCount; // FIXME: remove this one or in g_sMap
 static FUBYTE s_fubControlPointMaxCount;
 static UWORD s_uwFrameCounter;
 static UBYTE s_ubAllocSpawnCount;
