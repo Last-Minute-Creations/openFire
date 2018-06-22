@@ -142,6 +142,14 @@ UBYTE bobNewProcessNext(void) {
 			const tUwCoordYX * pPos = &pBob->sPos;
 			++s_ubBobsDrawn;
 
+			if(!blitCheck(
+				pBob->pBitmap, 0, pBob->uwOffsetY / pBob->pBitmap->BytesPerRow,
+				pQueue->pDst, pPos->sUwCoord.uwX, pPos->sUwCoord.uwY,
+				pBob->uwWidth, pBob->uwHeight, __LINE__, __FILE__
+			)) {
+				return 1;
+			}
+
 			UBYTE ubDstOffs = pPos->sUwCoord.uwX & 0xF;
 			UWORD uwBlitWidth = (pBob->uwWidth +ubDstOffs+15) & 0xFFF0;
 			UWORD uwBlitWords = uwBlitWidth >> 4;

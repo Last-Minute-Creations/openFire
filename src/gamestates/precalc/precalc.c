@@ -28,18 +28,15 @@ void precalcCreate(void) {
 
 	s_pView = viewCreate(0,
 		TAG_VIEW_GLOBAL_CLUT, 1,
-		TAG_DONE
-	);
+	TAG_DONE);
 	s_pVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pView,
 		TAG_VPORT_BPP, PRECALC_BPP,
-		TAG_DONE
-	);
+	TAG_DONE);
 	s_pBuffer = simpleBufferCreate(0,
 		TAG_SIMPLEBUFFER_VPORT, s_pVPort,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
-		TAG_DONE
-	);
+	TAG_DONE);
 
 	copBlockDisableSprites(s_pView->pCopList, 0xFF);
 	paletteLoad("data/loading.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
@@ -130,7 +127,7 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	const UWORD uwProgressWidth = 200;
 	const UWORD uwProgressHeight = 10;
 
-	s_fubProgress = MIN(100, s_fubProgress+fubAmountToAdd);
+	s_fubProgress = MIN(99, s_fubProgress+fubAmountToAdd);
 	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", s_fubProgress, szText);
 
 	UWORD uwVehicleWidth = s_pLoadingVehicle->BytesPerRow<<3;
