@@ -23,7 +23,7 @@ typedef struct _tControlPoint {
 	char szName[CONTROL_NAME_MAX];
 } tControlPoint;
 
-void controlManagerCreate(FUBYTE fubPointCount);
+void controlManagerCreate(UBYTE fubPointCount);
 
 void controlManagerDestroy(void);
 
@@ -41,7 +41,8 @@ void controlRedrawPoints(void);
 
 tControlPoint *controlPointGetAt(FUBYTE fubTileX, FUBYTE fubTileY);
 
+void controlIncreaseCounters(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam);
+
 extern tControlPoint *g_pControlPoints;
-extern FUBYTE g_fubControlPointCount;
 
 #endif // GUARD_OF_GAMESTATES_GAME_CONTROL_H

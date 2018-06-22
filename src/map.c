@@ -14,8 +14,8 @@ void mapInit(char *szFileName) {
 	// so 1st pass will extract only general data
 	mapJsonGetMeta(pMapJson, &g_sMap);
 	logWrite(
-		"Dimensions: %" PRI_FUBYTE "x%" PRI_FUBYTE ", control pts: %"PRI_FUBYTE"\n",
-		g_sMap.fubWidth, g_sMap.fubHeight, g_sMap.fubControlPointCount
+		"Dimensions: %" PRI_FUBYTE "x%" PRI_FUBYTE "\n",
+		g_sMap.fubWidth, g_sMap.fubHeight
 	);
 
 	mapJsonReadTiles(pMapJson, &g_sMap);

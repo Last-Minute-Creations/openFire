@@ -111,14 +111,17 @@ void worldMapCreate(void) {
 	s_ubPendingTiles[BUFFER_BACK] = 0;
 	s_ubPendingTiles[BUFFER_FRONT] = 0;
 
+	tJson *pMapJson = jsonCreate(g_sMap.szPath);
+	UWORD uwTokPts = jsonGetDom(pMapJson, "controlPoints");
+	UWORD uwControlPointCount = pMapJson->pTokens[uwTokPts].size;
+
 	buildingManagerReset();
-	controlManagerCreate(g_sMap.fubControlPointCount);
+	controlManagerCreate(uwControlPointCount);
 	spawnManagerCreate(g_sMap.fubSpawnCount);
 	turretListCreate(g_sMap.fubWidth, g_sMap.fubHeight);
 	worldMapGenerateLogic();
 
 	// Read remaining JSON data
-	tJson *pMapJson = jsonCreate(g_sMap.szPath);
 	mapJsonReadControlPoints(pMapJson);
 	jsonDestroy(pMapJson);
 

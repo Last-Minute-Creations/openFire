@@ -314,21 +314,7 @@ void playerSimVehicle(tPlayer *pPlayer) {
 		}
 	}
 
-	// Increase counters for control point domination
-	for(FUBYTE i = g_fubControlPointCount; i--;) {
-		// Calc distance
-		// Increase vehicle count near control point for given team
-		if(
-			ABS(uwVTileX - g_pControlPoints[i].fubTileX) <= 2 &&
-			ABS(uwVTileY - g_pControlPoints[i].fubTileY) <= 2
-		) {
-			if(pPlayer->ubTeam == TEAM_BLUE)
-				++g_pControlPoints[i].fubGreenCount;
-			else
-				++g_pControlPoints[i].fubBrownCount;
-			break; // Player can't be in two bases at same time
-		}
-	}
+	controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
 
 	// Calculate vehicle positions based on steer requests
 	switch(pPlayer->ubCurrentVehicleType) {

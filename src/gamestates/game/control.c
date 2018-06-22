@@ -10,29 +10,29 @@
 #define CONTROL_POINT_LIFE_RED   0
 #define CONTROL_POINT_LIFE_NEUTRAL (CONTROL_POINT_LIFE)
 #define CONTROL_POINT_LIFE_BLUE   (CONTROL_POINT_LIFE*2)
+#define CONTROL_TAKEOVER_TILE_DISTANCE 2
 
 tControlPoint *g_pControlPoints;
-FUBYTE g_fubControlPointCount; // FIXME: remove this one or in g_sMap
-static FUBYTE s_fubControlPointMaxCount;
+static UBYTE s_ubControlPointCount;
+static UBYTE s_ubControlPointMaxCount;
 static UWORD s_uwFrameCounter;
 static UBYTE s_ubAllocSpawnCount;
 static UBYTE s_ubAllocTurretCount;
 
-
-void controlManagerCreate(FUBYTE fubPointCount) {
+void controlManagerCreate(UBYTE ubPointCount) {
 	logBlockBegin(
-		"controlManagerCreate(fubPointCount: %"PRI_FUBYTE")", fubPointCount
+		"controlManagerCreate(ubPointCount: %"PRI_FUBYTE")", ubPointCount
 	);
-	s_fubControlPointMaxCount = fubPointCount;
-	g_pControlPoints = memAllocFastClear(sizeof(tControlPoint) * fubPointCount);
-	g_fubControlPointCount = 0;
+	s_ubControlPointMaxCount = ubPointCount;
+	g_pControlPoints = memAllocFastClear(sizeof(tControlPoint) * ubPointCount);
+	s_ubControlPointCount = 0;
 	s_uwFrameCounter = 0;
 	logBlockEnd("controlManagerCreate()");
 }
 
 void controlManagerDestroy(void) {
 	logBlockBegin("controlManagerDestroy()");
-	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+	for(FUBYTE i = 0; i < s_ubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
 		if(pPoint->fubSpawnCount) {
 			memFree(pPoint->pSpawns, pPoint->fubSpawnCount * sizeof(FUBYTE));
@@ -41,7 +41,7 @@ void controlManagerDestroy(void) {
 			memFree(pPoint->pTurrets, pPoint->fubTurretCount * sizeof(UWORD));
 		}
 	}
-	memFree(g_pControlPoints, sizeof(tControlPoint) * s_fubControlPointMaxCount);
+	memFree(g_pControlPoints, sizeof(tControlPoint) * s_ubControlPointMaxCount);
 	logBlockEnd("controlManagerDestroy()");
 }
 
@@ -60,7 +60,7 @@ static UBYTE ** controlPolygonMaskCreate(
 		pMask[x] = memAllocFastClear(sizeof(UBYTE) * g_sMap.fubHeight);
 
 	*pX1 = 0xFF; *pY1 = 0xFF; *pX2 = 0; *pY2 = 0;
-	for(FUBYTE i = 1; i != fubPolyPtCnt; ++i) {
+	for(FUBYTE i = 1; i < fubPolyPtCnt; ++i) {
 		FUBYTE x1 = pPolyPts[i-1].sUbCoord.ubX;
 		FUBYTE y1 = pPolyPts[i-1].sUbCoord.ubY;
 		FUBYTE x2 = pPolyPts[i].sUbCoord.ubX;
@@ -123,7 +123,7 @@ static void controlMaskIterateSpawns(
 	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2,
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubSpawnIdx)
 ) {
-	for(FUBYTE i = 0; i != g_ubSpawnCount; ++i) {
+	for(FUBYTE i = 0; i < g_ubSpawnCount; ++i) {
 		FUBYTE fubX = g_pSpawns[i].ubTileX;
 		FUBYTE fubY = g_pSpawns[i].ubTileY;
 		if(fubX < fubX1 || fubX > fubX2)
@@ -153,7 +153,7 @@ static void controlMaskIterateTurrets(
 	FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE fubY2,
 	void (*onFound)(tControlPoint *pPoint, FUBYTE fubTurretIdx)
 ) {
-	for(FUBYTE i = 0; i != g_uwTurretCount; ++i) {
+	for(FUBYTE i = 0; i < g_uwTurretCount; ++i) {
 		FUBYTE fubX = g_pTurrets[i].uwCenterX >> MAP_TILE_SIZE;
 		FUBYTE fubY = g_pTurrets[i].uwCenterY >> MAP_TILE_SIZE;
 		if(fubX < fubX1 || fubX > fubX2)
@@ -187,11 +187,11 @@ void controlAddPoint(
 		"fubCaptureTileY: %"PRI_FUBYTE", fubPolyPtCnt: %"PRI_FUBYTE", pPolyPts: %p)",
 		szName, fubCaptureTileX, fubCaptureTileY, fubPolyPtCnt, pPolyPts
 	);
-	if(g_fubControlPointCount >= s_fubControlPointMaxCount) {
+	if(s_ubControlPointCount >= s_ubControlPointMaxCount) {
 		logWrite("ERR: No more room for control point %s\n", szName);
 		return;
 	}
-	tControlPoint *pPoint = &g_pControlPoints[g_fubControlPointCount];
+	tControlPoint *pPoint = &g_pControlPoints[s_ubControlPointCount];
 	memcpy(pPoint->szName, szName, MIN(CONTROL_NAME_MAX, strlen(szName)));
 	pPoint->fubTileX = fubCaptureTileX;
 	pPoint->fubTileY = fubCaptureTileY;
@@ -241,7 +241,7 @@ void controlAddPoint(
 
 	// Free polygon mask
 	controlPolygonMaskDestroy(pMask);
-	++g_fubControlPointCount;
+	++s_ubControlPointCount;
 	logWrite(
 		"Spawns: %"PRI_FUBYTE", turrets: %"PRI_FUBYTE"\n",
 		pPoint->fubSpawnCount, pPoint->fubTurretCount
@@ -269,10 +269,12 @@ static void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 	consoleWrite(szLog, fubColor);
 
 	pPoint->fubTeam = fubTeam;
-	for(FUBYTE i = 0; i != pPoint->fubSpawnCount; ++i)
+	for(FUBYTE i = 0; i < pPoint->fubSpawnCount; ++i) {
 		spawnCapture(pPoint->pSpawns[i], fubTeam);
-	for(FUBYTE i = 0; i != pPoint->fubTurretCount; ++i)
+	}
+	for(FUBYTE i = 0; i < pPoint->fubTurretCount; ++i) {
 		turretCapture(pPoint->pTurrets[i], fubTeam);
+	}
 }
 
 // 50 spawns per team
@@ -283,7 +285,7 @@ static void controlCapturePoint(tControlPoint *pPoint, FUBYTE fubTeam) {
 void controlSim(void) {
 	FUBYTE fubControlledByRed = 0;
 	FUBYTE fubControlledByBlue = 0;
-	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+	for(FUBYTE i = 0; i < s_ubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
 		FBYTE fbCaptureDir;
 
@@ -368,7 +370,7 @@ void controlSim(void) {
 }
 
 void controlRedrawPoints(void) {
-	for(FUBYTE i = 0; i != g_fubControlPointCount; ++i) {
+	for(FUBYTE i = 0; i < s_ubControlPointCount; ++i) {
 		tControlPoint *pPoint = &g_pControlPoints[i];
 		// Omit drawing if not visible
 		if(!simpleBufferIsRectVisible(
@@ -409,10 +411,30 @@ void controlRedrawPoints(void) {
 
 tControlPoint *controlPointGetAt(FUBYTE fubTileX, FUBYTE fubTileY) {
 	FUBYTE i; tControlPoint *pPoint;
-	for(i = g_fubControlPointCount, pPoint = &g_pControlPoints[0]; i--; ++pPoint) {
+	for(i = s_ubControlPointCount, pPoint = &g_pControlPoints[0]; i--; ++pPoint) {
 		if(pPoint->fubTileX == fubTileX &&	pPoint->fubTileY == fubTileY) {
 			return pPoint;
 		}
 	}
 	return 0;
+}
+
+void controlIncreaseCounters(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
+	// Increase counters for control point domination
+	for(FUBYTE i = s_ubControlPointCount; i--;) {
+		// Calc distance
+		// Increase vehicle count near control point for given team
+		if(
+			ABS(uwTileX - g_pControlPoints[i].fubTileX) <= CONTROL_TAKEOVER_TILE_DISTANCE &&
+			ABS(uwTileY - g_pControlPoints[i].fubTileY) <= CONTROL_TAKEOVER_TILE_DISTANCE
+		) {
+			if(ubTeam == TEAM_BLUE) {
+				++g_pControlPoints[i].fubGreenCount;
+			}
+			else {
+				++g_pControlPoints[i].fubBrownCount;
+			}
+			return; // Player can't be in two bases at the same time
+		}
+	}
 }

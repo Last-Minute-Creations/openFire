@@ -87,6 +87,7 @@ void bobNewInit(
 	UWORD uwBlitWords = (uwWidth+15)/16 + 1; // One word more for aligned copy
 	pBob->_uwBlitSize = ((uwHeight*s_ubBpp) << 6) | uwBlitWords;
 	pBob->_wModuloUndrawSave = bitmapGetByteWidth(s_pQueues[0].pDst) - uwBlitWords*2;
+	pBob->uwOffsetY = 0;
 
 	pBob->sPos.sUwCoord.uwX = uwX;
 	pBob->sPos.sUwCoord.uwY = uwY;
@@ -105,7 +106,7 @@ UBYTE bobNewProcessNext(void) {
 		tBobQueue *pQueue = &s_pQueues[s_ubBufferCurr];
 		if(!s_ubBobsSaved) {
 			// Prepare for saving
-			// NOTE: bltcon0/1, bltaxwm could be reset between Begin and ProcessNext
+			// Bltcon0/1, bltaxwm could be reset between Begin and ProcessNext
 			UWORD uwBltCon0 = USEA|USED | MINTERM_A;
 			g_pCustom->bltcon0 = uwBltCon0;
 			g_pCustom->bltcon1 = 0;

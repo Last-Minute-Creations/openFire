@@ -16,12 +16,11 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 
 	UWORD uwTokWidth = jsonGetDom(pJson, "width");
 	UWORD uwTokHeight = jsonGetDom(pJson, "height");
-	UWORD uwTokPts = jsonGetDom(pJson, "controlPoints");
 	UWORD uwTokName = jsonGetDom(pJson, "title");
 	UWORD uwTokAuthor = jsonGetDom(pJson, "author");
 	UWORD uwTokMode = jsonGetDom(pJson, "mode");
 
-	if(!uwTokWidth || !uwTokHeight || !uwTokPts || !uwTokName || !uwTokAuthor) {
+	if(!uwTokWidth || !uwTokHeight || !uwTokName || !uwTokAuthor) {
 		logWrite("ERR: Malformed JSON!");
 		logBlockEnd("mapJsonGetMeta()");
 		return 0;
@@ -29,7 +28,6 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 
 	pMap->fubWidth = jsonTokToUlong(pJson, uwTokWidth, 10);
 	pMap->fubHeight = jsonTokToUlong(pJson, uwTokHeight, 10);
-	pMap->fubControlPointCount = pJson->pTokens[uwTokPts].size;
 	jsonTokStrCpy(pJson, uwTokAuthor, pMap->szAuthor, MAP_AUTHOR_MAX);
 	jsonTokStrCpy(pJson, uwTokName, pMap->szName, MAP_NAME_MAX);
 	jsonTokStrCpy(pJson, uwTokMode, szModeStr, 20);
