@@ -62,11 +62,14 @@ UWORD turretAdd(UWORD uwTileX, UWORD uwTileY, UBYTE ubTeam) {
 	pTurret->uwCenterX = (uwTileX << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->uwCenterY = (uwTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pTurret->ubTeam = ubTeam;
-	pTurret->ubAngle = ANGLE_90;
-	pTurret->ubDestAngle = ANGLE_90;
+	UBYTE ubAngle = ubRandMinMax(ANGLE_0, ANGLE_360-1) & 0xFE;
+	pTurret->ubAngle = ubAngle;
+	pTurret->ubDestAngle = ubAngle;
 	pTurret->isTargeting = 0;
 	pTurret->ubCooldown = 0;
 	pTurret->fubSeq = (uwTileX & 3) |	((uwTileY & 3) << 2);
+
+	bobNewSetBitMapOffset(&pTurret->sBob, angleToFrame(ubAngle) * TURRET_BOB_HEIGHT);
 
 	// Add to tile-based list
 	g_pTurretTiles[uwTileX][uwTileY] = g_uwTurretCount;

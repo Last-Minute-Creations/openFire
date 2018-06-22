@@ -92,7 +92,7 @@ void gsGameCreate(void) {
 	bobNewManagerCreate(
 		ubPlayersMax*2 + EXPLOSIONS_MAX + ubProjectilesMax,
 		ubPlayersMax*2*(VEHICLE_BODY_WIDTH/16 + 1)*VEHICLE_BODY_HEIGHT +
-			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
+			ubProjectilesMax*2*(1+1)*2 + EXPLOSIONS_MAX*2*(2+1)*32,
 		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
 	);
 
@@ -103,7 +103,7 @@ void gsGameCreate(void) {
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
-	projectileListCreate(5);
+	projectileListCreate(ubProjectilesMax);
 
 	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
 	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
