@@ -41,7 +41,10 @@ void precalcCreate(void) {
 	copBlockDisableSprites(s_pView->pCopList, 0xFF);
 	paletteLoad("data/loading.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
 	bitmapLoadFromFile(s_pBuffer->pBack, "data/menu/logo.bm", 80, 16);
-	s_pLoadingVehicle = bitmapCreateFromFile("data/loading/tank.bm");
+	const char* pVehicleSources[] = {
+		"data/loading/tank.bm", "data/loading/jeep.bm", "data/loading/chopper.bm"
+	};
+	s_pLoadingVehicle = bitmapCreateFromFile(pVehicleSources[g_pRayPos->bfPosY % 3]);
 
 	s_isHdd = 1;
 
@@ -64,6 +67,16 @@ void precalcCreate(void) {
 			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
 		);
 	}
+
+	UWORD uwVehicleWidth = bitmapGetByteWidth(s_pLoadingVehicle)*8;
+	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/2;
+	blitCopy(
+		s_pLoadingVehicle, 0, 0,
+		s_pBuffer->pBack,
+		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
+		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
+		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE, 0xFF
+	);
 
 	s_fubProgress = 0;
 
@@ -130,14 +143,14 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	s_fubProgress = MIN(99, s_fubProgress+fubAmountToAdd);
 	logWrite("precalcIncreaseProgress() -> %"PRI_FUBYTE"%% - %s\n", s_fubProgress, szText);
 
-	UWORD uwVehicleWidth = s_pLoadingVehicle->BytesPerRow<<3;
-	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/6;
+	UWORD uwVehicleWidth = bitmapGetByteWidth(s_pLoadingVehicle)*8;
+	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/2;
 	blitCopy(
-		s_pLoadingVehicle, 0, ((s_fubProgress*6)/100) * s_pLoadingVehicle->Rows/6,
+		s_pLoadingVehicle, 0, uwVehicleHeight,
 		s_pBuffer->pBack,
 		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
 		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
-		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE, 0xFF
+		(s_fubProgress*uwVehicleWidth)/100, uwVehicleHeight, MINTERM_COOKIE, 0xFF
 	);
 
 	// BG + outline
