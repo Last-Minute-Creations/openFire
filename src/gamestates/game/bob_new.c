@@ -213,6 +213,9 @@ void bobNewBegin(void) {
 	g_pCustom->bltamod = 0;
 	ULONG ulA = (ULONG)(pQueue->pBg->Planes[0]);
 	g_pCustom->bltapt = (APTR)ulA;
+#ifdef GAME_DEBUG
+	UWORD uwDrawnHeight = 0;
+#endif
 
 	for(UBYTE i = 0; i < pQueue->ubUndrawCount; ++i) {
 		const tBobNew *pBob = pQueue->pBobs[i];
@@ -226,9 +229,22 @@ void bobNewBegin(void) {
 			g_pCustom->bltdmod = pBob->_wModuloUndrawSave;
 			g_pCustom->bltdpt = (APTR)ulCD;
 			g_pCustom->bltsize = pBob->_uwBlitSize;
+#ifdef GAME_DEBUG
+			UWORD uwBlitWords = (pBob->uwWidth+15)/16 + 1;
+			uwDrawnHeight += uwBlitWords * pBob->uwHeight;
+#endif
 			blitWait();
 		}
 	}
+#ifdef GAME_DEBUG
+	UWORD uwDrawLimit = s_pQueues[0].pBg->Rows * s_pQueues[0].pBg->Depth;
+	if(uwDrawnHeight > uwDrawLimit) {
+		logWrite(
+			"ERR: BG restore out of bounds: used %hu, limit: %hu",
+			uwDrawnHeight, uwDrawLimit
+		);
+	}
+#endif
 	s_ubBobsSaved = 0;
 	s_ubBobsDrawn = 0;
 	s_ubBobsPushed = 0;
