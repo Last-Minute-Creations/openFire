@@ -7,8 +7,8 @@
 
 // 210x59
 #define CONSOLE_MAX_ENTRIES 8
-#define CONSOLE_LOG_MAX 24
-#define CHAT_MAX (192/6)
+#define CONSOLE_LOG_MAX 10
+#define CHAT_MAX 50
 
 static tFont *s_pConsoleFont;
 static char s_pChatBfr[CHAT_MAX] = "say: ";
@@ -45,6 +45,12 @@ void consoleDestroy(void) {
 
 void consoleWrite(const char *szMsg, UBYTE ubColor) {
 	s_sLog.pLog[s_sLog.uwTailIdx].ubColor = ubColor;
+#ifdef GAME_DEBUG
+	if(strlen(szMsg) > CHAT_MAX) {
+		logWrite("ERR: Text too long (%d): '%s'\n", strlen(szMsg), szMsg);
+		return;
+	}
+#endif
 	strcpy(s_sLog.pLog[s_sLog.uwTailIdx].szMessage, szMsg);
 	++s_sLog.uwTailIdx;
 	if(s_sLog.uwTailIdx >= CONSOLE_LOG_MAX) {
@@ -53,25 +59,32 @@ void consoleWrite(const char *szMsg, UBYTE ubColor) {
 }
 
 void consoleUpdate(void) {
-	// Move remaining messages up
 	if(s_uwToDraw == s_sLog.uwTailIdx) {
 		return;
 	}
-	blitCopyAligned(
-		g_pHudBfr->pBack, 112, 9,
-		g_pHudBfr->pBack, 112, 3,
-		192, 41
-	);
 
-	// Clear last line
-	blitRect(g_pHudBfr->pBack, 112,45, 192, 5, 0);
+	if(fontFillTextBitMap(
+		s_pConsoleFont, s_pChatLineBfr, s_sLog.pLog[s_uwToDraw].szMessage
+	)) {
+		// Move remaining messages up
+		blitCopyAligned(
+			g_pHudBfr->pBack, 112, 9,
+			g_pHudBfr->pBack, 112, 3,
+			192, 41
+		);
 
-	// Draw new message
-	fontFillTextBitMap(s_pConsoleFont, s_pChatLineBfr, s_sLog.pLog[s_uwToDraw].szMessage);
-	fontDrawTextBitMap(
-		g_pHudBfr->pBack, s_pChatLineBfr, 112, 45,
-		s_sLog.pLog[s_uwToDraw].ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
-	);
+		// Clear last line
+		blitRect(g_pHudBfr->pBack, 112,45, 192, 5, 0);
+
+		// Draw new message
+		fontDrawTextBitMap(
+			g_pHudBfr->pBack, s_pChatLineBfr, 112, 45,
+			s_sLog.pLog[s_uwToDraw].ubColor, FONT_TOP | FONT_LEFT | FONT_LAZY
+		);
+	}
+	else {
+		logWrite("ERR: Couldn't render '%s'", s_sLog.pLog[s_uwToDraw].szMessage);
+	}
 	++s_uwToDraw;
 	if(s_uwToDraw >= CONSOLE_LOG_MAX) {
 		s_uwToDraw -= CONSOLE_LOG_MAX;

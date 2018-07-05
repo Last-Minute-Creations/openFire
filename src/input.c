@@ -7,12 +7,10 @@
 /* Functions */
 void inputOpen() {
 	mouseCreate(MOUSE_PORT_1);
-	joyOpen();
 	keyCreate();
 }
 
 void inputProcess() {
-	joyProcess();
 	mouseProcess();
 	keyProcess();
 }
@@ -20,5 +18,4 @@ void inputProcess() {
 void inputClose() {
 	mouseDestroy();
 	keyDestroy();
-	joyClose();
 }

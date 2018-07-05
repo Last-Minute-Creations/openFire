@@ -75,7 +75,7 @@ void hudChangeState(FUBYTE fubState) {
 	s_fubHudState = fubState;
 
 	UWORD uwDmaCon;
-	void *pCrossCtl;
+	volatile UWORD * pCrossCtl;
 	tCopCmd *pFrontList = g_pWorldView->pCopList->pFrontBfr->pList;
 	tCopCmd *pBackList = g_pWorldView->pCopList->pBackBfr->pList;
 	if(fubState == HUD_STATE_DRIVING) {

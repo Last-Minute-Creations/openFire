@@ -24,12 +24,12 @@ ULONG adler32file(const char *szPath) {
 	systemUse();
 	logBlockBegin("adler32File(szPath: %s)", szPath);
 	tFile *pFile = fileOpen(szPath, "rb");
+	ULONG a = 1, b = 0;
 	if(!pFile) {
 		logWrite("ERR: File doesn't exist\n");
 		goto fail;
 	}
 	UBYTE ubBfr;
-	ULONG a = 1, b = 0;
 	while(!fileIsEof(pFile)) {
 		fileRead(pFile, &ubBfr, 1);
 		a += ubBfr;

@@ -26,30 +26,25 @@
 // Iterating other player's position during targeting could be done with:
 // for(p = next; p != self; ++p)
 
-void playerListCreate(UBYTE ubPlayerLimit) {
-	UBYTE i;
+void playerListInit(UBYTE ubPlayerLimit) {
+	logBlockBegin("playerListInit(ubPlayerLimit: %hhu)", ubPlayerLimit);
 
+	memset(g_pPlayers, 0, PLAYER_MAX_COUNT * sizeof(tPlayer));
 	g_ubPlayerLimit = ubPlayerLimit;
-	g_pPlayers = memAllocFastClear(ubPlayerLimit * sizeof(tPlayer));
-	for(i = 0; i < ubPlayerLimit; ++i) {
+	for(UBYTE i = 0; i < ubPlayerLimit; ++i) {
 		bobNewInit(
 			&g_pPlayers[i].sVehicle.sBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 1,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pMainMask, 0, 0
 		);
-
 		bobNewInit(
 			&g_pPlayers[i].sVehicle.sAuxBob, VEHICLE_BODY_WIDTH, VEHICLE_BODY_HEIGHT, 0,
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxFrames[TEAM_BLUE],
 			g_pVehicleTypes[VEHICLE_TYPE_TANK].pAuxMask, 0, 0
 		);
 	}
-}
 
-void playerListDestroy(void) {
-	logBlockBegin("playerListDestroy()");
-	memFree(g_pPlayers, g_ubPlayerLimit * sizeof(tPlayer));
-	logBlockEnd("playerListDestroy()");
+	logBlockEnd("playerListInit()");
 }
 
 static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
@@ -313,27 +308,19 @@ void playerSimVehicle(tPlayer *pPlayer) {
 					return;
 				}
 				// If not, just highlight
-				g_sHighlightBob.sPos.ulYX = pVehicle->sBob.sPos.ulYX;
-				bobNewPush(&g_sHighlightBob);
+				worldMapTrySetTile(
+					uwVTileX, uwVTileY, MAP_TILE_SPAWN_BLUE_HI + pPlayer->ubTeam
+				);
+			}
+			else {
+				worldMapTrySetTile(
+					uwVTileX, uwVTileY, MAP_TILE_SPAWN_BLUE + pPlayer->ubTeam
+				);
 			}
 		}
 	}
 
-	// Increase counters for control point domination
-	for(FUBYTE i = g_fubControlPointCount; i--;) {
-		// Calc distance
-		// Increase vehicle count near control point for given team
-		if(
-			ABS(uwVTileX - g_pControlPoints[i].fubTileX) <= 2 &&
-			ABS(uwVTileY - g_pControlPoints[i].fubTileY) <= 2
-		) {
-			if(pPlayer->ubTeam == TEAM_BLUE)
-				++g_pControlPoints[i].fubGreenCount;
-			else
-				++g_pControlPoints[i].fubBrownCount;
-			break; // Player can't be in two bases at same time
-		}
-	}
+	controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
 
 	// Calculate vehicle positions based on steer requests
 	switch(pPlayer->ubCurrentVehicleType) {
@@ -442,7 +429,7 @@ tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTe
 	return pClosest;
 }
 
-tPlayer *g_pPlayers;
+tPlayer g_pPlayers[PLAYER_MAX_COUNT];
 UBYTE g_ubPlayerLimit;
 UBYTE g_ubPlayerCount;
 tPlayer *g_pLocalPlayer;

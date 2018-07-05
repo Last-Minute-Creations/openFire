@@ -87,6 +87,7 @@ void bobNewInit(
 	UWORD uwBlitWords = (uwWidth+15)/16 + 1; // One word more for aligned copy
 	pBob->_uwBlitSize = ((uwHeight*s_ubBpp) << 6) | uwBlitWords;
 	pBob->_wModuloUndrawSave = bitmapGetByteWidth(s_pQueues[0].pDst) - uwBlitWords*2;
+	pBob->uwOffsetY = 0;
 
 	pBob->sPos.sUwCoord.uwX = uwX;
 	pBob->sPos.sUwCoord.uwY = uwY;
@@ -105,7 +106,7 @@ UBYTE bobNewProcessNext(void) {
 		tBobQueue *pQueue = &s_pQueues[s_ubBufferCurr];
 		if(!s_ubBobsSaved) {
 			// Prepare for saving
-			// NOTE: bltcon0/1, bltaxwm could be reset between Begin and ProcessNext
+			// Bltcon0/1, bltaxwm could be reset between Begin and ProcessNext
 			UWORD uwBltCon0 = USEA|USED | MINTERM_A;
 			g_pCustom->bltcon0 = uwBltCon0;
 			g_pCustom->bltcon1 = 0;
@@ -113,8 +114,8 @@ UBYTE bobNewProcessNext(void) {
 			g_pCustom->bltalwm = 0xFFFF;
 
 			g_pCustom->bltdmod = 0;
-			ULONG ulCD = (ULONG)(pQueue->pBg->Planes[0]);
-			g_pCustom->bltdpt = (APTR)ulCD;
+			ULONG ulD = (ULONG)(pQueue->pBg->Planes[0]);
+			g_pCustom->bltdpt = (APTR)ulD;
 		}
 		const tBobNew *pBob = pQueue->pBobs[s_ubBobsSaved];
 		++s_ubBobsSaved;
@@ -141,6 +142,14 @@ UBYTE bobNewProcessNext(void) {
 			tBobNew *pBob = pQueue->pBobs[s_ubBobsDrawn];
 			const tUwCoordYX * pPos = &pBob->sPos;
 			++s_ubBobsDrawn;
+
+			if(!blitCheck(
+				pBob->pBitmap, 0, pBob->uwOffsetY / pBob->pBitmap->BytesPerRow,
+				pQueue->pDst, pPos->sUwCoord.uwX, pPos->sUwCoord.uwY,
+				pBob->uwWidth, pBob->uwHeight, __LINE__, __FILE__
+			)) {
+				return 1;
+			}
 
 			UBYTE ubDstOffs = pPos->sUwCoord.uwX & 0xF;
 			UWORD uwBlitWidth = (pBob->uwWidth +ubDstOffs+15) & 0xFFF0;
@@ -204,6 +213,9 @@ void bobNewBegin(void) {
 	g_pCustom->bltamod = 0;
 	ULONG ulA = (ULONG)(pQueue->pBg->Planes[0]);
 	g_pCustom->bltapt = (APTR)ulA;
+#ifdef GAME_DEBUG
+	UWORD uwDrawnHeight = 0;
+#endif
 
 	for(UBYTE i = 0; i < pQueue->ubUndrawCount; ++i) {
 		const tBobNew *pBob = pQueue->pBobs[i];
@@ -217,9 +229,23 @@ void bobNewBegin(void) {
 			g_pCustom->bltdmod = pBob->_wModuloUndrawSave;
 			g_pCustom->bltdpt = (APTR)ulCD;
 			g_pCustom->bltsize = pBob->_uwBlitSize;
+
+#ifdef GAME_DEBUG
+			UWORD uwBlitWords = (pBob->uwWidth+15)/16 + 1;
+			uwDrawnHeight += uwBlitWords * pBob->uwHeight;
+#endif
 			blitWait();
 		}
 	}
+#ifdef GAME_DEBUG
+	UWORD uwDrawLimit = s_pQueues[0].pBg->Rows * s_pQueues[0].pBg->Depth;
+	if(uwDrawnHeight > uwDrawLimit) {
+		logWrite(
+			"ERR: BG restore out of bounds: used %hu, limit: %hu",
+			uwDrawnHeight, uwDrawLimit
+		);
+	}
+#endif
 	s_ubBobsSaved = 0;
 	s_ubBobsDrawn = 0;
 	s_ubBobsPushed = 0;

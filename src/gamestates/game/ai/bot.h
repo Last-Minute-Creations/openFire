@@ -29,4 +29,8 @@ void botAdd(const char *szName, UBYTE ubTeam);
 
 void botProcess(void);
 
+void botRemoveByPtr(tBot *pBot);
+
+void botRemoveByName(const char *szName);
+
 #endif // GUARD_OF_GAMESTATES_GAME_AI_BOT_H

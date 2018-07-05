@@ -34,12 +34,6 @@ tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
 static UBYTE s_isScoreShown;
 
-// Silo highlight
-// TODO: struct?
-UBYTE g_ubDoSiloHighlight;
-tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
-tBobNew g_sHighlightBob;
-
 ULONG g_ulGameFrame;
 static tFont *s_pSmallFont;
 
@@ -77,7 +71,7 @@ void gsGameCreate(void) {
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_sMap.fubWidth << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_sMap.fubHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
-		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
+		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED | BMF_CLEAR,
 		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
 	TAG_DONE);
 	if(!g_pWorldMainBfr) {
@@ -92,25 +86,17 @@ void gsGameCreate(void) {
 	bobNewManagerCreate(
 		ubPlayersMax*2 + EXPLOSIONS_MAX + ubProjectilesMax,
 		ubPlayersMax*2*(VEHICLE_BODY_WIDTH/16 + 1)*VEHICLE_BODY_HEIGHT +
-			ubProjectilesMax*2*2 + EXPLOSIONS_MAX*3*32,
+			ubProjectilesMax*2*(1+1)*2 + EXPLOSIONS_MAX*2*(2+1)*32,
 		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
 	);
 
-	worldMapCreate();
+	worldMapCreate(g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 
 	teamsInit();
-	worldMapSetBuffers(g_pMapTileset, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
-	projectileListCreate(5);
-
-	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
-	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
-	bobNewInit(
-		&g_sHighlightBob, 32, 32, 1,
-		s_pHighlightBitmap, s_pHighlightMask, 0, 0
-	);
+	projectileListCreate(ubProjectilesMax);
 
 	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
 	hudCreate(s_pSmallFont);
@@ -134,11 +120,10 @@ void gsGameCreate(void) {
 	explosionsCreate();
 
 	// Initial values
-	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
 	// AI
-	playerListCreate(ubPlayersMax);
+	playerListInit(ubPlayersMax);
 	aiManagerCreate();
 
 	// Add players
@@ -152,23 +137,7 @@ void gsGameCreate(void) {
 	botAdd("enemy", TEAM_RED);
 	displayPrepareLimbo();
 
-	for(FUBYTE i = 0; i != 7; ++i) {
-		char szName[10];
-		sprintf(szName, "player %hhu", i);
-		playerAdd(szName, TEAM_BLUE);
-	}
-
-	// Now that world buffer is created, do the first draw
-	worldMapRedraw();
-	if(g_pWorldMainBfr->pBack != g_pWorldMainBfr->pFront) {
-		// Might be too big to do in a single blit
-		for(UWORD i = 0; i < g_pWorldMainBfr->pBack->Rows; i+=32) {
-			blitCopyAligned(
-				g_pWorldMainBfr->pBack, 0, i, g_pWorldMainBfr->pFront, 0, i,
-				bitmapGetByteWidth(g_pWorldMainBfr->pBack) * 8, 32
-			);
-		}
-	}
+	blitWait();
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
@@ -297,11 +266,8 @@ void gsGameDestroy(void) {
 	fontDestroy(s_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
-	bitmapDestroy(s_pHighlightBitmap);
-	bitmapDestroy(s_pHighlightMask);
 
 	worldMapDestroy();
-	playerListDestroy();
 
 	logBlockEnd("gsGameDestroy()");
 }

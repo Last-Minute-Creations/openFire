@@ -16,12 +16,11 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 
 	UWORD uwTokWidth = jsonGetDom(pJson, "width");
 	UWORD uwTokHeight = jsonGetDom(pJson, "height");
-	UWORD uwTokPts = jsonGetDom(pJson, "controlPoints");
 	UWORD uwTokName = jsonGetDom(pJson, "title");
 	UWORD uwTokAuthor = jsonGetDom(pJson, "author");
 	UWORD uwTokMode = jsonGetDom(pJson, "mode");
 
-	if(!uwTokWidth || !uwTokHeight || !uwTokPts || !uwTokName || !uwTokAuthor) {
+	if(!uwTokWidth || !uwTokHeight || !uwTokName || !uwTokAuthor) {
 		logWrite("ERR: Malformed JSON!");
 		logBlockEnd("mapJsonGetMeta()");
 		return 0;
@@ -29,7 +28,6 @@ UBYTE mapJsonGetMeta(const tJson *pJson, tMap *pMap) {
 
 	pMap->fubWidth = jsonTokToUlong(pJson, uwTokWidth, 10);
 	pMap->fubHeight = jsonTokToUlong(pJson, uwTokHeight, 10);
-	pMap->fubControlPointCount = pJson->pTokens[uwTokPts].size;
 	jsonTokStrCpy(pJson, uwTokAuthor, pMap->szAuthor, MAP_AUTHOR_MAX);
 	jsonTokStrCpy(pJson, uwTokName, pMap->szName, MAP_NAME_MAX);
 	jsonTokStrCpy(pJson, uwTokMode, szModeStr, 20);
@@ -103,15 +101,14 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 		return;
 	}
 
-	FUBYTE fubControlPointCount = pJson->pTokens[uwTokPts].size;
-	logWrite("Adding %hu control points\n", fubControlPointCount);
-	for(FUBYTE fubPt = 0; fubPt < fubControlPointCount; ++fubPt) {
-		UWORD uwTokPoint = jsonGetElementInArray(pJson, uwTokPts, fubPt);
-		logWrite("Token %hu - type: %d\n", uwTokPoint, pJson->pTokens[uwTokPoint].type); // <- FIXME this prevents malformed reads, heisenbug
+	UBYTE ubControlPointCount = pJson->pTokens[uwTokPts].size;
+	logWrite("Adding %hu control points\n", ubControlPointCount);
+	for(UBYTE ubCtrlPt = 0; ubCtrlPt < ubControlPointCount; ++ubCtrlPt) {
+		UWORD uwTokPoint = jsonGetElementInArray(pJson, uwTokPts, ubCtrlPt);
 		if(!uwTokPoint || pJson->pTokens[uwTokPoint].type != JSMN_OBJECT) {
 			logWrite(
-				"ERR: Malformed control point: %"PRI_FUBYTE" (%hu => %d)\n",
-				fubPt, uwTokPoint, pJson->pTokens[uwTokPoint].type
+				"ERR: Malformed control point: %hhu (%hu => %d)\n",
+				ubCtrlPt, uwTokPoint, pJson->pTokens[uwTokPoint].type
 			);
 			logBlockEnd("mapJsonReadControlPoints()");
 			return;
@@ -121,7 +118,7 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 		UWORD uwTokPtCapture = jsonGetElementInStruct(pJson, uwTokPoint, "capture");
 		UWORD uwTokPtPoly = jsonGetElementInStruct(pJson, uwTokPoint, "polygon");
 		if(!uwTokPtName || !uwTokPtCapture || !uwTokPtPoly) {
-			logWrite("ERR: Missing properties in control point: %"PRI_FUBYTE"\n", fubPt);
+			logWrite("ERR: Missing properties in control point: %"PRI_FUBYTE"\n", ubCtrlPt);
 			logBlockEnd("mapJsonReadControlPoints()");
 			return;
 		}
@@ -148,8 +145,14 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 
 		// Polygon
 		FUBYTE fubPolyPointCnt = pJson->pTokens[uwTokPtPoly].size;
+		if(!fubPolyPointCnt) {
+			logWrite("ERR: No polygon points supplied @point %"PRI_FUBYTE"!\n", ubCtrlPt);
+			logBlockEnd("mapJsonReadControlPoints()");
+			return;
+		}
+		++fubPolyPointCnt; // One more for closing
 		tUbCoordYX *pPolyPoints = memAllocFast(fubPolyPointCnt * sizeof(tUbCoordYX));
-		for(FUBYTE pp = 0; pp != fubPolyPointCnt; ++pp) {
+		for(UBYTE pp = 0; pp < fubPolyPointCnt - 1; ++pp) {
 			UWORD uwTokPolyPoint = jsonGetElementInArray(pJson, uwTokPtPoly, pp);
 			if(
 				!uwTokPolyPoint ||
@@ -157,8 +160,8 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 				pJson->pTokens[uwTokPolyPoint].size != 2
 			) {
 				logWrite(
-					"ERR: polygon point not a point %"PRI_FUBYTE" (%d): '%.*s'",
-					pp, pJson->pTokens[uwTokPolyPoint].type,
+					"ERR: polygon point %hhu of control point %hhu not a point (type: %d): '%.*s'",
+					pp, ubCtrlPt, pJson->pTokens[uwTokPolyPoint].type,
 					pJson->pTokens[uwTokPolyPoint].end - pJson->pTokens[uwTokPolyPoint].start,
 					pJson->szData + pJson->pTokens[uwTokPolyPoint].start
 				);
@@ -170,30 +173,23 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 			pPolyPoints[pp].sUbCoord.ubY = jsonTokToUlong(pJson, uwTokPolyPoint+2, 10);
 		}
 
-		if(!fubPolyPointCnt) {
-			logWrite("ERR: No polygon points supplied @point %"PRI_FUBYTE"!\n", fubPt);
-			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
-			logBlockEnd("mapJsonReadControlPoints()");
-			return;
-		}
 		if(!fubCaptureX && !fubCaptureY) {
-			logWrite("ERR: No capture point supplied @point %"PRI_FUBYTE"!\n", fubPt);
+			logWrite("ERR: No capture point supplied @point %"PRI_FUBYTE"!\n", ubCtrlPt);
 			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
 			logBlockEnd("mapJsonReadControlPoints()");
 			return;
 		}
 		if(!strlen(szControlName)) {
-			logWrite("ERR: No control point name! @point %"PRI_FUBYTE"\n", fubPt);
+			logWrite("ERR: No control point name! @point %"PRI_FUBYTE"\n", ubCtrlPt);
 			memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
 			logBlockEnd("mapJsonReadControlPoints()");
 			return;
 		}
 		// Close polygon
-		++fubPolyPointCnt;
 		pPolyPoints[fubPolyPointCnt-1].uwYX = pPolyPoints[0].uwYX;
 		controlAddPoint(
 			szControlName, fubCaptureX, fubCaptureY, fubPolyPointCnt, pPolyPoints
 		);
-		memFree(pPolyPoints, (fubPolyPointCnt-1) * sizeof(tUbCoordYX));
+		memFree(pPolyPoints, fubPolyPointCnt * sizeof(tUbCoordYX));
 	}
 }

@@ -33,8 +33,6 @@
 extern tView *g_pWorldView;
 extern tSimpleBufferManager *g_pWorldMainBfr;
 
-extern UBYTE g_ubDoSiloHighlight;
-extern tBobNew g_sHighlightBob;
 extern tCameraManager *g_pWorldCamera;
 
 extern ULONG g_ulGameFrame;

@@ -3,6 +3,7 @@
 
 #include "gamestates/game/vehicle.h"
 
+#define PLAYER_MAX_COUNT 8
 #define PLAYER_NAME_MAX        20
 
 #define PLAYER_DEATH_COOLDOWN 150
@@ -35,9 +36,7 @@ typedef struct _tPlayer {
 	UWORD uwScore;
 } tPlayer;
 
-void playerListCreate(UBYTE ubPlayerLimit);
-
-void playerListDestroy(void);
+void playerListInit(UBYTE ubPlayerLimit);
 
 tPlayer *playerAdd(const char *szName, UBYTE ubTeam);
 
@@ -66,7 +65,7 @@ void playerSimVehicle(tPlayer *pPlayer);
 
 void playerSay(tPlayer *pPlayer, char *szMsg, UBYTE isSayTeam);
 
-static inline tPlayer *playerGetByVehicle(tVehicle *pVehicle) {
+static inline tPlayer *playerGetByVehicle(const tVehicle *pVehicle) {
 	UBYTE *pVehicleByteAddr = (UBYTE*)pVehicle;
 	tPlayer sPlayer;
 	UBYTE ubDist = ((UBYTE*)&sPlayer.sVehicle) - ((UBYTE*)&sPlayer);
@@ -79,7 +78,7 @@ tPlayer *playerGetClosestInRange(
 	UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTeam
 );
 
-extern tPlayer *g_pPlayers;
+extern tPlayer g_pPlayers[PLAYER_MAX_COUNT];
 extern tPlayer *g_pLocalPlayer;
 extern UBYTE g_ubPlayerLimit; /// Defined by current server
 extern UBYTE g_ubPlayerCount;

@@ -180,7 +180,7 @@ static void aiGraphCreate(void) {
 	logBlockEnd("aiGraphCreate()");
 }
 
-static void aiGraphDump(void) {
+void aiGraphDump(void) {
 	logBlockBegin("aiGraphDump()");
 	logWrite("    ");
 	for(FUBYTE fubTo = 0; fubTo < g_fubNodeCount; ++fubTo)
@@ -231,7 +231,7 @@ static void aiCalcTileCostsFrag(FUBYTE fubX1, FUBYTE fubY1, FUBYTE fubX2, FUBYTE
 	}
 }
 
-static void aiDumpTileCosts(void) {
+void aiDumpTileCosts(void) {
 	logBlockBegin("aiDumpTileCosts()");
 	logWrite("Tile costs:\n");
 	logWrite("    ");

@@ -40,13 +40,14 @@ typedef struct _tMap {
 	char szAuthor[MAP_AUTHOR_MAX];
 	FUBYTE fubWidth;
 	FUBYTE fubHeight;
-	FUBYTE fubControlPointCount;
 	FUBYTE fubSpawnCount;
 	UBYTE ubMode;
 	tMapTile pData[MAP_MAX_SIZE][MAP_MAX_SIZE];
 } tMap;
 
 void mapInit(char *szPath);
+
+void mapSetLogic(UBYTE ubX, UBYTE ubY, UBYTE ubLogic);
 
 extern tMap g_sMap;
 
