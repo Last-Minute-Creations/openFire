@@ -9,25 +9,18 @@
 tSpawn *g_pSpawns;
 UBYTE g_ubSpawnCount;
 static UBYTE s_ubSpawnMaxCount;
-static tBitMap *s_pGreenAnims;
-static tBitMap *s_pBrownAnims;
 
 void spawnManagerCreate(FUBYTE fubMaxCount) {
 	logBlockBegin("spawnManagerCreate(fubMaxCount: %"PRI_FUBYTE")", fubMaxCount);
 	s_ubSpawnMaxCount = fubMaxCount;
 	g_ubSpawnCount = 0;
 	g_pSpawns = memAllocFastClear(sizeof(tSpawn) * fubMaxCount);
-	s_pGreenAnims = bitmapCreateFromFile("data/vehicles/bunkering_blue.bm");
-	// TODO: bunkering_brown.bm
-	s_pBrownAnims = bitmapCreateFromFile("data/vehicles/bunkering_red.bm");
 	logBlockEnd("spawnManagerCreate()");
 }
 
 void spawnManagerDestroy(void) {
 	logBlockBegin("spawnManagerDestroy()");
 	memFree(g_pSpawns, sizeof(tSpawn) * s_ubSpawnMaxCount);
-	bitmapDestroy(s_pGreenAnims);
-	bitmapDestroy(s_pBrownAnims);
 	logBlockEnd("spawnManagerDestroy()");
 }
 
@@ -49,7 +42,11 @@ UBYTE spawnAdd(UBYTE ubTileX, UBYTE ubTileY, UBYTE ubTeam) {
 
 void spawnCapture(UBYTE ubSpawnIdx, UBYTE ubTeam) {
 	g_pSpawns[ubSpawnIdx].ubTeam = ubTeam;
-	worldMapChangeTile(
+	worldMapSetTile(
+		g_pSpawns[ubSpawnIdx].ubTileX, g_pSpawns[ubSpawnIdx].ubTileY,
+		worldMapTileSpawn(ubTeam, 0)
+	);
+	mapSetLogic(
 		g_pSpawns[ubSpawnIdx].ubTileX, g_pSpawns[ubSpawnIdx].ubTileY,
 		ubTeam == TEAM_BLUE ? MAP_LOGIC_SPAWN1
 		: ubTeam == TEAM_RED ? MAP_LOGIC_SPAWN2
@@ -109,23 +106,24 @@ void spawnSim(void) {
 
 void spawnAnimate(UBYTE ubSpawnIdx) {
 	tSpawn *pSpawn = &g_pSpawns[ubSpawnIdx];
-	if(pSpawn->ubBusy == SPAWN_BUSY_NOT)
+	if(pSpawn->ubBusy == SPAWN_BUSY_NOT) {
 		return; // Most likely
+	}
 	if(pSpawn->ubFrame == PLAYER_SURFACING_COOLDOWN) {
-		worldMapRequestUpdateTile(pSpawn->ubTileX, pSpawn->ubTileY);
+		worldMapTrySetTile(
+			pSpawn->ubTileX, pSpawn->ubTileY, worldMapTileSpawn(pSpawn->ubTeam, 0)
+		);
 	}
 	else {
 		UBYTE ubFrameIdx = pSpawn->ubFrame / 10;
 		if(pSpawn->ubBusy == SPAWN_BUSY_SURFACING) {
 			ubFrameIdx = 5 - ubFrameIdx;
 		}
-		blitCopyAligned(
-			pSpawn->ubTeam == TEAM_BLUE ? s_pGreenAnims : s_pBrownAnims,
-			0, ubFrameIdx << MAP_TILE_SIZE,
-			g_pWorldMainBfr->pBack,
-			pSpawn->ubTileX << MAP_TILE_SIZE, pSpawn->ubTileY << MAP_TILE_SIZE,
-			MAP_FULL_TILE, MAP_FULL_TILE
-		);
+		UBYTE ubTile = MAP_TILE_SURFACING_TANK_BLUE + ubFrameIdx;
+		if(pSpawn->ubTeam == TEAM_RED) {
+			ubTile += 6;
+		}
+		worldMapTrySetTile(pSpawn->ubTileX, pSpawn->ubTileY, ubTile);
 	}
 }
 

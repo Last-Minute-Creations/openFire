@@ -34,12 +34,6 @@ tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
 static UBYTE s_isScoreShown;
 
-// Silo highlight
-// TODO: struct?
-UBYTE g_ubDoSiloHighlight;
-tBitMap *s_pHighlightBitmap, *s_pHighlightMask;
-tBobNew g_sHighlightBob;
-
 ULONG g_ulGameFrame;
 static tFont *s_pSmallFont;
 
@@ -77,7 +71,7 @@ void gsGameCreate(void) {
 		TAG_SIMPLEBUFFER_BOUND_WIDTH, g_sMap.fubWidth << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_BOUND_HEIGHT, g_sMap.fubHeight << MAP_TILE_SIZE,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPMAIN_POS,
-		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
+		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED | BMF_CLEAR,
 		TAG_SIMPLEBUFFER_IS_DBLBUF, 1,
 	TAG_DONE);
 	if(!g_pWorldMainBfr) {
@@ -96,21 +90,13 @@ void gsGameCreate(void) {
 		g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack
 	);
 
-	worldMapCreate();
+	worldMapCreate(g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 
 	teamsInit();
-	worldMapSetBuffers(g_pMapTileset, g_pWorldMainBfr->pFront, g_pWorldMainBfr->pBack);
 	paletteLoad("data/game.plt", s_pWorldMainVPort->pPalette, 16);
 	paletteLoad("data/sprites.plt", &s_pWorldMainVPort->pPalette[16], 16);
 
 	projectileListCreate(ubProjectilesMax);
-
-	s_pHighlightBitmap = bitmapCreateFromFile("data/silohighlight.bm");
-	s_pHighlightMask = bitmapCreateFromFile("data/silohighlight_mask.bm");
-	bobNewInit(
-		&g_sHighlightBob, 32, 32, 1,
-		s_pHighlightBitmap, s_pHighlightMask, 0, 0
-	);
 
 	s_pSmallFont = fontCreate("data/silkscreen5.fnt");
 	hudCreate(s_pSmallFont);
@@ -134,7 +120,6 @@ void gsGameCreate(void) {
 	explosionsCreate();
 
 	// Initial values
-	g_ubDoSiloHighlight = 0;
 	g_ulGameFrame = 0;
 
 	// AI
@@ -152,13 +137,7 @@ void gsGameCreate(void) {
 	botAdd("enemy", TEAM_RED);
 	displayPrepareLimbo();
 
-	// Now that world buffer is created, do the first draw
-	worldMapRedraw();
 	blitWait();
-	CopyMemQuick(
-		g_pWorldMainBfr->pBack->Planes[0], g_pWorldMainBfr->pFront->Planes[0],
-		g_pWorldMainBfr->pBack->BytesPerRow * g_pWorldMainBfr->pBack->Rows
-	);
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
@@ -287,8 +266,6 @@ void gsGameDestroy(void) {
 	fontDestroy(s_pSmallFont);
 	explosionsDestroy();
 	viewDestroy(g_pWorldView);
-	bitmapDestroy(s_pHighlightBitmap);
-	bitmapDestroy(s_pHighlightMask);
 
 	worldMapDestroy();
 

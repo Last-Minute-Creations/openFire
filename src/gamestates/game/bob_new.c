@@ -114,8 +114,8 @@ UBYTE bobNewProcessNext(void) {
 			g_pCustom->bltalwm = 0xFFFF;
 
 			g_pCustom->bltdmod = 0;
-			ULONG ulCD = (ULONG)(pQueue->pBg->Planes[0]);
-			g_pCustom->bltdpt = (APTR)ulCD;
+			ULONG ulD = (ULONG)(pQueue->pBg->Planes[0]);
+			g_pCustom->bltdpt = (APTR)ulD;
 		}
 		const tBobNew *pBob = pQueue->pBobs[s_ubBobsSaved];
 		++s_ubBobsSaved;
@@ -229,6 +229,7 @@ void bobNewBegin(void) {
 			g_pCustom->bltdmod = pBob->_wModuloUndrawSave;
 			g_pCustom->bltdpt = (APTR)ulCD;
 			g_pCustom->bltsize = pBob->_uwBlitSize;
+
 #ifdef GAME_DEBUG
 			UWORD uwBlitWords = (pBob->uwWidth+15)/16 + 1;
 			uwDrawnHeight += uwBlitWords * pBob->uwHeight;

@@ -47,6 +47,8 @@ typedef struct _tMap {
 
 void mapInit(char *szPath);
 
+void mapSetLogic(UBYTE ubX, UBYTE ubY, UBYTE ubLogic);
+
 extern tMap g_sMap;
 
 #endif // GUARD_OF_MAP_H

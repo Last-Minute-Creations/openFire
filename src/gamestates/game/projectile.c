@@ -146,9 +146,9 @@ void projectileSim(void) {
 			g_sMap.pData[ubTileX][ubTileY].ubIdx != MAP_LOGIC_WALL
 		)) {
 			if(buildingDamage(ubBuildingIdx, PROJECTILE_DAMAGE) == BUILDING_DESTROYED) {
-				g_sMap.pData[ubTileX][ubTileY].ubIdx = MAP_LOGIC_DIRT;
+				mapSetLogic(ubTileX, ubTileY, MAP_LOGIC_DIRT);
 				g_sMap.pData[ubTileX][ubTileY].ubBuilding = 0;
-				worldMapRequestUpdateTile(ubTileX, ubTileY);
+				worldMapSetTile(ubTileX, ubTileY, worldMapTileDirt(ubTileX, ubTileY));
 				explosionsAdd(
 					(ubTileX << MAP_TILE_SIZE) + MAP_HALF_TILE,
 					(ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE

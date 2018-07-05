@@ -308,8 +308,14 @@ void playerSimVehicle(tPlayer *pPlayer) {
 					return;
 				}
 				// If not, just highlight
-				g_sHighlightBob.sPos.ulYX = pVehicle->sBob.sPos.ulYX;
-				bobNewPush(&g_sHighlightBob);
+				worldMapTrySetTile(
+					uwVTileX, uwVTileY, MAP_TILE_SPAWN_BLUE_HI + pPlayer->ubTeam
+				);
+			}
+			else {
+				worldMapTrySetTile(
+					uwVTileX, uwVTileY, MAP_TILE_SPAWN_BLUE + pPlayer->ubTeam
+				);
 			}
 		}
 	}

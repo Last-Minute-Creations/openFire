@@ -23,3 +23,7 @@ void mapInit(char *szFileName) {
 	jsonDestroy(pMapJson);
 	logBlockEnd("mapInit()");
 }
+
+void mapSetLogic(UBYTE ubX, UBYTE ubY, UBYTE ubLogic) {
+	g_sMap.pData[ubX][ubY].ubIdx = ubLogic;
+}
