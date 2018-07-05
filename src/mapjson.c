@@ -107,7 +107,7 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 		UWORD uwTokPoint = jsonGetElementInArray(pJson, uwTokPts, ubCtrlPt);
 		if(!uwTokPoint || pJson->pTokens[uwTokPoint].type != JSMN_OBJECT) {
 			logWrite(
-				"ERR: Malformed control point: %"PRI_FUBYTE" (%hu => %d)\n",
+				"ERR: Malformed control point: %hhu (%hu => %d)\n",
 				ubCtrlPt, uwTokPoint, pJson->pTokens[uwTokPoint].type
 			);
 			logBlockEnd("mapJsonReadControlPoints()");
