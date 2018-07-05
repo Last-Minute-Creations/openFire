@@ -214,7 +214,7 @@ void vehicleTypesCreate(void) {
 	}
 	vehicleTypeGenerateRotatedCollisions(pType->pCollisionPts);
 
-	// Tank
+	// Chopper
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_CHOPPER];
 	pType->ubFwdSpeed = 1;
 	pType->ubBwSpeed = 1;

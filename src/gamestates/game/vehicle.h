@@ -31,7 +31,7 @@ typedef struct _tVehicle {
 	UWORD uwX;           ///< Same as fX, but converted to UWORD. Read-only.
 	UWORD uwY;           ///< Ditto.
 	UBYTE ubBodyAngle;   ///< Measured clockwise, +90deg is to bottom.
-	UBYTE ubTurretAngle; ///< NOT relative to body angle, measured as above.
+	UBYTE ubAuxAngle;    ///< NOT relative to body angle, measured as above.
 	UBYTE ubBaseAmmo;
 	UBYTE ubSuperAmmo;
 	BYTE  bRotDiv;
@@ -42,9 +42,8 @@ typedef struct _tVehicle {
 
 void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx);
 
-void vehicleDrawFrame(UWORD uwX, UWORD uwY, UBYTE ubDAngle);
-
 void vehicleSteerTank(tVehicle *pVehicle, const tSteerRequest *pSteerRequest);
 void vehicleSteerJeep(tVehicle *pVehicle, const tSteerRequest *pSteerRequest);
+void vehicleSteerChopper(tVehicle *pVehicle, const tSteerRequest *pSteerRequest);
 
 #endif

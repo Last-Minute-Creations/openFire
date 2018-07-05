@@ -85,6 +85,7 @@ tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 		pPlayer->isBot = 0;
 		pPlayer->ubCurrentVehicleType = 0xFF;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
+		pPlayer->pVehiclesLeft[VEHICLE_TYPE_CHOPPER] = 10;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
 		char szMessage[35];
@@ -221,12 +222,18 @@ void playerLocalProcessInput(void) {
 				const tUwRect sJeepRect = {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
+				const tUwRect sChopperRect = {
+					.uwX = 2 + 38, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
+				};
 				UWORD uwMouseX = mouseGetX(MOUSE_PORT_1), uwMouseY = mouseGetY(MOUSE_PORT_1);
 				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
 				}
 				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
+				}
+				else if(inRect(uwMouseX, uwMouseY, sChopperRect)) {
+					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_CHOPPER);
 				}
 			}
 		} break;
@@ -275,20 +282,6 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	UWORD uwVTileY = uwVy >> MAP_TILE_SIZE;
 	UBYTE ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
 
-	// Drowning
-	if(ubTileType == MAP_LOGIC_WATER) {
-		playerLoseVehicle(pPlayer);
-		char szBfr[CONSOLE_MESSAGE_MAX];
-		sprintf(szBfr, "%s has drowned", pPlayer->szName);
-		consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
-		return;
-	}
-
-	// Death from moving spawn
-	if(playerCheckDeathFromSpawn(pPlayer)) {
-		return;
-	}
-
 	// Standing on own, unoccupied spawn
 	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
 		if(
@@ -319,13 +312,36 @@ void playerSimVehicle(tPlayer *pPlayer) {
 			}
 		}
 	}
+	else if(pPlayer->ubCurrentVehicleType != VEHICLE_TYPE_CHOPPER) {
+		// Drowning
+		if(ubTileType == MAP_LOGIC_WATER) {
+			playerLoseVehicle(pPlayer);
+			char szBfr[CONSOLE_MESSAGE_MAX];
+			sprintf(szBfr, "%s has drowned", pPlayer->szName);
+			consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
+			return;
+		}
 
-	controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
+		// Death from moving spawn
+		if(playerCheckDeathFromSpawn(pPlayer)) {
+			return;
+		}
+	}
+
+	if(pPlayer->ubCurrentVehicleType != VEHICLE_TYPE_CHOPPER) {
+		// Also must work on spawn, so it's here
+		controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
+	}
 
 	// Calculate vehicle positions based on steer requests
 	switch(pPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
 			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
+			bobNewPush(&pVehicle->sAuxBob);
+			break;
+		case VEHICLE_TYPE_CHOPPER:
+			vehicleSteerChopper(pVehicle, &pPlayer->sSteerRequest);
 			bobNewPush(&pVehicle->sBob);
 			bobNewPush(&pVehicle->sAuxBob);
 			break;
