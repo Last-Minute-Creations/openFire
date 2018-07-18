@@ -45,7 +45,7 @@ ifeq ($(OF_CC), vc)
 	AS_FLAGS = +kick13 -c
 	OBJDUMP =
 else ifeq ($(OF_CC), m68k-amigaos-gcc)
-	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O3 -fbbb=abcfilmprsz
+	CC_FLAGS = -std=gnu11 $(INCLUDES) -DAMIGA -noixemul -Wall -Wextra -fomit-frame-pointer -O3
 	AS_FLAGS = -quiet -x -m68010 -Faout
 	OBJDUMP = m68k-amigaos-objdump -S -d $@ > $@.dasm
 endif
