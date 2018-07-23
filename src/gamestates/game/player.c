@@ -13,15 +13,6 @@
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
 
-// Steer requests
-#define OF_KEY_FORWARD      KEY_W
-#define OF_KEY_BACKWARD     KEY_S
-#define OF_KEY_LEFT         KEY_A
-#define OF_KEY_RIGHT        KEY_D
-#define OF_KEY_ACTION1      KEY_F
-#define OF_KEY_ACTION2      KEY_R
-#define OF_KEY_ACTION3      KEY_V
-
 // TODO players as cyclic buffer?
 // Iterating other player's position during targeting could be done with:
 // for(p = next; p != self; ++p)
@@ -63,7 +54,6 @@ static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	pPlayer->sVehicle.uwY = (g_pSpawns[fubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pPlayer->sVehicle.fX = fix16_from_int(pPlayer->sVehicle.uwX);
 	pPlayer->sVehicle.fY = fix16_from_int(pPlayer->sVehicle.uwY);
-	if(pPlayer == g_pLocalPlayer)
 	if(pPlayer == g_pLocalPlayer) {
 		displayPrepareLimbo();
 	}
@@ -192,14 +182,8 @@ void playerLocalProcessInput(void) {
 				pReq->ubAction3  = 0;
 			}
 			else {
-				pReq->ubForward  = keyCheck(OF_KEY_FORWARD);
-				pReq->ubBackward = keyCheck(OF_KEY_BACKWARD);
-				pReq->ubLeft     = keyCheck(OF_KEY_LEFT);
-				pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
-				pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
+				memcpy(pReq, steerRequestGetCurr(), sizeof(tSteerRequest));
 			}
-			pReq->ubAction1 = mouseCheck(MOUSE_PORT_1, MOUSE_LMB);
-			pReq->ubAction2 = mouseCheck(MOUSE_PORT_2, MOUSE_RMB);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				g_pLocalPlayer->sVehicle.uwX,

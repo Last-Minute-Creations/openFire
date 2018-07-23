@@ -7,20 +7,10 @@
 #include "gamestates/game/gamemath.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/bob_new.h"
+#include "gamestates/game/steer_request.h"
 
 /// Vehicle-specific constants
 #define VEHICLE_TANK_COOLDOWN PROJECTILE_FRAME_LIFE
-
-typedef struct _tSteerRequest {
-	UBYTE ubForward;
-	UBYTE ubBackward;
-	UBYTE ubLeft;
-	UBYTE ubRight;
-	UBYTE ubAction1;
-	UBYTE ubAction2;
-	UBYTE ubAction3;
-	UBYTE ubDestAngle;
-} tSteerRequest;
 
 typedef struct _tVehicle {
 	tVehicleType *pType; ///< Ptr to vehicle type definition

@@ -122,6 +122,20 @@ static void hudDrawBar(
 	}
 }
 
+static void hudDrawFps(void) {
+	const UWORD uwFpsX = 2+3;
+	const UWORD uwFpsY = 2+35+8;
+	blitRect(g_pHudBfr->pBack, (WORD)uwFpsX, (WORD)uwFpsY-1, 26, 5+2, 0);
+	char szFpsBfr[6];
+	sprintf(szFpsBfr, "%3hu", g_ubFps);
+	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szFpsBfr);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBack, s_pSpawnTextBfr, uwFpsX, uwFpsY,
+		12, FONT_COOKIE | FONT_LAZY
+	);
+
+}
+
 static void hudDrawTeamScore(FUBYTE fubTeam) {
 	const UWORD uwTicketX = 2+72+2;
 	const UWORD uwTicketY[2] = {2+35+3, 2+35+3+5+4};
@@ -182,6 +196,7 @@ void hudUpdate(void) {
 	if(s_fubFrame == 2 || s_fubFrame == 27) {
 		consoleUpdate();
 	}
+	hudDrawFps();
 
 	s_fubHudPrevState = s_fubHudState;
 	++s_fubFrame;
