@@ -80,6 +80,7 @@ of: $(OF_OBJS) $(ACE_OBJS_CP)
 	$(NEWLINE)
 	@echo Linking...
 	@$(OF_CC) $(CC_FLAGS) -lamiga -o $@ $^
+	@m68k-amigaos-size $@
 
 ace: $(ACE_OBJS)
 	$(MAKE) -C $(ACE_DIR) all ACE_CC=$(OF_CC) TARGET=$(TARGET)
