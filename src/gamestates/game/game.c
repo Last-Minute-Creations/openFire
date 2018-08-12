@@ -221,7 +221,7 @@ void gsGameLoop(void) {
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		cameraCenterAt(
 			g_pWorldCamera,
-			g_pLocalPlayer->sVehicle.uwX & 0xFFFE, g_pLocalPlayer->sVehicle.uwY
+			g_pLocalPlayer->sVehicle.uwX, g_pLocalPlayer->sVehicle.uwY
 		);
 	}
 	else {
