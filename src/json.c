@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ace/managers/log.h>
 #include <ace/managers/memory.h>
+#include <ace/managers/system.h>
 #include <ace/utils/file.h>
 
 tJson *jsonCreate(const char *szFilePath) {
