@@ -40,7 +40,7 @@ static tFont *s_pSmallFont;
 UBYTE g_isLocalBot;
 UBYTE g_ubFps;
 UBYTE s_ubFpsCounter;
-UBYTE s_ubFpsFrameCounter;
+UBYTE s_ubFpsCalcTimeout;
 
 void displayPrepareLimbo(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0,0, 320, 255);
@@ -57,9 +57,9 @@ static void INTERRUPT gameVblankServer(
   UNUSED_ARG REGARG(volatile tCustom *pCustom, "a0"),
   UNUSED_ARG REGARG(volatile void *pData, "a1")
 ) {
-	++s_ubFpsFrameCounter;
-	if(s_ubFpsFrameCounter == 50) {
-		s_ubFpsFrameCounter = 0;
+	++s_ubFpsCalcTimeout;
+	if(s_ubFpsCalcTimeout == 50) {
+		s_ubFpsCalcTimeout = 0;
 		g_ubFps = s_ubFpsCounter;
 		s_ubFpsCounter = 0;
 	}
@@ -142,7 +142,7 @@ void gsGameCreate(void) {
 	g_ulGameFrame = 0;
 	s_ubFpsCounter = 0;
 	g_ubFps = 0;
-	s_ubFpsFrameCounter = 0;
+	s_ubFpsCalcTimeout = 0;
 	steerRequestInit();
 
 	// AI

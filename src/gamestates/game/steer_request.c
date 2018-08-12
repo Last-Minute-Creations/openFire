@@ -13,30 +13,30 @@
 
 #define STEER_REQUESTS_MAX 50
 
-UBYTE s_ubReadBfr;
-volatile tSteerRequest s_pRequests[2][STEER_REQUESTS_MAX];
-volatile UBYTE s_pRequestCounts[2];
-UBYTE s_ubProcessedCount;
+UBYTE s_ubWriteBfr;
+volatile tSteerRequest s_pRequests[2][STEER_REQUESTS_MAX] = {{0}};
+volatile UBYTE s_pRequestCounts[2] = {0};
+UBYTE s_ubProcessedCount = 0;
 
 void steerRequestInit(void) {
-	s_ubReadBfr = 0;
+	s_ubWriteBfr = 0;
 	s_ubProcessedCount = 0;
 	s_pRequestCounts[0] = 0;
 	s_pRequestCounts[1] = 0;
 }
 
 void steerRequestSwap(void) {
-	s_pRequestCounts[s_ubReadBfr] = 0;
-	s_ubReadBfr = !s_ubReadBfr;
+	s_pRequestCounts[!s_ubWriteBfr] = 0;
+	s_ubWriteBfr = !s_ubWriteBfr;
 	s_ubProcessedCount = 0;
 }
 
 tSteerRequest *steerRequestGetCurr(void) {
-	return &s_pRequests[s_ubReadBfr][s_ubProcessedCount];
+	return &s_pRequests[!s_ubWriteBfr][s_ubProcessedCount];
 }
 
 UBYTE steerRequestIsLast(void) {
-	return s_ubProcessedCount >= s_pRequestCounts[s_ubReadBfr]-1;
+	return s_ubProcessedCount >= s_pRequestCounts[!s_ubWriteBfr]-1;
 }
 
 UBYTE steerRequestIsFirst(void) {
@@ -44,7 +44,7 @@ UBYTE steerRequestIsFirst(void) {
 }
 
 void steerRequestCapture(void) {
-	tSteerRequest * const pReq = &s_pRequests[!s_ubReadBfr][s_pRequestCounts[!s_ubReadBfr]];
+	tSteerRequest * const pReq = &s_pRequests[s_ubWriteBfr][s_pRequestCounts[s_ubWriteBfr]];
 	pReq->ubForward  = keyCheck(OF_KEY_FORWARD);
 	pReq->ubBackward = keyCheck(OF_KEY_BACKWARD);
 	pReq->ubLeft     = keyCheck(OF_KEY_LEFT);
@@ -52,11 +52,11 @@ void steerRequestCapture(void) {
 	pReq->ubAction1  = mouseCheck(MOUSE_PORT_1, MOUSE_LMB);
 	pReq->ubAction2  = mouseCheck(MOUSE_PORT_2, MOUSE_RMB);
 	pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
-	++s_pRequestCounts[!s_ubReadBfr];
+	++s_pRequestCounts[s_ubWriteBfr];
 }
 
 UBYTE steerRequestReadCount(void) {
-	return s_pRequestCounts[s_ubReadBfr];
+	return s_pRequestCounts[!s_ubWriteBfr];
 }
 
 UBYTE steerRequestProcessedCount(void) {

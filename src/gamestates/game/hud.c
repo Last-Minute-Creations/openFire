@@ -123,11 +123,16 @@ static void hudDrawBar(
 }
 
 static void hudDrawFps(void) {
-	const UWORD uwFpsX = 2+3;
+	const UWORD uwFpsX = 2+4+1;
 	const UWORD uwFpsY = 2+35+8;
 	blitRect(g_pHudBfr->pBack, (WORD)uwFpsX, (WORD)uwFpsY-1, 26, 5+2, 0);
-	char szFpsBfr[6];
-	sprintf(szFpsBfr, "%3hu", g_ubFps);
+	char szFpsBfr[4];
+	if(g_ubFps > 99) {
+		strcpy(szFpsBfr, "99+");
+	}
+	else {
+		sprintf(szFpsBfr, "%2hu", g_ubFps);
+	}
 	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szFpsBfr);
 	fontDrawTextBitMap(
 		g_pHudBfr->pBack, s_pSpawnTextBfr, uwFpsX, uwFpsY,
