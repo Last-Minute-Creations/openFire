@@ -11,7 +11,7 @@
 #define OF_KEY_ACTION2      KEY_R
 #define OF_KEY_ACTION3      KEY_V
 
-#define STEER_REQUESTS_MAX 50
+#define STEER_REQUESTS_MAX 250
 
 UBYTE s_ubWriteBfr;
 volatile tSteerRequest s_pRequests[2][STEER_REQUESTS_MAX] = {{{0}}};
@@ -46,16 +46,18 @@ UBYTE steerRequestIsFirst(void) {
 }
 
 void steerRequestCapture(void) {
+	if(s_ubCountWrite < STEER_REQUESTS_MAX) {
 		volatile tSteerRequest * const pReq = &s_pRequests[s_ubWriteBfr][s_ubCountWrite];
 		pReq->ubForward  = keyCheck(OF_KEY_FORWARD);
 		pReq->ubBackward = keyCheck(OF_KEY_BACKWARD);
 		pReq->ubLeft     = keyCheck(OF_KEY_LEFT);
-	pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
+		pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
 		pReq->ubAction1  = mouseCheck(MOUSE_PORT_1, MOUSE_LMB);
 		pReq->ubAction2  = mouseCheck(MOUSE_PORT_2, MOUSE_RMB);
 		pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
 		++s_ubCountWrite;
 	}
+}
 
 UBYTE steerRequestReadCount(void) {
 	return s_ubCountRead;
