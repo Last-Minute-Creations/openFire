@@ -121,11 +121,29 @@ static void hudDrawBar(
 	}
 }
 
+static void hudDrawTeamScore(UBYTE ubTeam) {
+	const UWORD uwTicketX = 2+72+2;
+	const UWORD uwTicketY[2] = {2+35+3, 2+35+3+5+4};
+	const UBYTE pTeamColors[2] = {12, 10};
+	char szSpawnBfr[6];
+	blitRect(g_pHudBfr->pBack, (WORD)uwTicketX, (WORD)uwTicketY[ubTeam], 26, 5, 0);
+	sprintf(szSpawnBfr, "%5hu", g_pTeams[ubTeam].uwTicketsLeft);
+	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szSpawnBfr);
+	fontDrawTextBitMap(
+		g_pHudBfr->pBack, s_pSpawnTextBfr, uwTicketX, uwTicketY[ubTeam],
+		pTeamColors[ubTeam], FONT_COOKIE | FONT_LAZY
+	);
+	s_uwPrevTickets[ubTeam] = g_pTeams[ubTeam].uwTicketsLeft;
+}
+
 static void hudForceRedraw(void) {
 		blitCopy(
 			s_pHudPanels[s_ubHudState], 0, 0, g_pHudBfr->pBack, 2, 2,
 			104, (WORD)s_pHudPanels[0]->Rows, MINTERM_COOKIE, 0xFF
 		);
+
+	hudDrawTeamScore(TEAM_BLUE);
+	hudDrawTeamScore(TEAM_RED);
 }
 
 void hudToggleFps(void) {
@@ -155,27 +173,11 @@ static void hudDrawFps(void) {
 	);
 }
 
-static void hudDrawTeamScore(UBYTE ubTeam) {
-	const UWORD uwTicketX = 2+72+2;
-	const UWORD uwTicketY[2] = {2+35+3, 2+35+3+5+4};
-	const UBYTE pTeamColors[2] = {12, 10};
-	char szSpawnBfr[6];
-	blitRect(g_pHudBfr->pBack, (WORD)uwTicketX, (WORD)uwTicketY[ubTeam], 26, 5, 0);
-	sprintf(szSpawnBfr, "%5hu", g_pTeams[ubTeam].uwTicketsLeft);
-	fontFillTextBitMap(s_pHudFont, s_pSpawnTextBfr, szSpawnBfr);
-	fontDrawTextBitMap(
-		g_pHudBfr->pBack, s_pSpawnTextBfr, uwTicketX, uwTicketY[ubTeam],
-		pTeamColors[ubTeam], FONT_COOKIE | FONT_LAZY
-	);
-	s_uwPrevTickets[ubTeam] = g_pTeams[ubTeam].uwTicketsLeft;
-}
-
 void hudUpdate(void) {
 	if(s_ubHudState != s_ubHudPrevState) {
 		hudForceRedraw();
 	}
 	if(s_ubHudState == HUD_STATE_DRIVING) {
-		// TODO one thing per frame, HP - always
 		tVehicle *pVehicle = &g_pLocalPlayer->sVehicle;
 		tVehicleType *pType = &g_pVehicleTypes[g_pLocalPlayer->ubCurrentVehicleType];
 
@@ -184,11 +186,7 @@ void hudUpdate(void) {
 		const UWORD uwBarAmmoY = 13;
 		const UWORD uwBarFuelY = 21;
 		hudDrawBar(uwBarLifeY, pVehicle->ubLife, pType->ubMaxLife, 4);
-		if(s_ubHudPrevState != s_ubHudState) {
-			hudDrawBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
-			hudDrawBar(uwBarFuelY, pVehicle->ubFuel, pType->ubMaxFuel, 11);
-		}
-		else if(s_ubFrame == 0 || s_ubFrame == 25) {
+		if(s_ubFrame == 0 || s_ubFrame == 25) {
 			hudDrawBar(uwBarAmmoY, pVehicle->ubBaseAmmo, pType->ubMaxBaseAmmo, 8);
 		}
 		else if(s_ubFrame == 1 || s_ubFrame == 26) {
@@ -197,19 +195,13 @@ void hudUpdate(void) {
 	}
 
 	// Update ticket count
-	if(s_ubHudPrevState != s_ubHudState) {
-		hudDrawTeamScore(TEAM_BLUE);
-		hudDrawTeamScore(TEAM_RED);
-	}
-	else {
 		if(s_ubFrame == 30 && s_uwPrevTickets[TEAM_BLUE] != g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 			hudDrawTeamScore(TEAM_BLUE);
 		}
 		else if(s_ubFrame == 40 && s_uwPrevTickets[TEAM_RED] != g_pTeams[TEAM_RED].uwTicketsLeft) {
 			hudDrawTeamScore(TEAM_RED);
 		}
-	}
-	if(s_ubFrame == 2 || s_ubFrame == 27) {
+	else if(s_ubFrame == 2 || s_ubFrame == 27) {
 		consoleUpdate();
 	}
 	else if(s_ubFrame == 3 || s_ubFrame == 28) {
