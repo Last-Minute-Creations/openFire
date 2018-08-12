@@ -218,7 +218,7 @@ void vehicleTypesCreate(void) {
 	pType = &g_pVehicleTypes[VEHICLE_TYPE_CHOPPER];
 	pType->ubFwdSpeed = 1;
 	pType->ubBwSpeed = 1;
-	pType->ubRotSpeed = 2;
+	pType->ubRotSpeed = 1;
 	pType->ubRotSpeedDiv = 4;
 	pType->ubMaxBaseAmmo = 100;
 	pType->ubMaxSuperAmmo = 0;
