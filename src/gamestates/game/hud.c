@@ -138,7 +138,6 @@ static void hudDrawFps(void) {
 		g_pHudBfr->pBack, s_pSpawnTextBfr, uwFpsX, uwFpsY,
 		12, FONT_COOKIE | FONT_LAZY
 	);
-
 }
 
 static void hudDrawTeamScore(FUBYTE fubTeam) {
