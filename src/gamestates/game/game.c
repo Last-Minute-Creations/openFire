@@ -202,6 +202,9 @@ void gsGameLoop(void) {
 		if(keyUse(KEY_T)) {
 			consoleChatBegin();
 		}
+		else if(keyUse(KEY_F1)) {
+			hudToggleFps();
+		}
 	}
 	if(keyUse(KEY_TAB)) {
 		s_isScoreShown = 1;
