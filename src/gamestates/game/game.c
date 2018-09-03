@@ -276,8 +276,6 @@ void gsGameLoop(void) {
 	// Start refreshing gfx at hud
 	++s_ubFpsCounter;
 	vPortWaitForEnd(s_pWorldMainVPort);
-
-	// This should be done on vblank interrupt
 	if(!s_isScoreShown) {
 		viewProcessManagers(g_pWorldView);
 		copProcessBlocks();
