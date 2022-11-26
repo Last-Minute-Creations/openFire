@@ -1,9 +1,12 @@
 #include "gamestates/precalc/precalc.h"
 #include <ace/managers/log.h>
 #include <ace/managers/game.h>
+#include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/font.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/custom.h>
 #include "vehicletypes.h"
+#include "open_fire.h"
 #include "gamestates/menu/menu.h"
 #include "gamestates/game/projectile.h"
 #include "gamestates/game/turret.h"
@@ -19,15 +22,16 @@ static tView *s_pView;
 static tVPort *s_pVPort;
 static tSimpleBufferManager *s_pBuffer;
 static tFont *s_pFont;
+static tTextBitMap *s_pTextBitMap;
 static FUBYTE s_isHdd;
 static FUBYTE s_fubProgress;
 static tBitMap *s_pLoadingVehicle;
 
-void precalcCreate(void) {
+static void precalcCreate(void) {
 	logBlockBegin("precalcCreate()");
 
 	s_pView = viewCreate(0,
-		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_GLOBAL_PALETTE, 1,
 	TAG_DONE);
 	s_pVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pView,
@@ -38,44 +42,44 @@ void precalcCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
 	TAG_DONE);
 
-	copBlockDisableSprites(s_pView->pCopList, 0xFF);
 	paletteLoad("data/loading.plt", s_pVPort->pPalette, 1 << PRECALC_BPP);
 	bitmapLoadFromFile(s_pBuffer->pBack, "data/menu/logo.bm", 80, 16);
 	const char* pVehicleSources[] = {
 		"data/loading/tank.bm", "data/loading/jeep.bm", "data/loading/chopper.bm"
 	};
-	s_pLoadingVehicle = bitmapCreateFromFile(pVehicleSources[g_pRayPos->bfPosY % 3]);
+	s_pLoadingVehicle = bitmapCreateFromFile(pVehicleSources[getRayPos().ulValue % 3], 0);
 
 	s_isHdd = 1;
 
 	s_pFont = fontCreate("data/silkscreen5.fnt");
+	s_pTextBitMap = fontCreateTextBitMap(320, s_pFont->uwHeight);
 	fontDrawStr(
-		s_pBuffer->pBack, s_pFont, 320/2, 256/4,
-		"Precalculating...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+		s_pFont, s_pBuffer->pBack, 320/2, 256/4,
+		"Precalculating...", PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER, s_pTextBitMap
 	);
 	if(s_isHdd) {
 		fontDrawStr(
-			s_pBuffer->pBack, s_pFont, 320/2, 256/4 + 10,
+			s_pFont, s_pBuffer->pBack, 320/2, 256/4 + 10,
 			"This will take a long time only once",
-			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER, s_pTextBitMap
 		);
 	}
 	else {
 		fontDrawStr(
-			s_pBuffer->pBack, s_pFont, 320/2, 256/4 + 10,
+			s_pFont, s_pBuffer->pBack, 320/2, 256/4 + 10,
 			"For better load times put this game on HDD",
-			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER
+			PRECALC_COLOR_TEXT, FONT_TOP | FONT_HCENTER, s_pTextBitMap
 		);
 	}
 
-	UWORD uwVehicleWidth = bitmapGetByteWidth(s_pLoadingVehicle)*8;
+	UWORD uwVehicleWidth = bitmapGetByteWidth(s_pLoadingVehicle) * 8;
 	UWORD uwVehicleHeight = s_pLoadingVehicle->Rows/2;
 	blitCopy(
 		s_pLoadingVehicle, 0, 0,
 		s_pBuffer->pBack,
-		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
-		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
-		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE, 0xFF
+		(s_pBuffer->uBfrBounds.uwX - uwVehicleWidth)/2,
+		(s_pBuffer->uBfrBounds.uwY - uwVehicleHeight)/2,
+		uwVehicleWidth, uwVehicleHeight, MINTERM_COOKIE
 	);
 
 	s_fubProgress = 0;
@@ -84,11 +88,11 @@ void precalcCreate(void) {
 	logBlockEnd("precalcCreate()");
 }
 
-void precalcLoop(void) {
+static void precalcLoop(void) {
 	static FUBYTE isInit = 0;
 
 	if(isInit) {
-		gameClose();
+		gameExit();
 		return;
 	}
 	logBlockBegin("precalcLoop()");
@@ -97,7 +101,7 @@ void precalcLoop(void) {
 	vehicleTypesCreate();
 
 	// TODO load tileset for turret use
-	g_pMapTileset = bitmapCreateFromFile("data/tiles.bm");
+	g_pMapTileset = bitmapCreateFromFile("data/tiles.bm", 0);
 
 	// Turret stuff
 	precalcIncreaseProgress(20, "Generating turret frames");
@@ -111,18 +115,19 @@ void precalcLoop(void) {
 	viewLoad(0);
 	viewDestroy(s_pView);
 	fontDestroy(s_pFont);
+	fontDestroyTextBitMap(s_pTextBitMap);
 
 	bitmapDestroy(s_pLoadingVehicle);
 
 	// All done - load menu
-	gamePushState(menuCreate, menuLoop, menuDestroy);
+	statePush(g_pStateManager, &g_sStateMenu);
 	isInit = 1;
 
 	// If returned - close game
 	logBlockEnd("precalcLoop()");
 }
 
-void precalcDestroy(void) {
+static void precalcDestroy(void) {
 	logBlockBegin("precalcDestroy()");
 
 	vehicleTypesDestroy();
@@ -148,9 +153,9 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 	blitCopy(
 		s_pLoadingVehicle, 0, uwVehicleHeight,
 		s_pBuffer->pBack,
-		(s_pBuffer->uBfrBounds.sUwCoord.uwX - uwVehicleWidth)/2,
-		(s_pBuffer->uBfrBounds.sUwCoord.uwY - uwVehicleHeight)/2,
-		(s_fubProgress*uwVehicleWidth)/100, uwVehicleHeight, MINTERM_COOKIE, 0xFF
+		(s_pBuffer->uBfrBounds.uwX - uwVehicleWidth)/2,
+		(s_pBuffer->uBfrBounds.uwY - uwVehicleHeight)/2,
+		(s_fubProgress*uwVehicleWidth)/100, uwVehicleHeight, MINTERM_COOKIE
 	);
 
 	// BG + outline
@@ -177,8 +182,12 @@ void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText) {
 
 	// Text
 	fontDrawStr(
-		s_pBuffer->pBack, s_pFont,
+		s_pFont, s_pBuffer->pBack,
 		uwProgressX + uwProgressWidth/2, uwProgressY + uwProgressHeight/2,
-		szText, PRECALC_COLOR_TEXT, FONT_CENTER | FONT_SHADOW | FONT_COOKIE
+		szText, PRECALC_COLOR_TEXT, FONT_CENTER | FONT_SHADOW | FONT_COOKIE, s_pTextBitMap
 	);
 }
+
+tState g_sStatePrecalc = {
+	.cbCreate = precalcCreate, .cbLoop = precalcLoop, .cbDestroy = precalcDestroy
+};

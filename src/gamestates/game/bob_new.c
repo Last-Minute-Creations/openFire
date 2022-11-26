@@ -92,12 +92,12 @@ void bobNewInit(
 	pBob->_wModuloUndrawSave = bitmapGetByteWidth(s_pQueues[0].pDst) - uwBlitWords*2;
 	pBob->uwOffsetY = 0;
 
-	pBob->sPos.sUwCoord.uwX = uwX;
-	pBob->sPos.sUwCoord.uwY = uwY;
-	pBob->pOldPositions[0].sUwCoord.uwX = uwX;
-	pBob->pOldPositions[0].sUwCoord.uwY = uwY;
-	pBob->pOldPositions[1].sUwCoord.uwX = uwX;
-	pBob->pOldPositions[1].sUwCoord.uwY = uwY;
+	pBob->sPos.uwX = uwX;
+	pBob->sPos.uwY = uwY;
+	pBob->pOldPositions[0].uwX = uwX;
+	pBob->pOldPositions[0].uwY = uwY;
+	pBob->pOldPositions[1].uwX = uwX;
+	pBob->pOldPositions[1].uwY = uwY;
 }
 
 void bobNewSetBitMapOffset(tBobNew *pBob, UWORD uwOffsetY) {
@@ -124,8 +124,8 @@ UBYTE bobNewProcessNext(void) {
 		++s_ubBobsSaved;
 		if(pBob->isUndrawRequired) {
 			ULONG ulSrcOffs = (
-				pQueue->pDst->BytesPerRow * pBob->sPos.sUwCoord.uwY +
-				pBob->sPos.sUwCoord.uwX/8
+				pQueue->pDst->BytesPerRow * pBob->sPos.uwY +
+				pBob->sPos.uwX/8
 			);
 			ULONG ulA = (ULONG)(pQueue->pDst->Planes[0]) + ulSrcOffs;
 			g_pCustom->bltamod = pBob->_wModuloUndrawSave;
@@ -148,13 +148,13 @@ UBYTE bobNewProcessNext(void) {
 
 			if(!blitCheck(
 				pBob->pBitmap, 0, pBob->uwOffsetY / pBob->pBitmap->BytesPerRow,
-				pQueue->pDst, pPos->sUwCoord.uwX, pPos->sUwCoord.uwY,
+				pQueue->pDst, pPos->uwX, pPos->uwY,
 				pBob->uwWidth, pBob->uwHeight, __LINE__, __FILE__
 			)) {
 				return 1;
 			}
 
-			UBYTE ubDstOffs = pPos->sUwCoord.uwX & 0xF;
+			UBYTE ubDstOffs = pPos->uwX & 0xF;
 			UWORD uwBlitWidth = (pBob->uwWidth +ubDstOffs+15) & 0xFFF0;
 			UWORD uwBlitWords = uwBlitWidth >> 4;
 			UWORD uwBlitSize = ((pBob->uwHeight * s_ubBpp) << 6) | uwBlitWords;
@@ -172,7 +172,7 @@ UBYTE bobNewProcessNext(void) {
 			}
 			ULONG ulSrcOffs = pBob->uwOffsetY;
 			ULONG ulDstOffs = (
-				pQueue->pDst->BytesPerRow * pPos->sUwCoord.uwY + (pPos->sUwCoord.uwX>>3)
+				pQueue->pDst->BytesPerRow * pPos->uwY + (pPos->uwX>>3)
 			);
 
 			WORD wDstModulo = bitmapGetByteWidth(pQueue->pDst) - (uwBlitWords<<1);
@@ -228,8 +228,8 @@ void bobNewBegin(void) {
 		if(pBob->isUndrawRequired) {
 			// Undraw next
 			ULONG ulDstOffs = (
-				pQueue->pDst->BytesPerRow * pBob->pOldPositions[s_ubBufferCurr].sUwCoord.uwY +
-				pBob->pOldPositions[s_ubBufferCurr].sUwCoord.uwX/8
+				pQueue->pDst->BytesPerRow * pBob->pOldPositions[s_ubBufferCurr].uwY +
+				pBob->pOldPositions[s_ubBufferCurr].uwX/8
 			);
 			ULONG ulCD = (ULONG)(pQueue->pDst->Planes[0]) + ulDstOffs;
 			g_pCustom->bltdmod = pBob->_wModuloUndrawSave;

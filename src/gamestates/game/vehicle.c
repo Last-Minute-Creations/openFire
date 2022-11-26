@@ -227,8 +227,8 @@ void vehicleSteerTank(
 		pVehicle->uwX = uwNewPosX;
 		pVehicle->uwY = uwNewPosY;
 		// Top-left draw pos
-		pVehicle->sBob.sPos.sUwCoord.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
-		pVehicle->sBob.sPos.sUwCoord.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+		pVehicle->sBob.sPos.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+		pVehicle->sBob.sPos.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
 		// Angle frame
 		pVehicle->ubBodyAngle = ubNewAngle;
 		pVehicle->ubAuxAngle = ubNewTurretAngle;
@@ -341,8 +341,8 @@ void vehicleSteerChopper(
 	pVehicle->uwX = fix16_to_int(fNewPosX);
 	pVehicle->uwY = fix16_to_int(fNewPosY);
 	// Top-left draw pos
-	pVehicle->sBob.sPos.sUwCoord.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
-	pVehicle->sBob.sPos.sUwCoord.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+	pVehicle->sBob.sPos.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+	pVehicle->sBob.sPos.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
 
 	// Rotor
 	pVehicle->ubAuxAngle += 6;
@@ -432,8 +432,8 @@ void vehicleSteerJeep(
 		pVehicle->uwX = fix16_to_int(fNewPosX);
 		pVehicle->uwY = fix16_to_int(fNewPosY);
 		// Top-left draw pos
-		pVehicle->sBob.sPos.sUwCoord.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
-		pVehicle->sBob.sPos.sUwCoord.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
+		pVehicle->sBob.sPos.uwX = pVehicle->uwX - VEHICLE_BODY_WIDTH/2;
+		pVehicle->sBob.sPos.uwY = pVehicle->uwY - VEHICLE_BODY_HEIGHT/2;
 		// Angle frame
 		pVehicle->ubBodyAngle = ubNewAngle;
 		bobNewSetBitMapOffset(&pVehicle->sBob, angleToFrame(ubNewAngle) * VEHICLE_BODY_HEIGHT);

@@ -33,8 +33,7 @@ tListCtl *listCtlCreate(
 	pCtl->onChange = onChange;
 
 	pCtl->pEntries =  memAllocFastClear(uwEntryMaxCnt * sizeof(char*));
-
-	s_pEntryTextBfr = fontCreateTextBitMap(uwWidth, pFont->uwHeight);
+	s_pEntryTextBfr = fontCreateTextBitMap(blockCountCeil(uwWidth, 16) * 16, pFont->uwHeight);
 
 	buttonAdd(
 		uwX + uwWidth - LISTCTL_BTN_WIDTH-2, uwY+2,

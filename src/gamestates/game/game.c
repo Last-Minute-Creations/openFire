@@ -6,10 +6,11 @@
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
-#include <ace/managers/rand.h>
 #include <ace/managers/system.h>
+#include <ace/utils/sprite.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
+#include "../../open_fire.h"
 #include "cursor.h"
 #include "gamestates/game/worldmap.h"
 #include "gamestates/game/vehicle.h"
@@ -33,14 +34,15 @@ tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
 static UBYTE s_isScoreShown;
-
-ULONG g_ulGameFrame;
+static UBYTE s_isSummary;
 static tFont *s_pSmallFont;
 
+ULONG g_ulGameFrame;
 UBYTE g_isLocalBot;
 UBYTE g_ubFps;
 UBYTE s_ubFpsCounter;
 UBYTE s_ubFpsCalcTimeout;
+tRandManager g_sRandManager;
 
 void displayPrepareLimbo(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0,0, 320, 255);
@@ -70,11 +72,11 @@ static void INTERRUPT gameVblankServer(
 
 void gsGameCreate(void) {
 	logBlockBegin("gsGameCreate()");
-	randInit(2184);
+	randInit(&g_sRandManager, 2184, 1911);
 
 	// Prepare view
 	g_pWorldView = viewCreate(0,
-		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_GLOBAL_PALETTE, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
 	TAG_DONE);
@@ -95,10 +97,10 @@ void gsGameCreate(void) {
 	TAG_DONE);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
-		gamePopState();
+		statePop(g_pStateManager);
 		return;
 	}
-	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
+	g_pWorldCamera = g_pWorldMainBfr->pCamera;
 
 	const UBYTE ubProjectilesMax = 16;
 	const UBYTE ubPlayersMax = 8;
@@ -121,16 +123,17 @@ void gsGameCreate(void) {
 	hudCreate(s_pSmallFont);
 	scoreTableCreate(g_pHudBfr->sCommon.pVPort, s_pSmallFont);
 	s_isScoreShown = 0;
+	s_isSummary = 0;
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
 	copSetMove(&pSpriteEnList[0].sMove, &g_pCustom->dmacon, BITSET | DMAF_SPRITE);
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS],
-		sizeof(tCopCmd)
+	g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS].ulCode = g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS].ulCode;
+	spriteDisableInCopRawMode(
+		g_pWorldView->pCopList,
+		SPRITE_0 | SPRITE_1 | SPRITE_3 | SPRITE_4 | SPRITE_5 | SPRITE_6 | SPRITE_7,
+		WORLD_COP_SPRITEEN_POS + 1
 	);
-	copRawDisableSprites(g_pWorldView->pCopList, 251, WORLD_COP_SPRITEEN_POS+1);
 
 	// Crosshair stuff
 	cursorCreate(g_pWorldView, 2, "data/crosshair.bm", WORLD_COP_CROSS_POS);
@@ -170,7 +173,7 @@ void gsGameCreate(void) {
 
 static void gameSummaryLoop(void) {
 	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		gameChangeState(menuCreate, menuLoop, menuDestroy);
+		stateChange(g_pStateManager, &g_sStateMenu);
 		return;
 	}
 	scoreTableProcessView();
@@ -190,10 +193,14 @@ void gameDebugKeys(void) {
 }
 
 void gsGameLoop(void) {
+	if(s_isSummary) {
+		gameSummaryLoop();
+		return;
+	}
 	++g_ulGameFrame;
 	// Quit?
 	if(keyUse(KEY_ESCAPE)) {
-		gameChangeState(menuCreate, menuLoop, menuDestroy);
+		stateChange(g_pStateManager, &g_sStateMenu);
 		return;
 	}
 	if(!g_isChatting) {
@@ -249,7 +256,7 @@ void gsGameLoop(void) {
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
-		gameChangeLoop(gameSummaryLoop);
+		s_isSummary = 1;
 	}
 
 	cursorUpdate();
@@ -264,8 +271,8 @@ void gsGameLoop(void) {
 		UWORD uwSpawnY = g_pLocalPlayer->sVehicle.uwY;
 		UWORD uwLimboX = MAX(0, uwSpawnX - WORLD_VPORT_WIDTH/2);
 		UWORD uwLimboY = MAX(0, uwSpawnY- WORLD_VPORT_HEIGHT/2);
-		WORD wDx = (WORD)CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
-		WORD wDy = (WORD)CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
+		WORD wDx = (WORD)CLAMP(uwLimboX - g_pWorldCamera->uPos.uwX, -2, 2);
+		WORD wDy = (WORD)CLAMP(uwLimboY - g_pWorldCamera->uPos.uwY, -2, 2);
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 
@@ -308,3 +315,7 @@ void gsGameDestroy(void) {
 
 	logBlockEnd("gsGameDestroy()");
 }
+
+tState g_sStateGame = {
+	.cbCreate = gsGameCreate, .cbLoop = gsGameLoop, .cbDestroy = gsGameDestroy
+};

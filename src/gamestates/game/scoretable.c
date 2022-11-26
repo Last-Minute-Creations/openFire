@@ -1,6 +1,7 @@
 #include "gamestates/game/scoretable.h"
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/sprite.h>
 #include "gamestates/game/player.h"
 
 #define SCORE_TABLE_BPP 4
@@ -24,7 +25,7 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	s_pView = viewCreate(0,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, 8*2 + (6+2*SCORE_TABLE_BPP) + 3,
-		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_GLOBAL_PALETTE, 1,
 	TAG_DONE);
 	s_pVPort = vPortCreate(0,
 		TAG_VPORT_VIEW, s_pView,
@@ -41,7 +42,11 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 
 	tSimpleBufferManager *pHudBfr = (tSimpleBufferManager*)vPortGetManager(pHudVPort, VPM_SCROLL);
 
-	copRawDisableSprites(s_pView->pCopList, 0xFF, 0);
+	spriteDisableInCopRawMode(
+		s_pView->pCopList,
+		SPRITE_0 | SPRITE_1 | SPRITE_2 | SPRITE_3 | SPRITE_4 | SPRITE_5 | SPRITE_6 | SPRITE_7,
+		0
+	);
 
 	// Jump to HUD - back buffer to back buffer
 	ULONG ulHudListAddr = (ULONG)((void*)
@@ -96,8 +101,8 @@ void scoreTableCreate(tVPort *pHudVPort, tFont *pFont) {
 	const char *pColHeaders[4] = {"Name", "Deaths", "Kills", "Capture points"};
 	for(UBYTE i = 0; i < 4; ++i) {
 		fontDrawStr(
-			s_pBfr->pBack, s_pFont, s_pColX[i], ubColHeaderOffsY, pColHeaders[i],
-			s_ubColorHeader, FONT_TOP | FONT_LEFT | FONT_COOKIE
+			s_pFont, s_pBfr->pBack, s_pColX[i], ubColHeaderOffsY, pColHeaders[i],
+			s_ubColorHeader, FONT_TOP | FONT_LEFT | FONT_COOKIE, s_pNameTextBfr
 		);
 	}
 	logBlockEnd("scoreTableCreate()");
@@ -117,28 +122,19 @@ void scoreTableUpdate(void) {
 				s_ubColorBot, FONT_TOP | FONT_LEFT | FONT_COOKIE
 			);
 		}
-		fontFillTextBitMap(s_pFont, s_pNameTextBfr, g_pPlayers[i].szName);
-		fontDrawTextBitMap(
-			s_pBfr->pBack, s_pNameTextBfr,	32, 16 + 7*i,
+		fontDrawStr(s_pFont, s_pBfr->pBack, 32, 16 + 7*i, g_pPlayers[i].szName,
 			(g_pPlayers[i].ubTeam == TEAM_RED ? s_ubColorRed : s_ubColorBlue),
-			FONT_TOP | FONT_LEFT | FONT_COOKIE
+			FONT_TOP | FONT_LEFT | FONT_COOKIE, s_pNameTextBfr
 		);
 	}
 }
 
 void scoreTableShowSummary(void) {
-	if(!g_pTeams[TEAM_BLUE].uwTicketsLeft) {
-		fontDrawStr(
-			s_pBfr->pBack, s_pFont, 160, 160, "Red Wins!",
-			s_ubColorRed, FONT_COOKIE | FONT_CENTER
-		);
-	}
-	else {
-		fontDrawStr(
-			s_pBfr->pBack, s_pFont, 160, 160, "Blue Wins!",
-			s_ubColorBlue, FONT_COOKIE | FONT_CENTER
-		);
-	}
+	const char *szMsg = !g_pTeams[TEAM_BLUE].uwTicketsLeft ? "Red Wins!" : "Blue Wins!";
+	fontDrawStr(
+		s_pFont, s_pBfr->pBack, 160, 160, szMsg,
+		s_ubColorRed, FONT_COOKIE | FONT_CENTER, s_pNameTextBfr
+	);
 	scoreTableShow();
 }
 

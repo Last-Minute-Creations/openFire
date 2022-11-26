@@ -5,7 +5,9 @@
 #include <ace/managers/game.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
+#include <ace/utils/sprite.h>
 #include <ace/managers/system.h>
+#include "open_fire.h"
 #include "cursor.h"
 #include "map.h"
 #include "gamestates/menu/button.h"
@@ -20,18 +22,18 @@ tFont *g_pMenuFont;
 tTextBitMap *g_pMenuTextBitmap;
 
 static void menuMainOnStartGame(void) {
-	gameChangeState(mapListCreate, mapListLoop, mapListDestroy);
+	stateChange(g_pStateManager, &g_sStateMapList);
 }
 
 static void menuMainOnQuit(void) {
-	gameClose();
+	gameExit();
 }
 
 static void menuMainOnDemo(void) {
 	g_isLocalBot = 1;
 	mapInit("min.json");
-	gamePopState(); // From current menu substate
-	gameChangeState(gsGameCreate, gsGameLoop, gsGameDestroy);
+	statePop(g_pStateManager); // From current menu substate
+	stateChange(g_pStateManager, &g_sStateGame);
 }
 
 #define MENU_BUTTON_WIDTH 80
@@ -70,19 +72,19 @@ void menuMainCreate(void) {
 	// Add notice
 	const UWORD uwColorNotice = 14;
 	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 236,
+		g_pMenuFont, g_pMenuBuffer->pBack, 320/2, 236,
 		"Founded by KaiN, Selur and Softiron",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY, g_pMenuTextBitmap
 	);
 	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 243,
+		g_pMenuFont, g_pMenuBuffer->pBack, 320/2, 243,
 		"as a RetroKomp 2017 Gamedev Compo entry.",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY, g_pMenuTextBitmap
 	);
 	fontDrawStr(
-		g_pMenuBuffer->pBack, g_pMenuFont, 320/2, 250,
+		g_pMenuFont, g_pMenuBuffer->pBack, 320/2, 250,
 		"Remaining authors are listed on project page.",
-		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY
+		uwColorNotice, FONT_HCENTER | FONT_TOP | FONT_LAZY, g_pMenuTextBitmap
 	);
 	logBlockEnd("menuMainCreate()");
 	systemUnuse();
@@ -100,7 +102,7 @@ void menuCreate(void) {
 	logBlockBegin("menuCreate()");
 	// Create View & VPort
 	s_pView = viewCreate(0,
-		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_GLOBAL_PALETTE, 1,
 		TAG_DONE
 	);
 	s_pVPort = vPortCreate(0,
@@ -113,16 +115,19 @@ void menuCreate(void) {
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_CLEAR | BMF_INTERLEAVED,
 		TAG_DONE
 	);
-	copBlockDisableSprites(s_pView->pCopList, 0xFE);
+	spriteDisableInCopBlockMode(
+		s_pView->pCopList,
+		SPRITE_1 | SPRITE_2 | SPRITE_3 | SPRITE_4 | SPRITE_5 | SPRITE_6 | SPRITE_7
+	);
 	cursorCreate(s_pView, 0, "data/crosshair.bm", 0);
 	paletteLoad("data/game.plt", s_pVPort->pPalette, 1 << MENU_BPP);
 	paletteLoad("data/sprites.plt", &s_pVPort->pPalette[16], 1 << MENU_BPP);
 	g_pMenuFont = fontCreate("data/silkscreen5.fnt");
 	g_pMenuTextBitmap = fontCreateTextBitMap(320, g_pMenuFont->uwHeight);
 
-	gamePushState(menuMainCreate, menuLoop, menuMainDestroy);
+	statePush(g_pStateManager, &g_sStateMenuMain);
 
-	systemSetDma(DMAB_SPRITE, 1);
+	systemSetDmaBit(DMAB_SPRITE, 1);
 	viewLoad(s_pView);
 	logBlockEnd("menuCreate()");
 	systemUnuse();
@@ -131,7 +136,7 @@ void menuCreate(void) {
 void menuDestroy(void) {
 	systemUse();
 	logBlockBegin("menuDestroy()");
-	systemSetDma(DMAB_SPRITE, 0);
+	systemSetDmaBit(DMAB_SPRITE, 0);
 	viewLoad(0);
 	cursorDestroy();
 	fontDestroyTextBitMap(g_pMenuTextBitmap);
@@ -142,7 +147,7 @@ void menuDestroy(void) {
 
 void menuLoop() {
 	if(keyUse(KEY_ESCAPE)) {
-		gameClose();
+		gameExit();
 		return;
 	}
 	if(mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
@@ -158,3 +163,11 @@ void menuProcess(void) {
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
 }
+
+tState g_sStateMenuMain = {
+	.cbCreate = menuMainCreate, .cbLoop = menuLoop, .cbDestroy = menuMainDestroy
+};
+
+tState g_sStateMenu = {
+	.cbCreate = menuCreate, .cbLoop = menuLoop, .cbDestroy = menuDestroy
+};

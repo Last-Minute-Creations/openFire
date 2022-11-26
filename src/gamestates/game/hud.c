@@ -48,21 +48,15 @@ void hudCreate(tFont *pFont) {
 		&g_pCustom->dmacon, BITSET|DMAF_RASTER
 	);
 	// Same for front bfr
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_VPHUD_DMAOFF_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_VPHUD_DMAOFF_POS],
-		2*sizeof(tCopCmd)
-	);
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_VPHUD_DMAON_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_VPHUD_DMAON_POS],
-		1*sizeof(tCopCmd)
-	);
+	for(UBYTE i = 2; i--;) {
+		g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_VPHUD_DMAOFF_POS + i].ulCode = g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_VPHUD_DMAOFF_POS + i].ulCode;
+		g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_VPHUD_DMAON_POS + i].ulCode = g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_VPHUD_DMAON_POS + i].ulCode;
+	}
 
 	// Initial draw on buffer
 	bitmapLoadFromFile(g_pHudBfr->pBack, "data/hud/blank.bm", 0, 0);
-	s_pHudPanels[HUD_STATE_DRIVING] = bitmapCreateFromFile("data/hud/driving.bm");
-	s_pHudPanels[HUD_STATE_SELECTING] = bitmapCreateFromFile("data/hud/selecting.bm");
+	s_pHudPanels[HUD_STATE_DRIVING] = bitmapCreateFromFile("data/hud/driving.bm", 0);
+	s_pHudPanels[HUD_STATE_SELECTING] = bitmapCreateFromFile("data/hud/selecting.bm", 0);
 
 	s_ubHudPrevState = 0xFF;
 	s_ubFrame = 0;
@@ -139,7 +133,7 @@ static void hudDrawTeamScore(UBYTE ubTeam) {
 static void hudForceRedraw(void) {
 		blitCopy(
 			s_pHudPanels[s_ubHudState], 0, 0, g_pHudBfr->pBack, 2, 2,
-			104, (WORD)s_pHudPanels[0]->Rows, MINTERM_COOKIE, 0xFF
+			104, (WORD)s_pHudPanels[0]->Rows, MINTERM_COOKIE
 		);
 
 	hudDrawTeamScore(TEAM_BLUE);

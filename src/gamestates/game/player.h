@@ -4,7 +4,7 @@
 #include "gamestates/game/vehicle.h"
 
 #define PLAYER_MAX_COUNT 8
-#define PLAYER_NAME_MAX        20
+#define PLAYER_NAME_MAX 10
 
 #define PLAYER_DEATH_COOLDOWN 150
 #define PLAYER_SURFACING_COOLDOWN 60

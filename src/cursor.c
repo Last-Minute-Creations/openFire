@@ -25,7 +25,7 @@ void cursorUpdate(void) {
 
 void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCopPos) {
 	mouseSetBounds(MOUSE_PORT_1, 0, 0, 320, 255);
-	s_pCrosshair = bitmapCreateFromFile(szPath);
+	s_pCrosshair = bitmapCreateFromFile(szPath, 0);
 	UWORD *pSpriteBfr = (UWORD*)((void*)s_pCrosshair->Planes[0]);
 	cursorUpdate();
 	ULONG ulSprAddr = (ULONG)((UBYTE*)pSpriteBfr);
@@ -33,11 +33,9 @@ void cursorCreate(tView *pView, FUBYTE fubSpriteIdx, char *szPath, UWORD uwRawCo
 		tCopCmd *pCrossList = &pView->pCopList->pBackBfr->pList[uwRawCopPos];
 		copSetMove(&pCrossList[0].sMove, &g_pSprFetch[fubSpriteIdx].uwHi, ulSprAddr >> 16);
 		copSetMove(&pCrossList[1].sMove, &g_pSprFetch[fubSpriteIdx].uwLo, ulSprAddr & 0xFFFF);
-		CopyMemQuick(
-			&pView->pCopList->pBackBfr->pList[uwRawCopPos],
-			&pView->pCopList->pFrontBfr->pList[uwRawCopPos],
-			2*sizeof(tCopCmd)
-		);
+		for(UBYTE i = 0; i < 2; ++i) {
+			pView->pCopList->pFrontBfr->pList[uwRawCopPos + i].ulCode = pView->pCopList->pBackBfr->pList[uwRawCopPos + i].ulCode;
+		}
 	}
 	else {
 		tCopBlock *pBlock = copBlockCreate(pView->pCopList, 2, 0, 0);

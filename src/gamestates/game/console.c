@@ -47,7 +47,7 @@ void consoleWrite(const char *szMsg, UBYTE ubColor) {
 	s_sLog.pLog[s_sLog.uwTailIdx].ubColor = ubColor;
 #ifdef GAME_DEBUG
 	if(strlen(szMsg) > CHAT_MAX) {
-		logWrite("ERR: Text too long (%d): '%s'\n", strlen(szMsg), szMsg);
+		logWrite("ERR: Text too long (%ld): '%s'\n", strlen(szMsg), szMsg);
 		return;
 	}
 #endif

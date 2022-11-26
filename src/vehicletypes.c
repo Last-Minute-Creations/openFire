@@ -1,6 +1,7 @@
 #include "vehicletypes.h"
 #include <ace/managers/blit.h>
 #include <ace/utils/chunky.h>
+#include <ace/utils/dir.h>
 #include <fixmath/fix16.h>
 #include "cache.h"
 #include "gamestates/game/gamemath.h"
@@ -11,17 +12,17 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
 	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: '%s')", szPath);
 
-	char szBitmapFileName[100];
+	char szCachePath[100];
 	if(cacheIsValid(szPath)) {
-		sprintf(szBitmapFileName, "precalc/%s", szPath);
-		tBitMap *pBitmap = bitmapCreateFromFile(szBitmapFileName);
+		sprintf(szCachePath, "precalc/%s", szPath);
+		tBitMap *pBitmap = bitmapCreateFromFile(szCachePath, 0);
 		logBlockEnd("vehicleTypeGenerateRotatedFrames()");
 		return pBitmap;
 	}
 
 	// Load first frame to determine sizes
-	sprintf(szBitmapFileName, "data/%s", szPath);
-	tBitMap *pFirstFrame = bitmapCreateFromFile(szBitmapFileName);
+	sprintf(szCachePath, "data/%s", szPath);
+	tBitMap *pFirstFrame = bitmapCreateFromFile(szCachePath, 0);
 	UWORD uwFrameWidth = bitmapGetByteWidth(pFirstFrame) * 8;
 
 	// Create huge-ass bitmap for all frames
@@ -64,8 +65,12 @@ tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
 	memFree(pChunkyRotated, uwFrameWidth * uwFrameWidth);
 
 	// Generate cache
-	sprintf(szBitmapFileName, "precalc/%s", szPath);
-	bitmapSave(pBitmap, szBitmapFileName);
+	sprintf(szCachePath, "precalc/%s", szPath);
+	UWORD uwLastSlashPos = strrchr(szCachePath, '/') - szCachePath;
+	szCachePath[uwLastSlashPos] = '\0';
+	dirCreatePath(szCachePath);
+	szCachePath[uwLastSlashPos] = '/';
+	bitmapSave(pBitmap, szCachePath);
 	cacheGenerateChecksum(szPath);
 
 	logBlockEnd("vehicleTypeGenerateRotatedFrames()");

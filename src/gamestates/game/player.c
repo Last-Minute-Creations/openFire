@@ -188,8 +188,8 @@ void playerLocalProcessInput(void) {
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				g_pLocalPlayer->sVehicle.uwX,
 				g_pLocalPlayer->sVehicle.uwY,
-				g_pWorldCamera->uPos.sUwCoord.uwX + mouseGetX(MOUSE_PORT_1),
-				g_pWorldCamera->uPos.sUwCoord.uwY + mouseGetY(MOUSE_PORT_1)
+				g_pWorldCamera->uPos.uwX + mouseGetX(MOUSE_PORT_1),
+				g_pWorldCamera->uPos.uwY + mouseGetY(MOUSE_PORT_1)
 			);
 		} break;
 		case PLAYER_STATE_LIMBO: {
