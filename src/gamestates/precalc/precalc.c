@@ -96,6 +96,8 @@ static void precalcLoop(void) {
 		return;
 	}
 	logBlockBegin("precalcLoop()");
+	precalcIncreaseProgress(0, "Generating math tables");
+	gameMathInit();
 
 	precalcIncreaseProgress(10, "Initializing vehicle types");
 	vehicleTypesCreate();

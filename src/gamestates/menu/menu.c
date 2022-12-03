@@ -13,6 +13,9 @@
 #include "gamestates/menu/button.h"
 #include "gamestates/menu/maplist.h"
 #include "gamestates/game/game.h"
+#include "gamestates/game/gamemath.h"
+
+// #define TEST_ATAN2
 
 static tView *s_pView;
 static tVPort *s_pVPort;
@@ -20,6 +23,23 @@ static tVPort *s_pVPort;
 tSimpleBufferManager *g_pMenuBuffer;
 tFont *g_pMenuFont;
 tTextBitMap *g_pMenuTextBitmap;
+
+static void atan2Test(void) {
+#if defined(TEST_ATAN2)
+	static char szBfr[200];
+	char szRef[15];
+	WORD wDx = mouseGetX(MOUSE_PORT_1) - 160;
+	WORD wDy = mouseGetY(MOUSE_PORT_1) - 128;
+	UWORD uwMy = catan2(wDy, wDx);
+	fix16_to_str(fix16_atan2(fix16_from_int(wDy), fix16_from_int(wDx)), szRef, 6);
+	sprintf(szBfr, "dx: %hd, dy: %hd, my: %hd, ref: %s", wDx, wDy, uwMy, szRef);
+	blitRect(g_pMenuBuffer->pBack, 0, 0, 320, 10, 0);
+	fontDrawStr(
+		g_pMenuFont, g_pMenuBuffer->pBack, 0, 0, szBfr,
+		14, FONT_LAZY, g_pMenuTextBitmap
+	);
+#endif
+}
 
 static void menuMainOnStartGame(void) {
 	stateChange(g_pStateManager, &g_sStateMapList);
@@ -40,7 +60,7 @@ static void menuMainOnDemo(void) {
 #define MENU_BUTTON_HEIGHT 16
 #define MENU_BUTTON_OFFS_X 32
 
-void menuMainCreate(void) {
+static void menuMainCreate(void) {
 	systemUse();
 	logBlockBegin("menuMainCreate()");
 	// Display logo
@@ -90,7 +110,7 @@ void menuMainCreate(void) {
 	systemUnuse();
 }
 
-void menuMainDestroy(void) {
+static void menuMainDestroy(void) {
 	systemUse();
 	logBlockBegin("menuMainDestroy()");
 	buttonListDestroy();
@@ -98,7 +118,7 @@ void menuMainDestroy(void) {
 	systemUnuse();
 }
 
-void menuCreate(void) {
+static void menuCreate(void) {
 	logBlockBegin("menuCreate()");
 	// Create View & VPort
 	s_pView = viewCreate(0,
@@ -133,7 +153,7 @@ void menuCreate(void) {
 	systemUnuse();
 }
 
-void menuDestroy(void) {
+static void menuDestroy(void) {
 	systemUse();
 	logBlockBegin("menuDestroy()");
 	systemSetDmaBit(DMAB_SPRITE, 0);
@@ -145,7 +165,8 @@ void menuDestroy(void) {
 	logBlockEnd("menuDestroy()");
 }
 
-void menuLoop() {
+static void menuLoop() {
+	atan2Test();
 	if(keyUse(KEY_ESCAPE)) {
 		gameExit();
 		return;
