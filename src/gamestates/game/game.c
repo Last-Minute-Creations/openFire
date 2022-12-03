@@ -282,7 +282,9 @@ void gsGameLoop(void) {
 
 	// Start refreshing gfx at hud
 	++s_ubFpsCounter;
-	vPortWaitForEnd(s_pWorldMainVPort);
+	systemIdleBegin();
+	vPortWaitUntilEnd(s_pWorldMainVPort);
+	systemIdleEnd();
 	if(!s_isScoreShown) {
 		viewProcessManagers(g_pWorldView);
 		copProcessBlocks();
