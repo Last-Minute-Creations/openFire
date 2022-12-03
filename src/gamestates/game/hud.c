@@ -29,6 +29,7 @@ void hudCreate(tFont *pFont) {
 		TAG_SIMPLEBUFFER_VPORT, s_pHudVPort,
 		TAG_SIMPLEBUFFER_COPLIST_OFFSET, WORLD_COP_VPHUD_POS,
 		TAG_SIMPLEBUFFER_BITMAP_FLAGS, BMF_INTERLEAVED,
+		TAG_SIMPLEBUFFER_USE_X_SCROLLING, 0,
 	TAG_DONE);
 	s_pHudFont = pFont;
 	s_pSpawnTextBfr = fontCreateTextBitMap(64, pFont->uwHeight);
