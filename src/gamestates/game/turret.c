@@ -24,6 +24,10 @@ UWORD g_pTurretTiles[MAP_MAX_SIZE][MAP_MAX_SIZE]; // 32k FAST
 
 static FUBYTE s_fubMapWidth, s_fubMapHeight;
 
+static UBYTE turretIsDestroyed(const tTurret *pTurret) {
+	return pTurret->uwCenterX == 0;
+}
+
 void turretListCreate(FUBYTE fubMapWidth, FUBYTE fubMapHeight) {
 	logBlockBegin("turretListCreate()");
 	s_fubMapWidth = fubMapWidth;
@@ -93,8 +97,10 @@ void turretDestroy(UWORD uwIdx) {
 	tTurret *pTurret = &g_pTurrets[uwIdx];
 
 	// Already destroyed?
-	if(!pTurret->uwCenterX)
+	if(turretIsDestroyed(pTurret)) {
+		logWrite("ERR: Turret %hu is already destroyed", uwIdx);
 		return;
+	}
 
 	// Remove from tile-based list
 	UWORD uwTileX = pTurret->uwCenterX >> MAP_TILE_SIZE;
@@ -133,9 +139,9 @@ void turretSim(void) {
 	FUBYTE fubSeq = g_ulGameFrame & 15;
 	UBYTE ubDrawSeq = (g_ulGameFrame>>1) & 15;
 
-	for(UWORD uwTurretIdx = 0; uwTurretIdx != s_uwMaxTurrets; ++uwTurretIdx) {
+	for(UWORD uwTurretIdx = 0; uwTurretIdx < g_uwTurretCount; ++uwTurretIdx) {
 		tTurret *pTurret = &g_pTurrets[uwTurretIdx];
-		if(!pTurret->uwCenterX || pTurret->ubTeam == TEAM_NONE) {
+		if(turretIsDestroyed(pTurret) || pTurret->ubTeam == TEAM_NONE) {
 			continue;
 		}
 

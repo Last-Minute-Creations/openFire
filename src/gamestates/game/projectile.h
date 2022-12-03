@@ -6,9 +6,9 @@
 #include "gamestates/game/bob_new.h"
 
 #define PROJECTILE_RANGE      ((320-32)/4)
-#define PROJECTILE_SPEED      (fix16_one*3)
-#define PROJECTILE_FRAME_LIFE fix16_to_int(fix16_div(fix16_from_int(PROJECTILE_RANGE), PROJECTILE_SPEED))
-
+#define PROJECTILE_SPEED_INT 3
+#define PROJECTILE_SPEED      (fix16_one * PROJECTILE_SPEED_INT)
+#define PROJECTILE_FRAME_LIFE (PROJECTILE_RANGE / PROJECTILE_SPEED_INT)
 
 // Projectile types.
 #define PROJECTILE_TYPE_OFF    0

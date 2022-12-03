@@ -412,8 +412,9 @@ tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTe
 		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
 
 		// Ignore players of same team or not on map
-		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam)
+		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam) {
 			continue;
+		}
 
 		// Calculate distance between turret & player
 		WORD wDx = ABS(pPlayer->sVehicle.uwX - uwX);
