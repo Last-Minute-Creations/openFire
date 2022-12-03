@@ -12,7 +12,7 @@ tVehicleType g_pVehicleTypes[VEHICLE_TYPE_COUNT];
 tBitMap *vehicleTypeGenerateRotatedFrames(const char *szPath) {
 	logBlockBegin("vehicleTypeGenerateRotatedFrames(szPath: '%s')", szPath);
 
-	char szCachePath[100];
+	char szCachePath[120];
 	if(cacheIsValid(szPath)) {
 		sprintf(szCachePath, "precalc/%s", szPath);
 		tBitMap *pBitmap = bitmapCreateFromFile(szCachePath, 0);
