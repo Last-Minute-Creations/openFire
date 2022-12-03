@@ -37,39 +37,49 @@ void vehicleInit(tVehicle *pVehicle, UBYTE ubVehicleType, UBYTE ubSpawnIdx) {
 }
 
 static UBYTE vehicleCollidesWithOtherVehicle(
-	const tVehicle *pVehicle, UWORD uwX, UWORD uwY, UBYTE ubAngle
+	const tVehicle *pVehicle, UWORD uwNewX, UWORD uwNewY, UBYTE ubAngle
 ) {
 	// Don't check AI since it stops before driving into vehicles
 	if(playerGetByVehicle(pVehicle) != g_pLocalPlayer) {
 		return 0;
 	}
-	// Transform player's vehicle position so that it's plain rectangle
-	UWORD uwRotdX = fix16_to_int(fix16_sub(
-		pVehicle->uwX * ccos(ubAngle),
-		pVehicle->uwY * csin(ubAngle)
-	));
-	UWORD uwRotdY = fix16_to_int(fix16_add(
-		fix16_mul(pVehicle->fX, csin(ubAngle)),
-		fix16_mul(pVehicle->fY, ccos(ubAngle))
-	));
+
+	UBYTE isRectCalculated = 0;
 	tUwAbsRect sRect;
-	sRect.uwX1 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[0].bX-1;
-	sRect.uwY1 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[0].bY-1;
-	sRect.uwX2 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[7].bX+1;
-	sRect.uwY2 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[7].bY+1;
+
 	tPlayer *pChkPlayer;
 	FUBYTE i;
 	for(i = 0, pChkPlayer = &g_pPlayers[0]; i != g_ubPlayerCount; ++i, ++pChkPlayer) {
-		if(pChkPlayer->ubState != PLAYER_STATE_DRIVING || &pChkPlayer->sVehicle == pVehicle) {
+		if(
+			pChkPlayer->ubState != PLAYER_STATE_DRIVING ||
+			&pChkPlayer->sVehicle == pVehicle
+		) {
 			continue;
 		}
 
 		// Check if player is nearby
 		if(
-			ABS(uwX - pChkPlayer->sVehicle.uwX) > VEHICLE_BODY_WIDTH ||
-			ABS(uwY - pChkPlayer->sVehicle.uwY) > VEHICLE_BODY_WIDTH
+			ABS(uwNewX - pChkPlayer->sVehicle.uwX) > VEHICLE_BODY_WIDTH ||
+			ABS(uwNewY - pChkPlayer->sVehicle.uwY) > VEHICLE_BODY_WIDTH
 		) {
 			continue;
+		}
+
+		if(!isRectCalculated) {
+			// Transform player's vehicle position so that it's plain rectangle
+			UWORD uwRotdX = fix16_to_int(fix16_sub(
+				pVehicle->uwX * ccos(ubAngle),
+				pVehicle->uwY * csin(ubAngle)
+			));
+			UWORD uwRotdY = fix16_to_int(fix16_add(
+				fix16_mul(pVehicle->fX, csin(ubAngle)),
+				fix16_mul(pVehicle->fY, ccos(ubAngle))
+			));
+			sRect.uwX1 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[0].bX-1;
+			sRect.uwY1 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[0].bY-1;
+			sRect.uwX2 = uwRotdX + pVehicle->pType->pCollisionPts[0].pPts[7].bX+1;
+			sRect.uwY2 = uwRotdY + pVehicle->pType->pCollisionPts[0].pPts[7].bY+1;
+			isRectCalculated = 1;
 		}
 
 		// Transform other player's vehicle pos to same axes
