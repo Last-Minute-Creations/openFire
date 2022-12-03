@@ -6,7 +6,7 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/console.h"
 
-#define CONTROL_POINT_LIFE 250 /* 15s */
+#define CONTROL_POINT_LIFE 256 /* 15s */
 #define CONTROL_POINT_LIFE_RED   0
 #define CONTROL_POINT_LIFE_NEUTRAL (CONTROL_POINT_LIFE)
 #define CONTROL_POINT_LIFE_BLUE   (CONTROL_POINT_LIFE*2)
