@@ -29,6 +29,26 @@ WORD getDeltaAngleDirection(UBYTE ubPrevAngle, UBYTE ubNewAngle, WORD wUnit) {
 	return -wUnit;
 }
 
+UWORD fastMagnitude(UWORD uwDx, UWORD uwDy) {
+	// Get approximate distance |(xo,yo)| using aMin+bMax with a=15/16 and b=15/32
+	// Average error is around 1.8%
+	// |(dx,dy)| ~= (P+0.5Q) - ((P+0.5Q) >> 4)
+	// P = max(|dx|,|dy|)
+	// Q = min(|dx|,|dy|)
+	UWORD uwP, uwQ;
+	if(uwDx > uwDy) {
+		uwP = uwDx;
+		uwQ = uwDy;
+	}
+	else {
+		uwP = uwDy;
+		uwQ = uwDx;
+	}
+	UWORD uwHalfQ = uwQ / 2;
+	UWORD uwPPlusHalfQ = uwP + uwHalfQ;
+	return uwPPlusHalfQ - (uwPPlusHalfQ >> 4);
+}
+
 fix16_t g_pSin[128] = {
 	0, 3215, 6423, 9616, 12785, 15923, 19024, 22078, 25079,
 	28020, 30893, 33692, 36409, 39039, 41575, 44011, 46340,

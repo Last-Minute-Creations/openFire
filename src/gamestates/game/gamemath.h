@@ -42,4 +42,6 @@ WORD getDeltaAngleDirection(
 	UBYTE ubPrevAngle, UBYTE ubNewAngle, WORD wUnit
 );
 
+UWORD fastMagnitude(UWORD uwDx, UWORD uwDy);
+
 #endif // GUARD_OF_GAMESTATES_GAME_GAMEMATH_H

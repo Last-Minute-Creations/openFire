@@ -417,11 +417,12 @@ tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTe
 		}
 
 		// Calculate distance between turret & player
-		WORD wDx = ABS(pPlayer->sVehicle.uwX - uwX);
-		WORD wDy = ABS(pPlayer->sVehicle.uwY - uwY);
-		if(wDx > uwRange || wDy > uwRange)
-			continue; // If too far, don't do costly multiplications
-		UWORD uwDist = wDx*wDx + wDy*wDy;
+		WORD wDx = pPlayer->sVehicle.uwX - uwX; wDx = ABS(wDx);
+		WORD wDy = pPlayer->sVehicle.uwY - uwY; wDy = ABS(wDy);
+		if(wDx > uwRange || wDy > uwRange) {
+			continue; // If too far, don't do costly calculations
+		}
+		UWORD uwDist = fastMagnitude(wDx, wDy);
 		if(uwDist <= uwClosestDist) {
 			pClosest = pPlayer;
 			uwClosestDist = uwDist;
