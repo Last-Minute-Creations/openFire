@@ -13,15 +13,6 @@
 #include "gamestates/game/control.h"
 #include "gamestates/game/console.h"
 
-// Steer requests
-#define OF_KEY_FORWARD      KEY_W
-#define OF_KEY_BACKWARD     KEY_S
-#define OF_KEY_LEFT         KEY_A
-#define OF_KEY_RIGHT        KEY_D
-#define OF_KEY_ACTION1      KEY_F
-#define OF_KEY_ACTION2      KEY_R
-#define OF_KEY_ACTION3      KEY_V
-
 // TODO players as cyclic buffer?
 // Iterating other player's position during targeting could be done with:
 // for(p = next; p != self; ++p)
@@ -63,7 +54,6 @@ static void playerMoveToLimbo(tPlayer *pPlayer, FUBYTE fubSpawnIdx) {
 	pPlayer->sVehicle.uwY = (g_pSpawns[fubSpawnIdx].ubTileY << MAP_TILE_SIZE) + MAP_HALF_TILE;
 	pPlayer->sVehicle.fX = fix16_from_int(pPlayer->sVehicle.uwX);
 	pPlayer->sVehicle.fY = fix16_from_int(pPlayer->sVehicle.uwY);
-	if(pPlayer == g_pLocalPlayer)
 	if(pPlayer == g_pLocalPlayer) {
 		displayPrepareLimbo();
 	}
@@ -85,6 +75,7 @@ tPlayer *playerAdd(const char *szName, UBYTE ubTeam) {
 		pPlayer->isBot = 0;
 		pPlayer->ubCurrentVehicleType = 0xFF;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_TANK] = 4;
+		pPlayer->pVehiclesLeft[VEHICLE_TYPE_CHOPPER] = 10;
 		pPlayer->pVehiclesLeft[VEHICLE_TYPE_JEEP] = 10;
 		++g_ubPlayerCount;
 		char szMessage[35];
@@ -191,20 +182,14 @@ void playerLocalProcessInput(void) {
 				pReq->ubAction3  = 0;
 			}
 			else {
-				pReq->ubForward  = keyCheck(OF_KEY_FORWARD);
-				pReq->ubBackward = keyCheck(OF_KEY_BACKWARD);
-				pReq->ubLeft     = keyCheck(OF_KEY_LEFT);
-				pReq->ubRight    = keyCheck(OF_KEY_RIGHT);
-				pReq->ubAction3  = keyCheck(OF_KEY_ACTION3);
+				memcpy(pReq, steerRequestGetCurr(), sizeof(tSteerRequest));
 			}
-			pReq->ubAction1 = mouseCheck(MOUSE_PORT_1, MOUSE_LMB);
-			pReq->ubAction2 = mouseCheck(MOUSE_PORT_2, MOUSE_RMB);
 
 			pReq->ubDestAngle = getAngleBetweenPoints(
 				g_pLocalPlayer->sVehicle.uwX,
 				g_pLocalPlayer->sVehicle.uwY,
-				g_pWorldCamera->uPos.sUwCoord.uwX + mouseGetX(MOUSE_PORT_1),
-				g_pWorldCamera->uPos.sUwCoord.uwY + mouseGetY(MOUSE_PORT_1)
+				g_pWorldCamera->uPos.uwX + mouseGetX(MOUSE_PORT_1),
+				g_pWorldCamera->uPos.uwY + mouseGetY(MOUSE_PORT_1)
 			);
 		} break;
 		case PLAYER_STATE_LIMBO: {
@@ -221,12 +206,18 @@ void playerLocalProcessInput(void) {
 				const tUwRect sJeepRect = {
 					.uwX = 2 + 38, .uwY = uwHudOffs +1+35, .uwWidth = 28, .uwHeight = 20
 				};
+				const tUwRect sChopperRect = {
+					.uwX = 2 + 38, .uwY = uwHudOffs +1+4, .uwWidth = 28, .uwHeight = 20
+				};
 				UWORD uwMouseX = mouseGetX(MOUSE_PORT_1), uwMouseY = mouseGetY(MOUSE_PORT_1);
 				if(inRect(uwMouseX, uwMouseY, sTankRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_TANK);
 				}
 				else if(inRect(uwMouseX, uwMouseY, sJeepRect)) {
 					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_JEEP);
+				}
+				else if(inRect(uwMouseX, uwMouseY, sChopperRect)) {
+					playerSelectVehicle(g_pLocalPlayer, VEHICLE_TYPE_CHOPPER);
 				}
 			}
 		} break;
@@ -275,20 +266,6 @@ void playerSimVehicle(tPlayer *pPlayer) {
 	UWORD uwVTileY = uwVy >> MAP_TILE_SIZE;
 	UBYTE ubTileType = g_sMap.pData[uwVTileX][uwVTileY].ubIdx;
 
-	// Drowning
-	if(ubTileType == MAP_LOGIC_WATER) {
-		playerLoseVehicle(pPlayer);
-		char szBfr[CONSOLE_MESSAGE_MAX];
-		sprintf(szBfr, "%s has drowned", pPlayer->szName);
-		consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
-		return;
-	}
-
-	// Death from moving spawn
-	if(playerCheckDeathFromSpawn(pPlayer)) {
-		return;
-	}
-
 	// Standing on own, unoccupied spawn
 	if(ubTileType == MAP_LOGIC_SPAWN1 || ubTileType == MAP_LOGIC_SPAWN2) {
 		if(
@@ -319,13 +296,36 @@ void playerSimVehicle(tPlayer *pPlayer) {
 			}
 		}
 	}
+	else if(pPlayer->ubCurrentVehicleType != VEHICLE_TYPE_CHOPPER) {
+		// Drowning
+		if(ubTileType == MAP_LOGIC_WATER) {
+			playerLoseVehicle(pPlayer);
+			char szBfr[CONSOLE_MESSAGE_MAX];
+			sprintf(szBfr, "%s has drowned", pPlayer->szName);
+			consoleWrite(szBfr, CONSOLE_COLOR_GENERAL);
+			return;
+		}
 
-	controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
+		// Death from moving spawn
+		if(playerCheckDeathFromSpawn(pPlayer)) {
+			return;
+		}
+	}
+
+	if(pPlayer->ubCurrentVehicleType != VEHICLE_TYPE_CHOPPER) {
+		// Also must work on spawn, so it's here
+		controlIncreaseCounters(uwVTileX, uwVTileY, pPlayer->ubTeam);
+	}
 
 	// Calculate vehicle positions based on steer requests
 	switch(pPlayer->ubCurrentVehicleType) {
 		case VEHICLE_TYPE_TANK:
 			vehicleSteerTank(pVehicle, &pPlayer->sSteerRequest);
+			bobNewPush(&pVehicle->sBob);
+			bobNewPush(&pVehicle->sAuxBob);
+			break;
+		case VEHICLE_TYPE_CHOPPER:
+			vehicleSteerChopper(pVehicle, &pPlayer->sSteerRequest);
 			bobNewPush(&pVehicle->sBob);
 			bobNewPush(&pVehicle->sAuxBob);
 			break;
@@ -412,15 +412,17 @@ tPlayer *playerGetClosestInRange(UWORD uwX, UWORD uwY, UWORD uwRange, UBYTE ubTe
 		tPlayer *pPlayer = &g_pPlayers[fubPlayerIdx];
 
 		// Ignore players of same team or not on map
-		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam)
+		if(pPlayer->ubState != PLAYER_STATE_DRIVING || pPlayer->ubTeam != ubTeam) {
 			continue;
+		}
 
 		// Calculate distance between turret & player
-		WORD wDx = ABS(pPlayer->sVehicle.uwX - uwX);
-		WORD wDy = ABS(pPlayer->sVehicle.uwY - uwY);
-		if(wDx > uwRange || wDy > uwRange)
-			continue; // If too far, don't do costly multiplications
-		UWORD uwDist = wDx*wDx + wDy*wDy;
+		WORD wDx = pPlayer->sVehicle.uwX - uwX; wDx = ABS(wDx);
+		WORD wDy = pPlayer->sVehicle.uwY - uwY; wDy = ABS(wDy);
+		if(wDx > uwRange || wDy > uwRange) {
+			continue; // If too far, don't do costly calculations
+		}
+		UWORD uwDist = fastMagnitude(wDx, wDy);
 		if(uwDist <= uwClosestDist) {
 			pClosest = pPlayer;
 			uwClosestDist = uwDist;

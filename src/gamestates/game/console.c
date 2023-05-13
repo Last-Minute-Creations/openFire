@@ -47,7 +47,7 @@ void consoleWrite(const char *szMsg, UBYTE ubColor) {
 	s_sLog.pLog[s_sLog.uwTailIdx].ubColor = ubColor;
 #ifdef GAME_DEBUG
 	if(strlen(szMsg) > CHAT_MAX) {
-		logWrite("ERR: Text too long (%d): '%s'\n", strlen(szMsg), szMsg);
+		logWrite("ERR: Text too long (%ld): '%s'\n", strlen(szMsg), szMsg);
 		return;
 	}
 #endif
@@ -63,9 +63,12 @@ void consoleUpdate(void) {
 		return;
 	}
 
-	if(fontFillTextBitMap(
+	if(fontTextFitsInTextBitmap(
 		s_pConsoleFont, s_pChatLineBfr, s_sLog.pLog[s_uwToDraw].szMessage
 	)) {
+		fontFillTextBitMap(
+			s_pConsoleFont, s_pChatLineBfr, s_sLog.pLog[s_uwToDraw].szMessage
+		);
 		// Move remaining messages up
 		blitCopyAligned(
 			g_pHudBfr->pBack, 112, 9,

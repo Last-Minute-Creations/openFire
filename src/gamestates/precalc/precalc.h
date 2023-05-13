@@ -1,13 +1,7 @@
 #ifndef GUARD_OF_PRECALC_PRECALC_H
 #define GUARD_OF_PRECALC_PRECALC_H
 
-#include "vehicletypes.h"
-
-void precalcCreate(void);
-
-void precalcLoop(void);
-
-void precalcDestroy(void);
+#include <ace/types.h>
 
 void precalcIncreaseProgress(FUBYTE fubAmountToAdd, char *szText);
 

@@ -1,8 +1,10 @@
 #ifndef GUARD_OF_GAMESTATES_GAME_GAME_H
 #define GUARD_OF_GAMESTATES_GAME_GAME_H
 
+#include <ace/managers/rand.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <gamestates/game/bob_new.h>
+#include <gamestates/game/steer_request.h>
 
 #define WORLD_BPP 4
 
@@ -37,6 +39,9 @@ extern tCameraManager *g_pWorldCamera;
 
 extern ULONG g_ulGameFrame;
 extern UBYTE g_isLocalBot;
+extern UBYTE g_ubFps;
+
+extern tRandManager g_sRandManager;
 
 void gsGameCreate(void);
 void gsGameLoop(void);

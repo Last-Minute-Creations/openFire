@@ -26,8 +26,8 @@ void projectileListCreate(FUBYTE fubProjectileMaxCount) {
 	);
 
 	// Load gfx
-	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm");
-	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet_mask.bm");
+	s_pBulletBitmap = bitmapCreateFromFile("data/projectiles/bullet.bm", 0);
+	s_pBulletMask = bitmapCreateFromFile("data/projectiles/bullet_mask.bm", 0);
 
 	// Create projectiles
 	s_fubProjectileMaxCount = fubProjectileMaxCount;
@@ -89,7 +89,7 @@ tProjectile *projectileCreate(
 	// Initial projectile position & angle
 	if(ubOwnerType == PROJECTILE_OWNER_TYPE_VEHICLE) {
 		if(uOwner.pVehicle->pType == &g_pVehicleTypes[VEHICLE_TYPE_TANK]) {
-			pProjectile->ubAngle = uOwner.pVehicle->ubTurretAngle;
+			pProjectile->ubAngle = uOwner.pVehicle->ubAuxAngle;
 		}
 		else {
 			pProjectile->ubAngle = uOwner.pVehicle->ubBodyAngle;
@@ -157,8 +157,8 @@ void projectileSim(void) {
 			projectileDestroy(pProjectile);
 			continue;
 		}
-		pProjectile->sBob.sPos.sUwCoord.uwX = fix16_to_int(pProjectile->fX)-PROJECTILE_BULLET_HEIGHT/2;
-		pProjectile->sBob.sPos.sUwCoord.uwY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
+		pProjectile->sBob.sPos.uwX = fix16_to_int(pProjectile->fX)-PROJECTILE_BULLET_HEIGHT/2;
+		pProjectile->sBob.sPos.uwY = fix16_to_int(pProjectile->fY)-PROJECTILE_BULLET_HEIGHT/2;
 		bobNewPush(&pProjectile->sBob);
 	}
 }

@@ -6,7 +6,7 @@
 #include "gamestates/game/game.h"
 #include "gamestates/game/console.h"
 
-#define CONTROL_POINT_LIFE 250 /* 15s */
+#define CONTROL_POINT_LIFE 256 /* 15s */
 #define CONTROL_POINT_LIFE_RED   0
 #define CONTROL_POINT_LIFE_NEUTRAL (CONTROL_POINT_LIFE)
 #define CONTROL_POINT_LIFE_BLUE   (CONTROL_POINT_LIFE*2)
@@ -61,10 +61,10 @@ static UBYTE ** controlPolygonMaskCreate(
 
 	*pX1 = 0xFF; *pY1 = 0xFF; *pX2 = 0; *pY2 = 0;
 	for(FUBYTE i = 1; i < fubPolyPtCnt; ++i) {
-		FUBYTE x1 = pPolyPts[i-1].sUbCoord.ubX;
-		FUBYTE y1 = pPolyPts[i-1].sUbCoord.ubY;
-		FUBYTE x2 = pPolyPts[i].sUbCoord.ubX;
-		FUBYTE y2 = pPolyPts[i].sUbCoord.ubY;
+		FUBYTE x1 = pPolyPts[i-1].ubX;
+		FUBYTE y1 = pPolyPts[i-1].ubY;
+		FUBYTE x2 = pPolyPts[i].ubX;
+		FUBYTE y2 = pPolyPts[i].ubY;
 
 		FUBYTE fubStartX = MIN(x1, x2);
 		FUBYTE fubEndX = MAX(x1, x2);

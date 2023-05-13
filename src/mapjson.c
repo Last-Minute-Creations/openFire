@@ -169,8 +169,8 @@ void mapJsonReadControlPoints(const tJson *pJson) {
 				logBlockEnd("mapJsonReadControlPoints()");
 				return;
 			}
-			pPolyPoints[pp].sUbCoord.ubX = jsonTokToUlong(pJson, uwTokPolyPoint+1, 10);
-			pPolyPoints[pp].sUbCoord.ubY = jsonTokToUlong(pJson, uwTokPolyPoint+2, 10);
+			pPolyPoints[pp].ubX = jsonTokToUlong(pJson, uwTokPolyPoint+1, 10);
+			pPolyPoints[pp].ubY = jsonTokToUlong(pJson, uwTokPolyPoint+2, 10);
 		}
 
 		if(!fubCaptureX && !fubCaptureY) {

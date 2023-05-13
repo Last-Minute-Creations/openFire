@@ -20,8 +20,8 @@ void explosionsAdd(UWORD uwX, UWORD uwY) {
 	for(UWORD i = EXPLOSIONS_MAX; i--;) {
 		if(s_pExplosions[i].uwDuration >= EXPLOSION_DURATION) {
 			// Free slot found - setup explosion
-			s_pExplosions[i].sBob.sPos.sUwCoord.uwX = uwX - EXPLOSION_SIZE/2;
-			s_pExplosions[i].sBob.sPos.sUwCoord.uwY = uwY - EXPLOSION_SIZE/2;
+			s_pExplosions[i].sBob.sPos.uwX = uwX - EXPLOSION_SIZE/2;
+			s_pExplosions[i].sBob.sPos.uwY = uwY - EXPLOSION_SIZE/2;
 			s_pExplosions[i].uwDuration = 0;
 			return;
 		}
@@ -30,8 +30,8 @@ void explosionsAdd(UWORD uwX, UWORD uwY) {
 
 void explosionsCreate(void) {
 	logBlockBegin("explosionsCreate()");
-	s_pBitmap = bitmapCreateFromFile("data/explosion.bm");
-	s_pMask = bitmapCreateFromFile("data/explosion_mask.bm");
+	s_pBitmap = bitmapCreateFromFile("data/explosion.bm", 0);
+	s_pMask = bitmapCreateFromFile("data/explosion_mask.bm", 0);
 
 	for(UBYTE i = EXPLOSIONS_MAX; i--;) {
 		bobNewInit(&s_pExplosions[i].sBob, 32, 32, 1, s_pBitmap, s_pMask, 0, 0);

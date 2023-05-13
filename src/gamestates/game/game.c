@@ -6,10 +6,11 @@
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
 #include <ace/managers/game.h>
-#include <ace/managers/rand.h>
 #include <ace/managers/system.h>
+#include <ace/utils/sprite.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
+#include "../../open_fire.h"
 #include "cursor.h"
 #include "gamestates/game/worldmap.h"
 #include "gamestates/game/vehicle.h"
@@ -33,11 +34,15 @@ tSimpleBufferManager *g_pWorldMainBfr;
 tCameraManager *g_pWorldCamera;
 static tVPort *s_pWorldMainVPort;
 static UBYTE s_isScoreShown;
-
-ULONG g_ulGameFrame;
+static UBYTE s_isSummary;
 static tFont *s_pSmallFont;
 
+ULONG g_ulGameFrame;
 UBYTE g_isLocalBot;
+UBYTE g_ubFps;
+UBYTE s_ubFpsCounter;
+UBYTE s_ubFpsCalcTimeout;
+tRandManager g_sRandManager;
 
 void displayPrepareLimbo(void) {
 	mouseSetBounds(MOUSE_PORT_1, 0,0, 320, 255);
@@ -49,13 +54,29 @@ void displayPrepareDriving(void) {
 	hudChangeState(HUD_STATE_DRIVING);
 }
 
+FN_HOTSPOT
+static void INTERRUPT gameVblankServer(
+  UNUSED_ARG REGARG(volatile tCustom *pCustom, "a0"),
+  UNUSED_ARG REGARG(volatile void *pData, "a1")
+) {
+	++s_ubFpsCalcTimeout;
+	if(s_ubFpsCalcTimeout == 50) {
+		s_ubFpsCalcTimeout = 0;
+		g_ubFps = s_ubFpsCounter;
+		s_ubFpsCounter = 0;
+	}
+	if(!g_isChatting) {
+		steerRequestCapture();
+	}
+}
+
 void gsGameCreate(void) {
 	logBlockBegin("gsGameCreate()");
-	randInit(2184);
+	randInit(&g_sRandManager, 2184, 1911);
 
 	// Prepare view
 	g_pWorldView = viewCreate(0,
-		TAG_VIEW_GLOBAL_CLUT, 1,
+		TAG_VIEW_GLOBAL_PALETTE, 1,
 		TAG_VIEW_COPLIST_MODE, VIEW_COPLIST_MODE_RAW,
 		TAG_VIEW_COPLIST_RAW_COUNT, WORLD_COP_SIZE,
 	TAG_DONE);
@@ -76,10 +97,10 @@ void gsGameCreate(void) {
 	TAG_DONE);
 	if(!g_pWorldMainBfr) {
 		logWrite("Buffer creation failed");
-		gamePopState();
+		statePop(g_pStateManager);
 		return;
 	}
-	g_pWorldCamera = g_pWorldMainBfr->pCameraManager;
+	g_pWorldCamera = g_pWorldMainBfr->pCamera;
 
 	const UBYTE ubProjectilesMax = 16;
 	const UBYTE ubPlayersMax = 8;
@@ -102,16 +123,17 @@ void gsGameCreate(void) {
 	hudCreate(s_pSmallFont);
 	scoreTableCreate(g_pHudBfr->sCommon.pVPort, s_pSmallFont);
 	s_isScoreShown = 0;
+	s_isSummary = 0;
 
 	// Enabling sprite DMA
 	tCopCmd *pSpriteEnList = &g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS];
 	copSetMove(&pSpriteEnList[0].sMove, &g_pCustom->dmacon, BITSET | DMAF_SPRITE);
-	CopyMemQuick(
-		&g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS],
-		&g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS],
-		sizeof(tCopCmd)
+	g_pWorldView->pCopList->pFrontBfr->pList[WORLD_COP_SPRITEEN_POS].ulCode = g_pWorldView->pCopList->pBackBfr->pList[WORLD_COP_SPRITEEN_POS].ulCode;
+	spriteDisableInCopRawMode(
+		g_pWorldView->pCopList,
+		SPRITE_0 | SPRITE_1 | SPRITE_3 | SPRITE_4 | SPRITE_5 | SPRITE_6 | SPRITE_7,
+		WORLD_COP_SPRITEEN_POS + 1
 	);
-	copRawDisableSprites(g_pWorldView->pCopList, 251, WORLD_COP_SPRITEEN_POS+1);
 
 	// Crosshair stuff
 	cursorCreate(g_pWorldView, 2, "data/crosshair.bm", WORLD_COP_CROSS_POS);
@@ -121,6 +143,10 @@ void gsGameCreate(void) {
 
 	// Initial values
 	g_ulGameFrame = 0;
+	s_ubFpsCounter = 0;
+	g_ubFps = 0;
+	s_ubFpsCalcTimeout = 0;
+	steerRequestInit();
 
 	// AI
 	playerListInit(ubPlayersMax);
@@ -138,6 +164,7 @@ void gsGameCreate(void) {
 	displayPrepareLimbo();
 
 	blitWait();
+	systemSetInt(INTB_VERTB, gameVblankServer, 0);
 
 	viewLoad(g_pWorldView);
 	logBlockEnd("gsGameCreate()");
@@ -146,7 +173,7 @@ void gsGameCreate(void) {
 
 static void gameSummaryLoop(void) {
 	if(keyUse(KEY_ESCAPE) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		gameChangeState(menuCreate, menuLoop, menuDestroy);
+		stateChange(g_pStateManager, &g_sStateMenu);
 		return;
 	}
 	scoreTableProcessView();
@@ -166,16 +193,25 @@ void gameDebugKeys(void) {
 }
 
 void gsGameLoop(void) {
+	if(s_isSummary) {
+		gameSummaryLoop();
+		return;
+	}
 	++g_ulGameFrame;
 	// Quit?
 	if(keyUse(KEY_ESCAPE)) {
-		gameChangeState(menuCreate, menuLoop, menuDestroy);
+		stateChange(g_pStateManager, &g_sStateMenu);
 		return;
 	}
-	gameDebugKeys();
-	// Steering-irrelevant player input
-	if(keyUse(KEY_T)) {
-		consoleChatBegin();
+	if(!g_isChatting) {
+		gameDebugKeys();
+		// Steering-irrelevant player input
+		if(keyUse(KEY_T)) {
+			consoleChatBegin();
+		}
+		else if(keyUse(KEY_F1)) {
+			hudToggleFps();
+		}
 	}
 	if(keyUse(KEY_TAB)) {
 		s_isScoreShown = 1;
@@ -193,35 +229,41 @@ void gsGameLoop(void) {
 
 	// Undraw bobs so that something goes on during data recv
 	dataRecv(); // Receives positions of other players from server
-	spawnSim();
-	controlSim();
-
-	playerLocalProcessInput(); // Steer requests, chat, limbo
-	botProcess();
 	dataSend(); // Send input requests to server
+	while(steerRequestProcessedCount() != steerRequestReadCount()) {
+		spawnSim();
+		controlSim();
 
-	// Undraw bobs, draw pending tiles
-	bobNewBegin();
-	controlRedrawPoints();
-	worldMapUpdateTiles();
+		playerLocalProcessInput(); // Steer requests, chat, limbo
+		botProcess();
 
-	// sim & draw
-	playerSim(); // Players & vehicles states
-	turretSim(); // Turrets: targeting, rotation & projectile spawn
-	projectileSim(); // Projectiles: new positions, damage -> explosions
-	explosionsProcess();
+		// Undraw bobs, draw pending tiles
+		bobNewBegin();
+		controlRedrawPoints();
+		worldMapUpdateTiles();
+
+		// sim & draw
+		playerSim(); // Players & vehicles states
+		turretSim(); // Turrets: targeting, rotation & projectile spawn
+		projectileSim(); // Projectiles: new positions, damage -> explosions
+		explosionsProcess();
+		steerRequestMoveToNext();
+	}
+	if(!steerRequestReadCount()) {
+		bobNewBegin();
+	}
 	bobNewPushingDone();
 
 	if(!g_pTeams[TEAM_RED].uwTicketsLeft || !g_pTeams[TEAM_BLUE].uwTicketsLeft) {
 		scoreTableShowSummary();
-		gameChangeLoop(gameSummaryLoop);
+		s_isSummary = 1;
 	}
 
-  cursorUpdate();
+	cursorUpdate();
 	if(g_pLocalPlayer->ubState != PLAYER_STATE_LIMBO) {
 		cameraCenterAt(
 			g_pWorldCamera,
-			g_pLocalPlayer->sVehicle.uwX & 0xFFFE, g_pLocalPlayer->sVehicle.uwY
+			g_pLocalPlayer->sVehicle.uwX, g_pLocalPlayer->sVehicle.uwY
 		);
 	}
 	else {
@@ -229,18 +271,20 @@ void gsGameLoop(void) {
 		UWORD uwSpawnY = g_pLocalPlayer->sVehicle.uwY;
 		UWORD uwLimboX = MAX(0, uwSpawnX - WORLD_VPORT_WIDTH/2);
 		UWORD uwLimboY = MAX(0, uwSpawnY- WORLD_VPORT_HEIGHT/2);
-		WORD wDx = (WORD)CLAMP(uwLimboX - g_pWorldCamera->uPos.sUwCoord.uwX, -2, 2);
-		WORD wDy = (WORD)CLAMP(uwLimboY - g_pWorldCamera->uPos.sUwCoord.uwY, -2, 2);
+		WORD wDx = (WORD)CLAMP(uwLimboX - g_pWorldCamera->uPos.uwX, -2, 2);
+		WORD wDy = (WORD)CLAMP(uwLimboY - g_pWorldCamera->uPos.uwY, -2, 2);
 		cameraMoveBy(g_pWorldCamera, wDx, wDy);
 	}
 
+	steerRequestSwap();
 	bobNewEnd(); // SHOULD BE SOMEWHERE HERE
 	worldMapSwapBuffers();
 
 	// Start refreshing gfx at hud
-	vPortWaitForEnd(s_pWorldMainVPort);
-
-	// This should be done on vblank interrupt
+	++s_ubFpsCounter;
+	systemIdleBegin();
+	vPortWaitUntilEnd(s_pWorldMainVPort);
+	systemIdleEnd();
 	if(!s_isScoreShown) {
 		viewProcessManagers(g_pWorldView);
 		copProcessBlocks();
@@ -253,6 +297,8 @@ void gsGameLoop(void) {
 void gsGameDestroy(void) {
 	systemUse();
 	logBlockBegin("gsGameDestroy()");
+
+	systemSetInt(INTB_VERTB, 0, 0);
 
 	projectileListDestroy();
 
@@ -271,3 +317,7 @@ void gsGameDestroy(void) {
 
 	logBlockEnd("gsGameDestroy()");
 }
+
+tState g_sStateGame = {
+	.cbCreate = gsGameCreate, .cbLoop = gsGameLoop, .cbDestroy = gsGameDestroy
+};

@@ -30,8 +30,7 @@ ULONG adler32file(const char *szPath) {
 		goto fail;
 	}
 	UBYTE ubBfr;
-	while(!fileIsEof(pFile)) {
-		fileRead(pFile, &ubBfr, 1);
+	while(fileRead(pFile, &ubBfr, 1)) {
 		a += ubBfr;
 		if(a >= ADLER32_MODULO) {
 			a -= ADLER32_MODULO;

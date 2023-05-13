@@ -5,10 +5,4 @@
 #define MAPLIST_MINIMAP_Y 10
 #define MAPLIST_MINIMAP_WIDTH 128
 
-void mapListCreate(void);
-
-void mapListLoop(void);
-
-void mapListDestroy(void);
-
 #endif // OF_GAMESTATES_MENU_MAPLIST_H
